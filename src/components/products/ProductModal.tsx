@@ -33,7 +33,7 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="bg-white rounded-3xl shadow-2xl w-fit max-w-[min(100%,calc(100vw-2rem))] max-h-[90vh] overflow-y-auto">
+      <div className="bg-white rounded-3xl shadow-2xl w-full max-w-[min(95vw,900px)] max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between gap-3 p-5 border-b border-gray-100 min-w-0">
           <h2
             className="text-lg font-bold text-neutral-dark pr-4"
@@ -50,8 +50,8 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
           </button>
         </div>
 
-        <div className="p-5 flex flex-col lg:flex-row lg:items-start gap-6 lg:gap-8">
-          <div className="shrink-0 w-full flex justify-center lg:justify-start lg:w-auto">
+        <div className="p-4 sm:p-5 flex flex-col lg:flex-row lg:items-start gap-5 lg:gap-8">
+          <div className="w-full lg:w-auto lg:shrink-0">
             <ImageGallery images={product.images} productName={product.name} />
           </div>
 
