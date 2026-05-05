@@ -1,0 +1,232 @@
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import type { Category } from "@/types";
+
+const LUCIDE_ICONS = [
+  "Grid2X2", "Sparkles", "Droplets", "LayoutPanelLeft", "Layers",
+  "Mountain", "Package", "Wrench", "Home", "Star", "Box", "Tag",
+  "ShoppingBag", "Hammer", "Paintbrush", "Lightbulb",
+];
+
+function emptyCategory(): Category {
+  return { slug: "", label: "", icon: "Box", description: "" };
+}
+
+interface EditState {
+  slug: string;
+  data: Category;
+}
+
+export default function CategoriesManager({ categories }: { categories: Category[] }) {
+  const router = useRouter();
+  const [newCat, setNewCat] = useState<Category>(emptyCategory());
+  const [adding, setAdding] = useState(false);
+  const [addError, setAddError] = useState("");
+  const [deleting, setDeleting] = useState<string | null>(null);
+  const [edit, setEdit] = useState<EditState | null>(null);
+  const [saving, setSaving] = useState(false);
+  const [editError, setEditError] = useState("");
+
+  function setNewField<K extends keyof Category>(key: K, value: Category[K]) {
+    setNewCat((c) => ({ ...c, [key]: value }));
+  }
+
+  async function handleAdd(e: React.FormEvent) {
+    e.preventDefault();
+    setAddError("");
+    setAdding(true);
+    const res = await fetch("/api/admin/categories", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(newCat),
+    });
+    setAdding(false);
+    if (res.ok) {
+      setNewCat(emptyCategory());
+      router.refresh();
+    } else {
+      const data = await res.json();
+      setAddError(data.error ?? "Error al agregar");
+    }
+  }
+
+  async function handleDelete(slug: string) {
+    if (!confirm(`¿Eliminar categoría "${slug}"? Solo es posible si no tiene productos.`)) return;
+    setDeleting(slug);
+    const res = await fetch(`/api/admin/categories/${slug}`, { method: "DELETE" });
+    setDeleting(null);
+    if (!res.ok) {
+      const data = await res.json();
+      alert(data.error ?? "Error al eliminar");
+    } else {
+      router.refresh();
+    }
+  }
+
+  async function handleSaveEdit(e: React.FormEvent) {
+    e.preventDefault();
+    if (!edit) return;
+    setEditError("");
+    setSaving(true);
+    const res = await fetch(`/api/admin/categories/${edit.slug}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(edit.data),
+    });
+    setSaving(false);
+    if (res.ok) {
+      setEdit(null);
+      router.refresh();
+    } else {
+      const data = await res.json();
+      setEditError(data.error ?? "Error al guardar");
+    }
+  }
+
+  return (
+    <div className="space-y-6 max-w-2xl">
+      {/* Tabla de categorías */}
+      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50 border-b border-gray-200">
+            <tr>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Slug</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Nombre</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Icono</th>
+              <th className="text-left px-4 py-3 font-medium text-gray-600">Acciones</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-100">
+            {categories.map((c) => (
+              <tr key={c.slug} className="hover:bg-gray-50">
+                <td className="px-4 py-3 font-mono text-xs text-gray-500">{c.slug}</td>
+                <td className="px-4 py-3 font-medium text-gray-800">{c.label}</td>
+                <td className="px-4 py-3 text-gray-600">{c.icon}</td>
+                <td className="px-4 py-3 space-x-2">
+                  <button
+                    onClick={() => setEdit({ slug: c.slug, data: { ...c } })}
+                    className="text-amber-600 hover:underline"
+                  >
+                    Editar
+                  </button>
+                  <button
+                    onClick={() => handleDelete(c.slug)}
+                    disabled={deleting === c.slug}
+                    className="text-red-500 hover:underline disabled:opacity-40"
+                  >
+                    {deleting === c.slug ? "..." : "Eliminar"}
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+
+      {/* Modal de edición inline */}
+      {edit && (
+        <div className="bg-white rounded-xl shadow-sm border border-amber-200 p-5">
+          <h2 className="font-semibold text-gray-800 mb-4">Editar: {edit.slug}</h2>
+          <form onSubmit={handleSaveEdit} className="space-y-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+              <input
+                value={edit.data.label}
+                onChange={(e) => setEdit((s) => s && { ...s, data: { ...s.data, label: e.target.value } })}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Icono (Lucide)</label>
+              <select
+                value={edit.data.icon}
+                onChange={(e) => setEdit((s) => s && { ...s, data: { ...s.data, icon: e.target.value } })}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              >
+                {LUCIDE_ICONS.map((i) => <option key={i} value={i}>{i}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+              <input
+                value={edit.data.description ?? ""}
+                onChange={(e) => setEdit((s) => s && { ...s, data: { ...s.data, description: e.target.value } })}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              />
+            </div>
+            {editError && <p className="text-red-600 text-sm">{editError}</p>}
+            <div className="flex gap-2">
+              <button type="submit" disabled={saving} className="bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition disabled:opacity-50">
+                {saving ? "Guardando..." : "Guardar"}
+              </button>
+              <button type="button" onClick={() => setEdit(null)} className="text-gray-500 text-sm px-4 py-2 rounded-lg border border-gray-200 hover:border-gray-300 transition">
+                Cancelar
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Formulario agregar categoría */}
+      <div className="bg-white rounded-xl shadow-sm p-5">
+        <h2 className="font-semibold text-gray-800 mb-4">Agregar categoría</h2>
+        <form onSubmit={handleAdd} className="space-y-3">
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Slug *</label>
+              <input
+                value={newCat.slug}
+                onChange={(e) => setNewField("slug", e.target.value.toLowerCase().replace(/\s+/g, "-"))}
+                placeholder="Ej: pisos-exteriores"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                required
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+              <input
+                value={newCat.label}
+                onChange={(e) => setNewField("label", e.target.value)}
+                placeholder="Ej: Pisos Exteriores"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                required
+              />
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Icono (Lucide)</label>
+              <select
+                value={newCat.icon}
+                onChange={(e) => setNewField("icon", e.target.value)}
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              >
+                {LUCIDE_ICONS.map((i) => <option key={i} value={i}>{i}</option>)}
+              </select>
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
+              <input
+                value={newCat.description ?? ""}
+                onChange={(e) => setNewField("description", e.target.value)}
+                placeholder="Descripción corta"
+                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              />
+            </div>
+          </div>
+          {addError && <p className="text-red-600 text-sm">{addError}</p>}
+          <button
+            type="submit"
+            disabled={adding}
+            className="bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition disabled:opacity-50"
+          >
+            {adding ? "Agregando..." : "+ Agregar categoría"}
+          </button>
+        </form>
+      </div>
+    </div>
+  );
+}

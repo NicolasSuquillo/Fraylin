@@ -1,9 +1,5 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import Header from "@/components/layout/Header";
-import Footer from "@/components/layout/Footer";
-import FloatingWhatsApp from "@/components/ui/FloatingWhatsApp";
-import ScrollToTop from "@/components/ui/ScrollToTop";
 
 export const metadata: Metadata = {
   title: "Fraylin — Acabados para la Construcción | Quito, Ecuador",
@@ -27,13 +23,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es">
-      <body>
-        <ScrollToTop />
-        <Header />
-        <main>{children}</main>
-        <Footer />
-        <FloatingWhatsApp />
-      </body>
+      <body>{children}</body>
     </html>
   );
 }

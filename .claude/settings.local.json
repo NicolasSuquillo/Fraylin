@@ -16,7 +16,10 @@
       "Bash(npm run *)",
       "Bash(python3 -c \"from PIL import Image; img = Image.open\\('/c/Users/nicolas.suquillo/Documents/Fraylin/public/logotipo.png'\\); print\\(f'Size: {img.size}, Mode: {img.mode}'\\)\")",
       "Bash(identify \"/c/Users/nicolas.suquillo/Documents/Fraylin/public/logotipo.png\")",
-      "WebSearch"
+      "WebSearch",
+      "Bash(findstr /i \"scripts\\\\|dev\\\\|build\\\\|lint\\\\|start\")",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\nicolas.suquillo\\\\Documents\\\\Fraylin\" -Recurse -Directory)",
+      "Bash(Select-Object FullName)"
     ]
   }
 }
