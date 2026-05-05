@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\nicolas.suquillo\\\\Documents\\\\Fraylin\" -Recurse -Force)",
+      "Bash(Select-Object FullName, Extension)",
+      "Bash(Sort-Object FullName)",
+      "Bash(Format-Table -AutoSize)",
+      "PowerShell(@\\(Test-Path \"C:\\\\Users\\\\nicolas.suquillo\\\\Documents\\\\Fraylin\\\\package.json\"; Test-Path \"C:\\\\Users\\\\nicolas.suquillo\\\\Documents\\\\Fraylin\\\\next.config.js\"; Test-Path \"C:\\\\Users\\\\nicolas.suquillo\\\\Documents\\\\Fraylin\\\\next.config.ts\"; Test-Path \"C:\\\\Users\\\\nicolas.suquillo\\\\Documents\\\\Fraylin\\\\tsconfig.json\"\\) | Format-Table -AutoSize)",
+      "PowerShell(head *)",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --app --src-dir --import-alias \"@/*\" --yes)",
+      "Bash(npx create-next-app@latest . --typescript --tailwind --app --src-dir --import-alias \"@/*\" --yes --name fraylin-web)",
+      "Bash(npx create-next-app@latest temp-init --typescript --tailwind --app --src-dir --import-alias \"@/*\" --yes)",
+      "Bash(Copy-Item -Path \"temp-init\\\\*\" -Destination \".\" -Recurse -Force)",
+      "Bash(Remove-Item -Recurse -Force \"temp-init\")",
+      "PowerShell(Move-Item *)",
+      "Bash(npm run *)",
+      "Bash(python3 -c \"from PIL import Image; img = Image.open\\('/c/Users/nicolas.suquillo/Documents/Fraylin/public/logotipo.png'\\); print\\(f'Size: {img.size}, Mode: {img.mode}'\\)\")",
+      "Bash(identify \"/c/Users/nicolas.suquillo/Documents/Fraylin/public/logotipo.png\")",
+      "WebSearch"
+    ]
+  }
+}

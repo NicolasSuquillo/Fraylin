@@ -1,0 +1,48 @@
+@import url("https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700;800&family=Inter:wght@400;500;600&display=swap");
+@import "tailwindcss";
+
+:root {
+  --brand-primary: #c25b28;
+  --brand-dark: #7a3b1e;
+  --brand-light: #e8916a;
+  --accent-cream: #f5ecd7;
+  --neutral-dark: #2d2d2d;
+  --neutral-mid: #8a8a8a;
+  --neutral-light: #f9f5f0;
+}
+
+@theme inline {
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-dark: var(--brand-dark);
+  --color-brand-light: var(--brand-light);
+  --color-accent-cream: var(--accent-cream);
+  --color-neutral-dark: var(--neutral-dark);
+  --color-neutral-mid: var(--neutral-mid);
+  --color-neutral-light: var(--neutral-light);
+  --font-heading: "Montserrat", sans-serif;
+  --font-body: "Inter", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--neutral-light);
+  color: var(--neutral-dark);
+  font-family: var(--font-body);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+}

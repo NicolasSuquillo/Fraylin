@@ -1,0 +1,184 @@
+{
+  "categories": [
+    {
+      "slug": "ceramica",
+      "label": "Cerámica",
+      "icon": "Grid2X2",
+      "description": "Pisos y revestimientos cerámicos para interiores y exteriores"
+    },
+    {
+      "slug": "porcelanato",
+      "label": "Porcelanato",
+      "icon": "Sparkles",
+      "description": "Porcelanato de alta resistencia y acabado premium"
+    },
+    {
+      "slug": "griferia-sanitarios",
+      "label": "Grifería y Sanitarios",
+      "icon": "Droplets",
+      "description": "Griferías, lavabos, inodoros y accesorios de baño"
+    },
+    {
+      "slug": "muebles",
+      "label": "Muebles",
+      "icon": "LayoutPanelLeft",
+      "description": "Vanitorios, muebles de baño y cocina"
+    },
+    {
+      "slug": "repisas",
+      "label": "Repisas",
+      "icon": "Layers",
+      "description": "Repisas decorativas y funcionales"
+    },
+    {
+      "slug": "piedra-decorativa",
+      "label": "Piedra Decorativa",
+      "icon": "Mountain",
+      "description": "Fachaletas, piedra natural y artificial para fachadas"
+    },
+    {
+      "slug": "pegas-materiales",
+      "label": "Pegas y Materiales",
+      "icon": "Package",
+      "description": "Adhesivos, morteros y materiales de instalación"
+    },
+    {
+      "slug": "ferreteria",
+      "label": "Ferretería",
+      "icon": "Wrench",
+      "description": "Herramientas y materiales de construcción"
+    }
+  ],
+  "products": [
+    {
+      "id": "CER-001",
+      "category": "ceramica",
+      "name": "Cerámica Mármol Blanco 60x60",
+      "price": "desde $18/m²",
+      "description": "Cerámica de alta calidad con acabado mármol. Ideal para salas y dormitorios. Resistente a manchas y de fácil limpieza.",
+      "featured": true,
+      "images": [
+        {
+          "src": "/products/ceramica/ceramica-marmol-blanco-01.jpg",
+          "alt": "Cerámica mármol blanco 60x60"
+        }
+      ]
+    },
+    {
+      "id": "CER-002",
+      "category": "ceramica",
+      "name": "Cerámica Rústica 45x45",
+      "price": "desde $14/m²",
+      "description": "Acabado rústico antideslizante. Ideal para exteriores y terrazas.",
+      "featured": false,
+      "images": [
+        {
+          "src": "/products/ceramica/ceramica-rustica-45x45-01.jpg",
+          "alt": "Cerámica rústica 45x45"
+        }
+      ]
+    },
+    {
+      "id": "POR-001",
+      "category": "porcelanato",
+      "name": "Porcelanato Gris Cemento 60x60",
+      "price": "desde $22/m²",
+      "description": "Porcelanato de alta resistencia con efecto cemento. Perfecto para salas modernas.",
+      "featured": true,
+      "images": [
+        {
+          "src": "/products/porcelanato/porcelanato-gris-cemento-01.jpg",
+          "alt": "Porcelanato gris cemento 60x60"
+        }
+      ]
+    },
+    {
+      "id": "GRI-001",
+      "category": "griferia-sanitarios",
+      "name": "Grifería Monocomando Acero",
+      "price": "$45",
+      "description": "Grifería monocomando acabado cromado. Instalación disponible.",
+      "featured": false,
+      "images": [
+        {
+          "src": "/products/griferia-sanitarios/griferia-monocomando-01.jpg",
+          "alt": "Grifería monocomando acero cromado"
+        }
+      ]
+    },
+    {
+      "id": "MUE-001",
+      "category": "muebles",
+      "name": "Mueble de Baño con Lavabo",
+      "price": "desde $180",
+      "description": "Mueble de baño completo con lavabo incluido. Acabado en blanco mate.",
+      "featured": true,
+      "images": [
+        {
+          "src": "/products/muebles/mueble-bano-lavabo-01.jpg",
+          "alt": "Mueble de baño con lavabo blanco"
+        }
+      ]
+    },
+    {
+      "id": "REP-001",
+      "category": "repisas",
+      "name": "Repisa Flotante Madera",
+      "price": "desde $25",
+      "description": "Repisa flotante en madera natural. Disponible en varios tamaños.",
+      "featured": false,
+      "images": [
+        {
+          "src": "/products/repisas/repisa-flotante-madera-01.png",
+          "alt": "Repisa flotante de madera natural"
+        },
+        {
+          "src": "/products/repisas/repisa-flotante-madera-02.png",
+          "alt": "Repisa flotante de madera natural"
+        }
+      ]
+    },
+    {
+      "id": "PIE-001",
+      "category": "piedra-decorativa",
+      "name": "Fachaleta Piedra Natural",
+      "price": "desde $28/m²",
+      "description": "Piedra natural para fachadas y muros interiores. Acabado rústico elegante.",
+      "featured": true,
+      "images": [
+        {
+          "src": "/products/piedra-decorativa/fachaleta-piedra-natural-01.jpg",
+          "alt": "Fachaleta de piedra natural para fachadas"
+        }
+      ]
+    },
+    {
+      "id": "PEG-001",
+      "category": "pegas-materiales",
+      "name": "Pegante para Cerámica y Porcelanato",
+      "price": "$8 / saco 25kg",
+      "description": "Adhesivo cementoso de alta resistencia para instalación de cerámica y porcelanato.",
+      "featured": false,
+      "images": [
+        {
+          "src": "/products/pegas-materiales/pegante-ceramica-01.jpg",
+          "alt": "Pegante para cerámica y porcelanato"
+        }
+      ]
+    },
+    {
+      "id": "FER-001",
+      "category": "ferreteria",
+      "name": "Juego de Herramientas Básico",
+      "price": "desde $35",
+      "description": "Set de herramientas esenciales para el hogar y pequeñas reparaciones.",
+      "featured": false,
+      "images": [
+        {
+          "src": "/products/ferreteria/herramientas-basico-01.jpg",
+          "alt": "Juego de herramientas básico"
+        }
+      ]
+    }
+  ]
+}
