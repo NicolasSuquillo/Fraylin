@@ -125,15 +125,39 @@
       "category": "repisas",
       "name": "Repisa Flotante Madera",
       "price": "desde $25",
-      "description": "Repisa flotante en madera natural. Disponible en varios tamaños.",
+      "description": "Repisa flotante.",
       "featured": false,
       "images": [
         {
-          "src": "/products/repisas/repisa-flotante-madera-01.png",
+          "src": "/products/repisas/REP-001-01.png",
           "alt": "Repisa flotante de madera natural"
         },
         {
-          "src": "/products/repisas/repisa-flotante-madera-02.png",
+          "src": "/products/repisas/REP-001-02.png",
+          "alt": "Repisa flotante de madera natural"
+        }
+        ,
+        {
+          "src": "/products/repisas/REP-001-03.png",
+          "alt": "Repisa flotante de madera natural"
+        }
+        ,
+        {
+          "src": "/products/repisas/REP-001-04.png",
+          "alt": "Repisa flotante de madera natural"
+        }
+      ]
+    },
+    {
+      "id": "REP-002",
+      "category": "repisas",
+      "name": "Repisa de llaves multiuso",
+      "price": "desde $10",
+      "description": "Repisa organizador moderno para llaves y accesorios.",
+      "featured": false,
+      "images": [
+        {
+          "src": "/products/repisas/REP-002-01.png",
           "alt": "Repisa flotante de madera natural"
         }
       ]
