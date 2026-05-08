@@ -3,68 +3,101 @@
 import { useState } from "react";
 import type { Product, Category } from "@/types";
 import SectionHeading from "@/components/ui/SectionHeading";
+import Reveal from "@/components/ui/Reveal";
 import CategoryTabs from "@/components/products/CategoryTabs";
 import ProductCard from "@/components/products/ProductCard";
-import ProductModal from "@/components/products/ProductModal";
+import ProductSearch from "@/components/products/ProductSearch";
 
 interface ProductosSectionProps {
   products: Product[];
   categories: Category[];
+  onProductSelect: (product: Product) => void;
 }
 
 export default function ProductosSection({
   products,
   categories,
+  onProductSelect,
 }: ProductosSectionProps) {
   const [selectedCategory, setSelectedCategory] = useState("todos");
-  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [query, setQuery] = useState("");
 
-  const filtered =
-    selectedCategory === "todos"
-      ? products
-      : products.filter((p) => p.category === selectedCategory);
+  const filtered = products
+    .filter((p) => {
+      const q = query.trim().toLowerCase();
+      if (!q) return true;
+      return `${p.name} ${p.description ?? ""}`.toLowerCase().includes(q);
+    })
+    .filter((p) => selectedCategory === "todos" || p.category === selectedCategory);
+
+  const sortedProducts = [...filtered].sort(
+    (a, b) => Number(!!b.featured) - Number(!!a.featured)
+  );
+
+  const hasQuery = query.trim().length > 0;
 
   return (
     <section id="productos" className="py-20 bg-neutral-light">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <SectionHeading
-          title="Nuestros Productos"
-          subtitle="Selecciona una categoría y encuentra lo que necesitas para tu proyecto"
-        />
-
-        <div className="mb-8">
-          <CategoryTabs
-            categories={categories}
-            selected={selectedCategory}
-            onSelect={setSelectedCategory}
-            totalCount={products.length}
+        <Reveal delay={0}>
+          <SectionHeading
+            title="Nuestros Productos"
+            subtitle="Selecciona una categoría y encuentra lo que necesitas para tu proyecto"
           />
+        </Reveal>
+
+        <div className="mb-8 space-y-4">
+          <Reveal delay={0.05}>
+            <ProductSearch
+              products={products}
+              categories={categories}
+              query={query}
+              onQueryChange={setQuery}
+              onPickProduct={onProductSelect}
+            />
+          </Reveal>
+          <Reveal delay={0.08}>
+            <CategoryTabs
+              categories={categories}
+              selected={selectedCategory}
+              onSelect={setSelectedCategory}
+              totalCount={products.length}
+            />
+          </Reveal>
         </div>
 
-        {filtered.length === 0 ? (
-          <div className="text-center py-16 text-neutral-mid">
-            <p className="text-lg">No hay productos en esta categoría aún.</p>
-            <p className="text-sm mt-2">Contáctanos para más información.</p>
+        {sortedProducts.length === 0 ? (
+          <div className="text-center py-16 text-text-secondary">
+            <p className="text-lg">
+              {hasQuery
+                ? `No encontramos resultados para “${query.trim()}”.`
+                : "No hay productos en esta categoría aún."}
+            </p>
+            <p className="text-sm mt-2">
+              {hasQuery
+                ? "Prueba con otras palabras o revisa la categoría seleccionada."
+                : "Contáctanos para más información."}
+            </p>
+            {hasQuery && (
+              <button
+                type="button"
+                onClick={() => setQuery("")}
+                className="mt-4 text-sm font-semibold text-brand-primary hover:underline"
+              >
+                Limpiar búsqueda
+              </button>
+            )}
           </div>
         ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {filtered.map((product) => (
-              <ProductCard
-                key={product.id}
-                product={product}
-                onSelect={setSelectedProduct}
-              />
+            {sortedProducts.map((product, i) => (
+              <Reveal key={product.id} delay={i * 0.05}>
+                <ProductCard product={product} onSelect={onProductSelect} />
+              </Reveal>
             ))}
           </div>
         )}
       </div>
-
-      {selectedProduct && (
-        <ProductModal
-          product={selectedProduct}
-          onClose={() => setSelectedProduct(null)}
-        />
-      )}
     </section>
   );
 }

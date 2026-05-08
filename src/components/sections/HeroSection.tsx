@@ -1,5 +1,6 @@
 import { ArrowRight, ChevronDown, LayoutGrid } from "lucide-react";
 import { BUSINESS, buildWhatsAppUrl } from "@/lib/constants";
+import Reveal from "@/components/ui/Reveal";
 
 export default function HeroSection() {
   const waMessage = "Hola Fraylin, me gustaría solicitar una cotización.";
@@ -10,73 +11,52 @@ export default function HeroSection() {
       id="inicio"
       className="relative min-h-screen flex items-center justify-center overflow-hidden"
     >
-      {/* Base: laminado / madera maciza — tonos roble–nogal */}
       <div
         className="absolute inset-0"
         style={{
           background: `
-            radial-gradient(ellipse 130% 85% at 50% -15%, rgba(255, 232, 205, 0.22) 0%, transparent 52%),
-            linear-gradient(
-              165deg,
-              #7d634f 0%,
-              #6a5243 22%,
-              #8b7260 42%,
-              #5c4639 68%,
-              #4a382e 100%
-            )
+            radial-gradient(ellipse 120% 80% at 60% 100%, rgba(201,168,76,0.15) 0%, transparent 60%),
+            radial-gradient(ellipse 80% 60% at 10% 0%, rgba(201,168,76,0.08) 0%, transparent 50%),
+            linear-gradient(165deg, #0a0a0a 0%, #1a1507 55%, rgba(201,168,76,0.12) 100%)
           `,
         }}
       />
-      {/* Tablillas horizontales (piso flotante), juntas y veta fina */}
-      <div
-        className="pointer-events-none absolute inset-0"
-        style={{
-          opacity: 0.92,
-          backgroundImage: [
-            // Brillo suave tipo barniz en el borde superior de cada tabla
-            "repeating-linear-gradient(180deg, rgba(255,240,220,0.07) 0px, transparent 4px, transparent 76px)",
-            // Juntas entre tablas (cada ~76px, como vista cenital del piso)
-            "repeating-linear-gradient(180deg, transparent 0px, transparent 73px, rgba(22,14,10,0.6) 73px, rgba(42,28,20,0.35) 76px)",
-            // Variación de tonalidad entre “piezas” (anchos alternados)
-            "repeating-linear-gradient(90deg, rgba(55,38,28,0.18) 0px, rgba(110,88,72,0.06) 210px, rgba(65,46,36,0.2) 430px, rgba(95,74,60,0.08) 680px)",
-            // Veta longitudinal muy fina (textura madera)
-            "repeating-linear-gradient(92deg, transparent 0px, transparent 2px, rgba(35,24,18,0.14) 2px, rgba(35,24,18,0.14) 3px, transparent 4px, transparent 11px)",
-          ].join(","),
-        }}
-      />
-      {/* Lavado cálido para legibilidad del texto blanco */}
-      <div
-        className="pointer-events-none absolute inset-0 bg-gradient-to-b from-black/25 via-transparent to-black/35"
-        aria-hidden
-      />
 
       <div className="relative z-10 text-center px-4 sm:px-6 max-w-4xl mx-auto pt-20">
-        <h1
-          className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black text-white mb-6 leading-tight"
-          style={{ fontFamily: "var(--font-heading)" }}
-        >
-          Acabados de
-          <span className="block text-accent-cream">alta calidad</span>
-          para embellecer tu hogar
-        </h1>
-
-        <p className="text-white/85 text-lg md:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
-          Cerámica, porcelanato, grifería, muebles de baño, piedra decorativa y
-          más. Asesoría e instalación profesional en Quito.
-        </p>
-
-        <div className="flex flex-col sm:flex-row gap-4 sm:gap-5 justify-center items-stretch sm:items-center">
-          <a
-            href="#productos"
-            className="group relative inline-flex min-h-[3.25rem] items-center justify-center gap-2.5 overflow-hidden rounded-2xl border border-white/30 bg-white/95 px-8 py-3.5 text-base font-semibold text-brand-dark shadow-[0_10px_40px_-12px_rgba(0,0,0,0.45)] ring-1 ring-white/50 backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:border-white/50 hover:bg-white hover:text-brand-primary hover:shadow-[0_16px_48px_-14px_rgba(194,91,40,0.45)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-white active:translate-y-0 sm:text-lg"
+        <Reveal immediate delay={0}>
+          <h1
+            className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 leading-tight tracking-wider"
             style={{ fontFamily: "var(--font-heading)" }}
           >
-            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-primary/10 text-brand-primary transition-colors group-hover:bg-brand-primary/15">
+            Acabados de
+            <span className="block text-brand-primary">alta calidad</span>
+            para embellecer tu hogar
+          </h1>
+        </Reveal>
+
+        <Reveal immediate delay={0.08}>
+          <div className="w-24 h-px bg-brand-primary mx-auto my-8" />
+        </Reveal>
+
+        <Reveal immediate delay={0.14}>
+          <p className="text-accent-cream/80 text-lg md:text-xl mb-10 max-w-2xl mx-auto leading-relaxed">
+            Cerámica, porcelanato, grifería, muebles de baño, piedra decorativa y
+            más. Asesoría e instalación profesional en Quito.
+          </p>
+        </Reveal>
+
+        <Reveal immediate delay={0.2} className="flex flex-col sm:flex-row gap-4 sm:gap-5 justify-center items-stretch sm:items-center">
+          <a
+            href="#productos"
+            className="group relative inline-flex min-h-[3.25rem] items-center justify-center gap-2.5 overflow-hidden rounded-2xl border border-brand-primary bg-transparent px-8 py-3.5 text-base font-semibold text-brand-primary backdrop-blur-sm transition-all duration-300 hover:-translate-y-0.5 hover:bg-brand-primary hover:text-neutral-dark hover:shadow-[0_16px_48px_-14px_rgba(201,168,76,0.45)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-primary active:translate-y-0 sm:text-lg"
+            style={{ fontFamily: "var(--font-heading)" }}
+          >
+            <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-brand-primary/10 text-brand-primary transition-colors group-hover:bg-neutral-dark/10">
               <LayoutGrid className="h-[18px] w-[18px] sm:h-5 sm:w-5" strokeWidth={2.25} aria-hidden />
             </span>
             <span className="tracking-tight">Ver catálogo</span>
             <ArrowRight
-              className="h-5 w-5 shrink-0 text-brand-primary/70 transition-transform duration-300 group-hover:translate-x-0.5 group-hover:text-brand-primary"
+              className="h-5 w-5 shrink-0 transition-transform duration-300 group-hover:translate-x-0.5"
               aria-hidden
             />
           </a>
@@ -101,23 +81,25 @@ export default function HeroSection() {
               aria-hidden
             />
           </a>
-        </div>
+        </Reveal>
 
-        <div className="flex flex-wrap justify-center gap-6 mt-14 text-white/70 text-sm">
+        <Reveal immediate delay={0.28} className="flex flex-wrap justify-center gap-6 mt-14 text-accent-cream/70 text-sm">
           <span className="flex items-center gap-1.5">✓ Marcas nacionales e importadas</span>
           <span className="flex items-center gap-1.5">✓ Instalación profesional</span>
           <span className="flex items-center gap-1.5">✓ Servicio a domicilio</span>
           <span className="flex items-center gap-1.5">✓ Atención personalizada</span>
-        </div>
+        </Reveal>
       </div>
 
-      <a
-        href="#servicios"
-        className="absolute bottom-8 left-1/2 -translate-x-1/2 text-white/60 hover:text-white transition-colors animate-bounce"
-        aria-label="Bajar a servicios"
-      >
-        <ChevronDown size={32} />
-      </a>
+      <Reveal immediate delay={0.36} className="absolute bottom-8 left-1/2 -translate-x-1/2">
+        <a
+          href="#servicios"
+          className="text-accent-cream/60 hover:text-brand-primary transition-colors animate-bounce inline-flex"
+          aria-label="Bajar a servicios"
+        >
+          <ChevronDown size={32} />
+        </a>
+      </Reveal>
     </section>
   );
 }

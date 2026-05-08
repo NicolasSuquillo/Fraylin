@@ -1,14 +1,92 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import * as LucideIcons from "lucide-react";
+import { ChevronDown, Box } from "lucide-react";
 import type { Category } from "@/types";
 
 const LUCIDE_ICONS = [
   "Grid2X2", "Sparkles", "Droplets", "LayoutPanelLeft", "Layers",
   "Mountain", "Package", "Wrench", "Home", "Star", "Box", "Tag",
   "ShoppingBag", "Hammer", "Paintbrush", "Lightbulb",
-];
+] as const;
+
+function LucideIconPreview({ name, size = 18 }: { name: string; size?: number }) {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const Icon = (LucideIcons as any)[name] as React.ComponentType<{ size?: number; className?: string }> | undefined;
+  if (!Icon) return <Box size={size} className="text-gray-400 shrink-0" aria-hidden />;
+  return <Icon size={size} className="text-gray-700 shrink-0" aria-hidden />;
+}
+
+function IconPicker({
+  value,
+  onChange,
+  id,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  id?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleDoc(e: MouseEvent) {
+      if (rootRef.current && !rootRef.current.contains(e.target as Node)) {
+        setOpen(false);
+      }
+    }
+    document.addEventListener("mousedown", handleDoc);
+    return () => document.removeEventListener("mousedown", handleDoc);
+  }, []);
+
+  return (
+    <div className="relative" ref={rootRef}>
+      <button
+        type="button"
+        id={id}
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2 text-sm text-left focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
+        aria-expanded={open}
+        aria-haspopup="listbox"
+      >
+        <LucideIconPreview name={value} size={18} />
+        <span className="flex-1 truncate text-gray-900">{value}</span>
+        <ChevronDown
+          className={`w-4 h-4 text-gray-400 shrink-0 transition-transform ${open ? "rotate-180" : ""}`}
+          aria-hidden
+        />
+      </button>
+      {open && (
+        <ul
+          className="absolute z-30 bottom-full left-0 mb-1 max-h-56 w-full overflow-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+          role="listbox"
+        >
+          {LUCIDE_ICONS.map((name) => (
+            <li key={name} role="presentation">
+              <button
+                type="button"
+                role="option"
+                aria-selected={value === name}
+                onClick={() => {
+                  onChange(name);
+                  setOpen(false);
+                }}
+                className={`flex w-full items-center gap-2.5 px-3 py-2 text-sm text-left hover:bg-amber-50 ${
+                  value === name ? "bg-amber-50 font-medium text-amber-900" : "text-gray-800"
+                }`}
+              >
+                <LucideIconPreview name={name} size={18} />
+                <span className="font-mono text-xs">{name}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}
 
 function emptyCategory(): Category {
   return { slug: "", label: "", icon: "Box", description: "" };
@@ -103,7 +181,12 @@ export default function CategoriesManager({ categories }: { categories: Category
               <tr key={c.slug} className="hover:bg-gray-50">
                 <td className="px-4 py-3 font-mono text-xs text-gray-500">{c.slug}</td>
                 <td className="px-4 py-3 font-medium text-gray-800">{c.label}</td>
-                <td className="px-4 py-3 text-gray-600">{c.icon}</td>
+                <td className="px-4 py-3 text-gray-600">
+                  <span className="inline-flex items-center gap-2">
+                    <LucideIconPreview name={c.icon} size={16} />
+                    <span className="font-mono text-xs">{c.icon}</span>
+                  </span>
+                </td>
                 <td className="px-4 py-3 space-x-2">
                   <button
                     onClick={() => setEdit({ slug: c.slug, data: { ...c } })}
@@ -140,14 +223,16 @@ export default function CategoriesManager({ categories }: { categories: Category
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Icono (Lucide)</label>
-              <select
+              <label htmlFor="edit-icon" className="block text-sm font-medium text-gray-700 mb-1">
+                Icono (Lucide)
+              </label>
+              <IconPicker
+                id="edit-icon"
                 value={edit.data.icon}
-                onChange={(e) => setEdit((s) => s && { ...s, data: { ...s.data, icon: e.target.value } })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
-              >
-                {LUCIDE_ICONS.map((i) => <option key={i} value={i}>{i}</option>)}
-              </select>
+                onChange={(icon) =>
+                  setEdit((s) => s && { ...s, data: { ...s.data, icon } })
+                }
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>
@@ -198,14 +283,14 @@ export default function CategoriesManager({ categories }: { categories: Category
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Icono (Lucide)</label>
-              <select
+              <label htmlFor="new-icon" className="block text-sm font-medium text-gray-700 mb-1">
+                Icono (Lucide)
+              </label>
+              <IconPicker
+                id="new-icon"
                 value={newCat.icon}
-                onChange={(e) => setNewField("icon", e.target.value)}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
-              >
-                {LUCIDE_ICONS.map((i) => <option key={i} value={i}>{i}</option>)}
-              </select>
+                onChange={(icon) => setNewField("icon", icon)}
+              />
             </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Descripción</label>

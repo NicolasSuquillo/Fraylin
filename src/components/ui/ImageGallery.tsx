@@ -57,9 +57,9 @@ export default function ImageGallery({
 
   return (
     <>
-      <div className="flex flex-col gap-3 w-full">
+      <div className="flex min-h-0 w-full flex-1 flex-col gap-3">
         <div
-          className="relative flex justify-center bg-gray-100 rounded-xl overflow-hidden cursor-zoom-in group"
+          className="relative flex min-h-[min(260px,42vh)] flex-1 w-full min-w-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-b from-stone-100 to-stone-200/80 shadow-inner cursor-zoom-in group lg:min-h-[min(480px,calc(92vh-11rem))] lg:max-h-[min(78vh,calc(92vh-11rem))]"
           onClick={() => setLightbox(true)}
         >
           <SafeImage
@@ -68,8 +68,8 @@ export default function ImageGallery({
             alt={images[current].alt}
             width={dims.w}
             height={dims.h}
-            className="object-contain w-auto h-auto max-w-full max-h-[65vh]"
-            sizes="(max-width: 1024px) 95vw, 520px"
+            className="object-contain max-h-full max-w-full w-auto h-auto p-2 sm:p-3"
+            sizes="(max-width: 1024px) 92vw, min(860px, 65vw)"
             priority
             onLoadingComplete={(img) =>
               setDims({ w: img.naturalWidth, h: img.naturalHeight })

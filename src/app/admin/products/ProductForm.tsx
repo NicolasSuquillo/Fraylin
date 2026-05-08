@@ -156,6 +156,8 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
   const [idFlash, setIdFlash] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
+  const [uploadingIdx, setUploadingIdx] = useState<number | null>(null);
+  const fileInputRefs = useRef<(HTMLInputElement | null)[]>([]);
 
   const idExists =
     mode === "new" &&
@@ -192,9 +194,30 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
     setProduct((p) => ({ ...p, images: p.images.filter((_, i) => i !== idx) }));
   }
 
+  async function handleFileUpload(idx: number, file: File) {
+    if (!product.category) return;
+    setUploadingIdx(idx);
+    const form = new FormData();
+    form.append("file", file);
+    form.append("category", product.category);
+    const res = await fetch("/api/admin/upload", { method: "POST", body: form });
+    setUploadingIdx(null);
+    if (res.ok) {
+      const { src } = await res.json();
+      setImage(idx, "src", src);
+    } else {
+      const data = await res.json();
+      setError(data.error ?? "Error al subir imagen");
+    }
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (idExists) return;
+    if (product.images.some((im) => !im.src?.trim())) {
+      setError("Sube todas las imágenes antes de guardar.");
+      return;
+    }
     setError("");
     setSaving(true);
 
@@ -329,13 +352,46 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
             <div key={idx} className="flex gap-2 items-start bg-gray-50 rounded-lg p-3">
               <span className="text-xs text-gray-400 mt-2 w-5 shrink-0">{idx + 1}.</span>
               <div className="flex-1 space-y-2">
-                <input
-                  value={img.src}
-                  onChange={(e) => setImage(idx, "src", e.target.value)}
-                  placeholder="/products/ceramica/foto.jpg"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 focus:ring-amber-500"
-                  required
-                />
+                {/* Preview + upload */}
+                <div className="flex gap-2 items-center flex-wrap">
+                  {img.src ? (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={img.src}
+                      alt={img.alt || "Vista previa"}
+                      className="w-14 h-14 object-cover rounded-lg border border-gray-200 shrink-0"
+                    />
+                  ) : (
+                    <div
+                      className="w-14 h-14 rounded-lg border border-dashed border-gray-300 bg-white shrink-0 flex items-center justify-center text-[10px] text-gray-400 text-center px-1"
+                      aria-hidden
+                    >
+                      Sin archivo
+                    </div>
+                  )}
+                  <input
+                    ref={(el) => { fileInputRefs.current[idx] = el; }}
+                    type="file"
+                    accept="image/*"
+                    className="sr-only"
+                    tabIndex={-1}
+                    aria-label={`Elegir archivo para imagen ${idx + 1}`}
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) handleFileUpload(idx, file);
+                      e.target.value = "";
+                    }}
+                  />
+                  <button
+                    type="button"
+                    disabled={!product.category || uploadingIdx === idx}
+                    title={!product.category ? "Selecciona una categoría primero" : img.src ? "Cambiar imagen" : "Subir imagen"}
+                    onClick={() => fileInputRefs.current[idx]?.click()}
+                    className="shrink-0 px-4 py-2 text-sm rounded-lg border border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 transition disabled:opacity-40 disabled:cursor-not-allowed font-medium"
+                  >
+                    {uploadingIdx === idx ? "Subiendo…" : img.src ? "Cambiar imagen" : "Subir imagen"}
+                  </button>
+                </div>
                 <input
                   value={img.alt}
                   onChange={(e) => setImage(idx, "alt", e.target.value)}

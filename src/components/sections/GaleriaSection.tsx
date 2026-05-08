@@ -1,83 +1,99 @@
 "use client";
 
 import { useState } from "react";
-import Image from "next/image";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import SectionHeading from "@/components/ui/SectionHeading";
+import SafeImage from "@/components/ui/SafeImage";
+import Reveal from "@/components/ui/Reveal";
 
-const galleryItems = [
-  {
-    src: "/gallery/trabajo-01.jpg",
-    alt: "Instalación de cerámica en baño",
-    caption: "Instalación de cerámica",
-  },
-  {
-    src: "/gallery/trabajo-02.jpg",
-    alt: "Colocación de porcelanato en sala",
-    caption: "Porcelanato en sala",
-  },
-  {
-    src: "/gallery/trabajo-03.jpg",
-    alt: "Mueble de baño instalado",
-    caption: "Mueble de baño completo",
-  },
-  {
-    src: "/gallery/trabajo-04.jpg",
-    alt: "Fachaleta de piedra en fachada",
-    caption: "Piedra decorativa exterior",
-  },
-  {
-    src: "/gallery/trabajo-05.jpg",
-    alt: "Grifería instalada en cocina",
-    caption: "Grifería de cocina",
-  },
-  {
-    src: "/gallery/trabajo-06.jpg",
-    alt: "Piso flotante instalado",
-    caption: "Piso flotante",
-  },
+type GalleryItemData = {
+  src: string;
+  alt: string;
+  caption: string;
+};
+
+/**
+ * Añade imágenes en `public/gallery/…` y referencia sus rutas aquí.
+ * Con el array vacío se muestran 6 baldosas con `/placeholder.svg` (“Foto próximamente”), igual que en productos sin imagen.
+ */
+const galleryItems: GalleryItemData[] = [
+  // { src: "/gallery/trabajo-01.jpg", alt: "Instalación de cerámica en baño", caption: "Instalación de cerámica" },
+  // { src: "/gallery/trabajo-02.jpg", alt: "Colocación de porcelanato en sala", caption: "Porcelanato en sala" },
+  // { src: "/gallery/trabajo-03.jpg", alt: "Mueble de baño instalado", caption: "Mueble de baño completo" },
+  // { src: "/gallery/trabajo-04.jpg", alt: "Fachaleta de piedra en fachada", caption: "Piedra decorativa exterior" },
+  // { src: "/gallery/trabajo-05.jpg", alt: "Grifería instalada en cocina", caption: "Grifería de cocina" },
+  // { src: "/gallery/trabajo-06.jpg", alt: "Piso flotante instalado", caption: "Piso flotante" },
 ];
+
+const PLACEHOLDER_SLOTS = 6;
 
 export default function GaleriaSection() {
   const [lightbox, setLightbox] = useState<number | null>(null);
 
+  const hasPhotos = galleryItems.length > 0;
+
   const prev = () =>
-    setLightbox((c) => (c === null ? null : c === 0 ? galleryItems.length - 1 : c - 1));
+    setLightbox((c) =>
+      c === null ? null : c === 0 ? galleryItems.length - 1 : c - 1
+    );
   const next = () =>
-    setLightbox((c) => (c === null ? null : c === galleryItems.length - 1 ? 0 : c + 1));
+    setLightbox((c) =>
+      c === null ? null : c === galleryItems.length - 1 ? 0 : c + 1
+    );
 
   return (
-    <section id="galeria" className="py-20 bg-white">
+    <section id="galeria" className="py-20 bg-neutral-light">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <SectionHeading
-          title="Galería de Trabajos"
-          subtitle="Proyectos realizados con dedicación y materiales de primera calidad"
-        />
+        <Reveal delay={0}>
+          <SectionHeading
+            title="Galería de Trabajos"
+            subtitle="Proyectos realizados con dedicación y materiales de primera calidad"
+          />
+        </Reveal>
 
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-          {galleryItems.map((item, i) => (
-            <button
-              key={i}
-              onClick={() => setLightbox(i)}
-              className="group relative aspect-[4/3] overflow-hidden rounded-2xl bg-gray-100"
-            >
-              <Image
-                src={item.src}
-                alt={item.alt}
-                fill
-                className="object-cover group-hover:scale-105 transition-transform duration-500"
-                sizes="(max-width: 768px) 50vw, 33vw"
-              />
-              <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-end p-3">
-                <span className="text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity">
-                  {item.caption}
-                </span>
-              </div>
-            </button>
-          ))}
+          {!hasPhotos
+            ? Array.from({ length: PLACEHOLDER_SLOTS }, (_, i) => (
+                <Reveal key={`placeholder-${i}`} delay={i * 0.06}>
+                <div
+                  className="relative aspect-[4/3] overflow-hidden rounded-2xl border border-stone-200 bg-neutral-light"
+                >
+                  <SafeImage
+                    src="/placeholder.svg"
+                    alt="Foto próximamente"
+                    fill
+                    className="object-cover"
+                    sizes="(max-width: 768px) 50vw, 33vw"
+                  />
+                </div>
+                </Reveal>
+              ))
+            : galleryItems.map((item, i) => (
+                <Reveal key={`${item.src}-${i}`} delay={i * 0.06}>
+                <button
+                  type="button"
+                  onClick={() => setLightbox(i)}
+                  className="group relative aspect-[4/3] overflow-hidden rounded-2xl bg-neutral-light text-left border border-transparent hover:border-brand-primary/30 transition-colors w-full"
+                >
+                  <SafeImage
+                    src={item.src}
+                    alt={item.alt}
+                    fill
+                    className="object-cover group-hover:scale-105 transition-transform duration-500"
+                    sizes="(max-width: 768px) 50vw, 33vw"
+                  />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-[rgba(201,168,76,0.25)] transition-colors flex items-end p-3">
+                    <span className="text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md">
+                      {item.caption}
+                    </span>
+                  </div>
+                </button>
+                </Reveal>
+              ))}
         </div>
 
-        <p className="text-center text-neutral-mid text-sm mt-6">
+        <Reveal delay={0.2}>
+        <p className="text-center text-text-secondary text-sm mt-6">
           ¿Quieres ver más trabajos?{" "}
           <a
             href="https://www.instagram.com/fraylin.acabados"
@@ -88,9 +104,10 @@ export default function GaleriaSection() {
             Síguenos en Instagram
           </a>
         </p>
+        </Reveal>
       </div>
 
-      {lightbox !== null && (
+      {hasPhotos && lightbox !== null && (
         <div
           className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center p-4"
           onClick={(e) => {
@@ -98,6 +115,7 @@ export default function GaleriaSection() {
           }}
         >
           <button
+            type="button"
             onClick={() => setLightbox(null)}
             className="absolute top-4 right-4 text-white/70 hover:text-white"
             aria-label="Cerrar"
@@ -105,6 +123,7 @@ export default function GaleriaSection() {
             <X size={28} />
           </button>
           <button
+            type="button"
             onClick={prev}
             className="absolute left-4 text-white/70 hover:text-white"
             aria-label="Anterior"
@@ -112,7 +131,7 @@ export default function GaleriaSection() {
             <ChevronLeft size={36} />
           </button>
           <div className="relative w-full max-w-3xl aspect-[4/3]">
-            <Image
+            <SafeImage
               src={galleryItems[lightbox].src}
               alt={galleryItems[lightbox].alt}
               fill
@@ -121,6 +140,7 @@ export default function GaleriaSection() {
             />
           </div>
           <button
+            type="button"
             onClick={next}
             className="absolute right-4 text-white/70 hover:text-white"
             aria-label="Siguiente"

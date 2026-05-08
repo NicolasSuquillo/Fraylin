@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Phone, MapPin, Clock, MessageCircle, Send } from "lucide-react";
 import SectionHeading from "@/components/ui/SectionHeading";
+import Reveal from "@/components/ui/Reveal";
 import { BUSINESS, buildWhatsAppUrl } from "@/lib/constants";
 
 export default function ContactoSection() {
@@ -18,15 +19,18 @@ export default function ContactoSection() {
   return (
     <section id="contacto" className="py-20 bg-neutral-dark text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <SectionHeading
-          title="Contáctanos"
-          subtitle="Estamos listos para ayudarte con tu proyecto"
-          light
-        />
+        <Reveal delay={0}>
+          <SectionHeading
+            title="Contáctanos"
+            subtitle="Estamos listos para ayudarte con tu proyecto"
+            light
+          />
+        </Reveal>
 
         {/* Fila 1: formulario + info de contacto */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
           {/* Formulario */}
+          <Reveal delay={0.06}>
           <div className="bg-white/5 rounded-3xl p-6 md:p-8 border border-white/10">
             <h3
               className="text-xl font-bold text-white mb-6"
@@ -43,7 +47,7 @@ export default function ContactoSection() {
                   value={form.nombre}
                   onChange={(e) => setForm((f) => ({ ...f, nombre: e.target.value }))}
                   placeholder="Tu nombre"
-                  className="w-full bg-white/10 border border-white/20 text-white placeholder-white/30 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-light transition-colors"
+                  className="w-full bg-white/10 border border-white/20 text-white placeholder-white/30 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-primary transition-colors"
                 />
               </div>
               <div>
@@ -53,7 +57,7 @@ export default function ContactoSection() {
                   value={form.telefono}
                   onChange={(e) => setForm((f) => ({ ...f, telefono: e.target.value }))}
                   placeholder="0987 654 321"
-                  className="w-full bg-white/10 border border-white/20 text-white placeholder-white/30 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-light transition-colors"
+                  className="w-full bg-white/10 border border-white/20 text-white placeholder-white/30 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-primary transition-colors"
                 />
               </div>
               <div>
@@ -64,7 +68,7 @@ export default function ContactoSection() {
                   onChange={(e) => setForm((f) => ({ ...f, mensaje: e.target.value }))}
                   placeholder="¿Qué producto o servicio necesitas? ¿Tienes alguna pregunta?"
                   rows={4}
-                  className="w-full bg-white/10 border border-white/20 text-white placeholder-white/30 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-light transition-colors resize-none"
+                  className="w-full bg-white/10 border border-white/20 text-white placeholder-white/30 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-brand-primary transition-colors resize-none"
                 />
               </div>
               <button
@@ -79,8 +83,10 @@ export default function ContactoSection() {
               </p>
             </form>
           </div>
+          </Reveal>
 
           {/* Info de contacto + redes */}
+          <Reveal delay={0.12}>
           <div className="flex flex-col gap-6">
             <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
               <h3
@@ -150,9 +156,11 @@ export default function ContactoSection() {
               </div>
             </div>
           </div>
+          </Reveal>
         </div>
 
         {/* Fila 2: mapa ancho completo */}
+        <Reveal delay={0.18}>
         <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
           <h3
             className="text-base font-semibold text-brand-light mb-4"
@@ -160,7 +168,7 @@ export default function ContactoSection() {
           >
             Ubicación
           </h3>
-          <div className="relative w-full aspect-[21/9] min-h-[220px] rounded-xl overflow-hidden border border-white/10 bg-black/30 shadow-inner">
+          <div className="relative w-full aspect-[21/9] min-h-[220px] rounded-xl overflow-hidden border border-brand-primary/20 bg-black/30 shadow-inner">
             <iframe
               title="Mapa: Fraylin — Avenida Juan de Molinares, Quito"
               src={BUSINESS.mapsEmbedUrl}
@@ -180,6 +188,7 @@ export default function ContactoSection() {
             Abrir dirección en Google Maps
           </a>
         </div>
+        </Reveal>
       </div>
     </section>
   );

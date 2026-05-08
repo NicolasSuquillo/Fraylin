@@ -1,7 +1,7 @@
-import { getAllProducts, getCategories } from "@/lib/products";
+import { getAllProducts, getCategories, getFeaturedProducts } from "@/lib/products";
 import HeroSection from "@/components/sections/HeroSection";
 import ServiciosSection from "@/components/sections/ServiciosSection";
-import ProductosSection from "@/components/sections/ProductosSection";
+import ProductsCatalog from "@/components/products/ProductsCatalog";
 import GaleriaSection from "@/components/sections/GaleriaSection";
 import NosotrosSection from "@/components/sections/NosotrosSection";
 import ContactoSection from "@/components/sections/ContactoSection";
@@ -13,6 +13,7 @@ import ScrollToTop from "@/components/ui/ScrollToTop";
 export default function Home() {
   const products = getAllProducts();
   const categories = getCategories();
+  const featuredProducts = getFeaturedProducts();
 
   return (
     <>
@@ -21,7 +22,11 @@ export default function Home() {
       <main>
         <HeroSection />
         <ServiciosSection />
-        <ProductosSection products={products} categories={categories} />
+        <ProductsCatalog
+          products={products}
+          categories={categories}
+          featuredProducts={featuredProducts}
+        />
         <GaleriaSection />
         <NosotrosSection />
         <ContactoSection />
