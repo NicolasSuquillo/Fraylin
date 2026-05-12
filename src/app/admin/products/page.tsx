@@ -16,12 +16,12 @@ export default async function ProductsPage() {
   const categories: Category[] = data.categories;
 
   return (
-    <div>
-      <div className="flex items-center justify-between mb-6">
+    <div className="max-w-6xl mx-auto">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between mb-6">
         <h1 className="text-2xl font-bold text-gray-800">Productos</h1>
         <a
           href="/admin/products/new"
-          className="bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition"
+          className="inline-flex items-center justify-center min-h-[48px] w-full sm:w-auto rounded-xl bg-amber-600 px-5 text-sm font-semibold text-white transition hover:bg-amber-700 active:scale-[0.99] sm:min-h-0 sm:px-4 sm:py-2.5"
         >
           + Agregar producto
         </a>

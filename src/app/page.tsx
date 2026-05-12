@@ -1,4 +1,5 @@
 import { getAllProducts, getCategories, getFeaturedProducts } from "@/lib/products";
+import { getGalleryItems } from "@/lib/gallery";
 import HeroSection from "@/components/sections/HeroSection";
 import ServiciosSection from "@/components/sections/ServiciosSection";
 import ProductsCatalog from "@/components/products/ProductsCatalog";
@@ -14,6 +15,7 @@ export default function Home() {
   const products = getAllProducts();
   const categories = getCategories();
   const featuredProducts = getFeaturedProducts();
+  const galleryItems = getGalleryItems();
 
   return (
     <>
@@ -27,7 +29,7 @@ export default function Home() {
           categories={categories}
           featuredProducts={featuredProducts}
         />
-        <GaleriaSection />
+        <GaleriaSection items={galleryItems} />
         <NosotrosSection />
         <ContactoSection />
       </main>

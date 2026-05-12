@@ -5,29 +5,15 @@ import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import SectionHeading from "@/components/ui/SectionHeading";
 import SafeImage from "@/components/ui/SafeImage";
 import Reveal from "@/components/ui/Reveal";
-
-type GalleryItemData = {
-  src: string;
-  alt: string;
-  caption: string;
-};
-
-/**
- * Añade imágenes en `public/gallery/…` y referencia sus rutas aquí.
- * Con el array vacío se muestran 6 baldosas con `/placeholder.svg` (“Foto próximamente”), igual que en productos sin imagen.
- */
-const galleryItems: GalleryItemData[] = [
-  // { src: "/gallery/trabajo-01.jpg", alt: "Instalación de cerámica en baño", caption: "Instalación de cerámica" },
-  // { src: "/gallery/trabajo-02.jpg", alt: "Colocación de porcelanato en sala", caption: "Porcelanato en sala" },
-  // { src: "/gallery/trabajo-03.jpg", alt: "Mueble de baño instalado", caption: "Mueble de baño completo" },
-  // { src: "/gallery/trabajo-04.jpg", alt: "Fachaleta de piedra en fachada", caption: "Piedra decorativa exterior" },
-  // { src: "/gallery/trabajo-05.jpg", alt: "Grifería instalada en cocina", caption: "Grifería de cocina" },
-  // { src: "/gallery/trabajo-06.jpg", alt: "Piso flotante instalado", caption: "Piso flotante" },
-];
+import type { GalleryItem } from "@/types";
 
 const PLACEHOLDER_SLOTS = 6;
 
-export default function GaleriaSection() {
+interface GaleriaSectionProps {
+  items: GalleryItem[];
+}
+
+export default function GaleriaSection({ items: galleryItems }: GaleriaSectionProps) {
   const [lightbox, setLightbox] = useState<number | null>(null);
 
   const hasPhotos = galleryItems.length > 0;
@@ -84,7 +70,7 @@ export default function GaleriaSection() {
                   />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-[rgba(201,168,76,0.25)] transition-colors flex items-end p-3">
                     <span className="text-white text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity drop-shadow-md">
-                      {item.caption}
+                      {item.caption ?? item.alt}
                     </span>
                   </div>
                 </button>
@@ -148,7 +134,8 @@ export default function GaleriaSection() {
             <ChevronRight size={36} />
           </button>
           <p className="absolute bottom-4 left-1/2 -translate-x-1/2 text-white/70 text-sm">
-            {galleryItems[lightbox].caption} — {lightbox + 1}/{galleryItems.length}
+            {galleryItems[lightbox].caption ?? galleryItems[lightbox].alt} — {lightbox + 1}/
+            {galleryItems.length}
           </p>
         </div>
       )}

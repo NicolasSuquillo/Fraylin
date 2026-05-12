@@ -36,6 +36,14 @@
 
 html {
   scroll-behavior: smooth;
+  /* Evita que los #anclas queden tapados por el header fijo (h-16 / h-20) */
+  scroll-padding-top: 5rem;
+}
+
+@media (min-width: 768px) {
+  html {
+    scroll-padding-top: 6rem;
+  }
 }
 
 body {

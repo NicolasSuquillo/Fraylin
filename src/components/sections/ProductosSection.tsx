@@ -37,32 +37,37 @@ export default function ProductosSection({
   const hasQuery = query.trim().length > 0;
 
   return (
-    <section id="productos" className="py-20 bg-neutral-light">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+    <section id="productos" className="py-16 md:py-20 bg-neutral-light">
+      <div className="w-full max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal delay={0}>
           <SectionHeading
             title="Nuestros Productos"
             subtitle="Selecciona una categoría y encuentra lo que necesitas para tu proyecto"
+            className="mb-8 md:mb-10"
           />
         </Reveal>
 
-        <div className="mb-8 space-y-4">
+        <div className="mb-10 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
           <Reveal delay={0.05}>
-            <ProductSearch
-              products={products}
-              categories={categories}
-              query={query}
-              onQueryChange={setQuery}
-              onPickProduct={onProductSelect}
-            />
+            <div className="w-full lg:max-w-md lg:shrink-0">
+              <ProductSearch
+                products={products}
+                categories={categories}
+                query={query}
+                onQueryChange={setQuery}
+                onPickProduct={onProductSelect}
+              />
+            </div>
           </Reveal>
           <Reveal delay={0.08}>
-            <CategoryTabs
-              categories={categories}
-              selected={selectedCategory}
-              onSelect={setSelectedCategory}
-              totalCount={products.length}
-            />
+            <div className="min-w-0 w-full lg:flex-1 lg:pt-0.5">
+              <CategoryTabs
+                categories={categories}
+                selected={selectedCategory}
+                onSelect={setSelectedCategory}
+                totalCount={products.length}
+              />
+            </div>
           </Reveal>
         </div>
 
@@ -89,7 +94,7 @@ export default function ProductosSection({
             )}
           </div>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+          <div className="grid grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6 items-stretch">
             {sortedProducts.map((product, i) => (
               <Reveal key={product.id} delay={i * 0.05}>
                 <ProductCard product={product} onSelect={onProductSelect} />

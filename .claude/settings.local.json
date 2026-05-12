@@ -22,7 +22,9 @@
       "Bash(Select-Object FullName)",
       "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\nicolas.suquillo\\\\Documents\\\\Fraylin\" -Force)",
       "Bash(Select-Object Name, PSIsContainer)",
-      "Bash(python -c ' *)"
+      "Bash(python -c ' *)",
+      "Bash(ngrok *)",
+      "Bash(winget install *)"
     ]
   }
 }

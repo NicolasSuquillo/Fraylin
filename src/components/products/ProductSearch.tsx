@@ -48,9 +48,13 @@ export default function ProductSearch({
       .slice(0, 5);
   }, [products, q]);
 
-  useEffect(() => {
-    setHighlighted(0);
-  }, [q, suggestions.length]);
+  const activeIndex = useMemo(
+    () =>
+      suggestions.length === 0
+        ? 0
+        : Math.min(highlighted, suggestions.length - 1),
+    [highlighted, suggestions.length]
+  );
 
   useEffect(() => {
     function onDoc(e: MouseEvent) {
@@ -88,7 +92,7 @@ export default function ProductSearch({
       setHighlighted((h) => Math.max(h - 1, 0));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      const p = suggestions[highlighted];
+      const p = suggestions[activeIndex];
       if (p) pick(p);
     } else if (e.key === "Escape") {
       setOpen(false);
@@ -96,7 +100,7 @@ export default function ProductSearch({
   };
 
   return (
-    <div ref={rootRef} className="relative w-full max-w-xl mx-auto lg:mx-0">
+    <div ref={rootRef} className="relative w-full max-w-full sm:max-w-xl lg:max-w-none">
       <div className="relative">
         <Search
           className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary pointer-events-none"
@@ -108,6 +112,7 @@ export default function ProductSearch({
           value={query}
           onChange={(e) => {
             onQueryChange(e.target.value);
+            setHighlighted(0);
             setOpen(true);
           }}
           onFocus={() => suggestions.length > 0 && setOpen(true)}
@@ -125,6 +130,7 @@ export default function ProductSearch({
             type="button"
             onClick={() => {
               onQueryChange("");
+              setHighlighted(0);
               setOpen(false);
               inputRef.current?.focus();
             }}
@@ -148,12 +154,12 @@ export default function ProductSearch({
               <button
                 type="button"
                 role="option"
-                aria-selected={i === highlighted}
+                aria-selected={i === activeIndex}
                 onMouseEnter={() => setHighlighted(i)}
                 onMouseDown={(e) => e.preventDefault()}
                 onClick={() => pick(p)}
                 className={`flex w-full items-center gap-3 px-3 py-2.5 text-left text-sm transition-colors ${
-                  i === highlighted
+                  i === activeIndex
                     ? "bg-brand-primary/10 text-text-primary"
                     : "text-text-secondary hover:bg-stone-50"
                 }`}

@@ -9,6 +9,12 @@ const playfairDisplay = Playfair_Display({
   display: "swap",
 });
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover" as const,
+};
+
 export const metadata: Metadata = {
   title: "Fraylin — Acabados para la Construcción | Quito, Ecuador",
   description:

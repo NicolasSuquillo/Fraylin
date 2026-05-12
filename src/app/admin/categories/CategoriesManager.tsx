@@ -47,7 +47,7 @@ function IconPicker({
         type="button"
         id={id}
         onClick={() => setOpen((o) => !o)}
-        className="w-full flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2 text-sm text-left focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
+        className="w-full min-h-[44px] flex items-center gap-2 border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm text-left focus:outline-none focus:ring-2 focus:ring-amber-500 bg-white"
         aria-expanded={open}
         aria-haspopup="listbox"
       >
@@ -60,7 +60,7 @@ function IconPicker({
       </button>
       {open && (
         <ul
-          className="absolute z-30 bottom-full left-0 mb-1 max-h-56 w-full overflow-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
+          className="absolute z-40 top-full left-0 mt-1 max-h-56 w-full overflow-auto rounded-lg border border-gray-200 bg-white py-1 shadow-lg"
           role="listbox"
         >
           {LUCIDE_ICONS.map((name) => (
@@ -99,6 +99,8 @@ interface EditState {
 
 export default function CategoriesManager({ categories }: { categories: Category[] }) {
   const router = useRouter();
+  const editPanelRef = useRef<HTMLDivElement>(null);
+  const editLabelInputRef = useRef<HTMLInputElement>(null);
   const [newCat, setNewCat] = useState<Category>(emptyCategory());
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState("");
@@ -106,6 +108,20 @@ export default function CategoriesManager({ categories }: { categories: Category
   const [edit, setEdit] = useState<EditState | null>(null);
   const [saving, setSaving] = useState(false);
   const [editError, setEditError] = useState("");
+
+  useEffect(() => {
+    if (edit == null) return;
+    const scrollFrame = window.requestAnimationFrame(() => {
+      editPanelRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+    const focusTimer = window.setTimeout(() => {
+      editLabelInputRef.current?.focus({ preventScroll: true });
+    }, 450);
+    return () => {
+      window.cancelAnimationFrame(scrollFrame);
+      window.clearTimeout(focusTimer);
+    };
+  }, [edit?.slug]);
 
   function setNewField<K extends keyof Category>(key: K, value: Category[K]) {
     setNewCat((c) => ({ ...c, [key]: value }));
@@ -165,9 +181,47 @@ export default function CategoriesManager({ categories }: { categories: Category
 
   return (
     <div className="space-y-6 max-w-2xl">
-      {/* Tabla de categorías */}
-      <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-        <table className="w-full text-sm">
+      {/* Móvil: tarjetas */}
+      <div className="md:hidden space-y-3">
+        {categories.map((c) => (
+          <article
+            key={c.slug}
+            className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm"
+          >
+            <div className="flex items-start gap-3">
+              <LucideIconPreview name={c.icon} size={22} />
+              <div className="min-w-0 flex-1">
+                <h2 className="font-semibold text-gray-900">{c.label}</h2>
+                <p className="mt-1 font-mono text-xs text-gray-500">{c.slug}</p>
+                <p className="mt-2 text-xs text-gray-500">
+                  Icono: <span className="font-mono text-gray-700">{c.icon}</span>
+                </p>
+              </div>
+            </div>
+            <div className="mt-4 flex gap-2">
+              <button
+                type="button"
+                onClick={() => setEdit({ slug: c.slug, data: { ...c } })}
+                className="inline-flex flex-1 min-h-[48px] items-center justify-center rounded-xl bg-amber-600 px-3 text-sm font-semibold text-white active:bg-amber-700"
+              >
+                Editar
+              </button>
+              <button
+                type="button"
+                onClick={() => handleDelete(c.slug)}
+                disabled={deleting === c.slug}
+                className="inline-flex flex-1 min-h-[48px] items-center justify-center rounded-xl border-2 border-red-100 bg-red-50/80 px-3 text-sm font-semibold text-red-700 active:bg-red-100 disabled:opacity-40"
+              >
+                {deleting === c.slug ? "…" : "Eliminar"}
+              </button>
+            </div>
+          </article>
+        ))}
+      </div>
+
+      {/* Escritorio: tabla */}
+      <div className="hidden md:block bg-white rounded-xl shadow-sm overflow-x-auto border border-gray-200">
+        <table className="w-full text-sm min-w-[420px]">
           <thead className="bg-gray-50 border-b border-gray-200">
             <tr>
               <th className="text-left px-4 py-3 font-medium text-gray-600">Slug</th>
@@ -189,12 +243,14 @@ export default function CategoriesManager({ categories }: { categories: Category
                 </td>
                 <td className="px-4 py-3 space-x-2">
                   <button
+                    type="button"
                     onClick={() => setEdit({ slug: c.slug, data: { ...c } })}
                     className="text-amber-600 hover:underline"
                   >
                     Editar
                   </button>
                   <button
+                    type="button"
                     onClick={() => handleDelete(c.slug)}
                     disabled={deleting === c.slug}
                     className="text-red-500 hover:underline disabled:opacity-40"
@@ -210,15 +266,28 @@ export default function CategoriesManager({ categories }: { categories: Category
 
       {/* Modal de edición inline */}
       {edit && (
-        <div className="bg-white rounded-xl shadow-sm border border-amber-200 p-5">
-          <h2 className="font-semibold text-gray-800 mb-4">Editar: {edit.slug}</h2>
+        <div
+          ref={editPanelRef}
+          id="editar-categoria-panel"
+          role="region"
+          aria-labelledby="editar-categoria-titulo"
+          tabIndex={-1}
+          className="scroll-mt-28 rounded-2xl border border-amber-200 bg-white p-4 shadow-sm outline-none focus-visible:ring-2 focus-visible:ring-amber-400 sm:p-5 md:scroll-mt-8"
+        >
+          <h2 id="editar-categoria-titulo" className="mb-4 text-lg font-semibold text-gray-800">
+            Editar: {edit.slug}
+          </h2>
           <form onSubmit={handleSaveEdit} className="space-y-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+              <label htmlFor="edit-categoria-nombre" className="block text-sm font-medium text-gray-700 mb-1">
+                Nombre *
+              </label>
               <input
+                id="edit-categoria-nombre"
+                ref={editLabelInputRef}
                 value={edit.data.label}
                 onChange={(e) => setEdit((s) => s && { ...s, data: { ...s.data, label: e.target.value } })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
                 required
               />
             </div>
@@ -239,16 +308,24 @@ export default function CategoriesManager({ categories }: { categories: Category
               <input
                 value={edit.data.description ?? ""}
                 onChange={(e) => setEdit((s) => s && { ...s, data: { ...s.data, description: e.target.value } })}
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
             </div>
             {editError && <p className="text-red-600 text-sm">{editError}</p>}
-            <div className="flex gap-2">
-              <button type="submit" disabled={saving} className="bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition disabled:opacity-50">
-                {saving ? "Guardando..." : "Guardar"}
-              </button>
-              <button type="button" onClick={() => setEdit(null)} className="text-gray-500 text-sm px-4 py-2 rounded-lg border border-gray-200 hover:border-gray-300 transition">
+            <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center">
+              <button
+                type="button"
+                onClick={() => setEdit(null)}
+                className="min-h-[48px] sm:min-h-0 w-full sm:w-auto rounded-xl border border-gray-200 px-4 py-3 text-sm font-medium text-gray-600 transition hover:border-gray-300 sm:py-2"
+              >
                 Cancelar
+              </button>
+              <button
+                type="submit"
+                disabled={saving}
+                className="min-h-[48px] sm:min-h-0 w-full sm:w-auto rounded-xl bg-amber-600 px-4 py-3 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:opacity-50 sm:py-2"
+              >
+                {saving ? "Guardando..." : "Guardar"}
               </button>
             </div>
           </form>
@@ -256,17 +333,17 @@ export default function CategoriesManager({ categories }: { categories: Category
       )}
 
       {/* Formulario agregar categoría */}
-      <div className="bg-white rounded-xl shadow-sm p-5">
-        <h2 className="font-semibold text-gray-800 mb-4">Agregar categoría</h2>
+      <div className="bg-white rounded-2xl shadow-sm border border-gray-200 p-4 sm:p-5">
+        <h2 className="font-semibold text-gray-800 mb-4 text-lg">Agregar categoría</h2>
         <form onSubmit={handleAdd} className="space-y-3">
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">Slug *</label>
               <input
                 value={newCat.slug}
                 onChange={(e) => setNewField("slug", e.target.value.toLowerCase().replace(/\s+/g, "-"))}
                 placeholder="Ej: pisos-exteriores"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
                 required
               />
             </div>
@@ -276,12 +353,12 @@ export default function CategoriesManager({ categories }: { categories: Category
                 value={newCat.label}
                 onChange={(e) => setNewField("label", e.target.value)}
                 placeholder="Ej: Pisos Exteriores"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
                 required
               />
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <label htmlFor="new-icon" className="block text-sm font-medium text-gray-700 mb-1">
                 Icono (Lucide)
@@ -298,7 +375,7 @@ export default function CategoriesManager({ categories }: { categories: Category
                 value={newCat.description ?? ""}
                 onChange={(e) => setNewField("description", e.target.value)}
                 placeholder="Descripción corta"
-                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
               />
             </div>
           </div>
@@ -306,7 +383,7 @@ export default function CategoriesManager({ categories }: { categories: Category
           <button
             type="submit"
             disabled={adding}
-            className="bg-amber-600 hover:bg-amber-700 text-white text-sm font-semibold px-4 py-2 rounded-lg transition disabled:opacity-50"
+            className="w-full sm:w-auto min-h-[48px] sm:min-h-0 rounded-xl bg-amber-600 px-5 py-3 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:opacity-50 sm:py-2"
           >
             {adding ? "Agregando..." : "+ Agregar categoría"}
           </button>

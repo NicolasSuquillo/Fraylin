@@ -15,8 +15,11 @@ export default async function CategoriesPage() {
   const categories: Category[] = data.categories;
 
   return (
-    <div>
-      <h1 className="text-2xl font-bold text-gray-800 mb-6">Categorías</h1>
+    <div className="max-w-6xl mx-auto">
+      <h1 className="text-2xl font-bold text-gray-800 mb-2">Categorías</h1>
+      <p className="text-sm text-gray-600 mb-6">
+        Slug, nombre e icono se reflejan en la web pública (pestañas de productos).
+      </p>
       <CategoriesManager categories={categories} />
     </div>
   );

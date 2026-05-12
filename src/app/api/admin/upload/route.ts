@@ -17,8 +17,27 @@ export async function POST(req: NextRequest) {
   const form = await req.formData();
   const file = form.get("file") as File | null;
   const category = form.get("category") as string | null;
+  const destination = form.get("destination") as string | null;
 
-  if (!file || !category) {
+  if (!file) {
+    return NextResponse.json({ error: "Falta el archivo" }, { status: 400 });
+  }
+
+  if (destination === "gallery") {
+    if (!ALLOWED_TYPES.includes(file.type)) {
+      return NextResponse.json({ error: "Tipo de archivo no permitido" }, { status: 400 });
+    }
+    const ext = extname(file.name) || ".jpg";
+    const base = sanitize(file.name.replace(ext, ""));
+    const filename = `${Date.now()}-${base}${ext}`;
+    const dir = join(process.cwd(), "public", "gallery");
+    mkdirSync(dir, { recursive: true });
+    const buffer = Buffer.from(await file.arrayBuffer());
+    writeFileSync(join(dir, filename), buffer);
+    return NextResponse.json({ src: `/gallery/${filename}` }, { status: 201 });
+  }
+
+  if (!category) {
     return NextResponse.json({ error: "Faltan campos: file, category" }, { status: 400 });
   }
 

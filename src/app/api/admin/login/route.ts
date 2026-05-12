@@ -14,10 +14,13 @@ export async function POST(req: NextRequest) {
 
   const token = createSessionToken();
   const res = NextResponse.json({ ok: true });
+  const isSecure =
+    process.env.NODE_ENV === "production" ||
+    (process.env.NEXTAUTH_URL ?? "").startsWith("https");
   res.cookies.set(COOKIE_NAME, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
+    secure: isSecure,
+    sameSite: isSecure ? "none" : "lax",
     maxAge: SESSION_DURATION_MS / 1000,
     path: "/",
   });

@@ -57,10 +57,6 @@ function CategoryCombobox({ categories, products, value, onChange, disabled }: C
       );
 
   useEffect(() => {
-    setQuery(selected?.label ?? "");
-  }, [selected?.label]);
-
-  useEffect(() => {
     function handleClickOutside(e: MouseEvent) {
       if (ref.current && !ref.current.contains(e.target as Node)) {
         setOpen(false);
@@ -100,7 +96,7 @@ function CategoryCombobox({ categories, products, value, onChange, disabled }: C
         onChange={(e) => { setQuery(e.target.value); setOpen(true); setHighlighted(0); }}
         onFocus={() => { setOpen(true); setHighlighted(0); }}
         onKeyDown={handleKeyDown}
-        className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:bg-gray-100"
+        className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500 disabled:bg-gray-100"
         autoComplete="off"
       />
       {/* flecha */}
@@ -242,7 +238,10 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
   }
 
   return (
-    <form onSubmit={handleSubmit} className="bg-white rounded-xl shadow-sm p-6 space-y-6 max-w-2xl">
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white rounded-2xl border border-gray-200 shadow-sm p-4 pb-8 sm:p-6 space-y-6 max-w-2xl"
+    >
 
       {/* Categoría */}
       <div>
@@ -250,6 +249,7 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
           Categoría <span className="text-red-500">*</span>
         </label>
         <CategoryCombobox
+          key={product.category}
           categories={categories}
           products={products}
           value={product.category}
@@ -273,7 +273,7 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
           onChange={(e) => { setField("id", e.target.value.toUpperCase()); setIdTouched(true); }}
           disabled={mode === "edit"}
           placeholder="Selecciona una categoría para generar el ID"
-          className={`w-full border rounded-lg px-3 py-2 text-sm font-mono focus:outline-none focus:ring-2 transition-colors disabled:bg-gray-100 ${
+          className={`w-full min-h-[44px] border rounded-lg px-3 py-2 text-base sm:text-sm font-mono focus:outline-none focus:ring-2 transition-colors disabled:bg-gray-100 ${
             idExists
               ? "border-red-400 focus:ring-red-400 bg-red-50"
               : idFlash
@@ -296,7 +296,7 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
           value={product.name}
           onChange={(e) => setField("name", e.target.value)}
           placeholder="Ej: Cerámica Mármol Blanco 60x60"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+          className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
           required
         />
       </div>
@@ -308,7 +308,7 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
           value={product.price ?? ""}
           onChange={(e) => setField("price", e.target.value)}
           placeholder="Ej: desde $18/m²"
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+          className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
         />
       </div>
 
@@ -320,7 +320,7 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
           onChange={(e) => setField("description", e.target.value)}
           rows={3}
           placeholder="Descripción del producto..."
-          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+          className="w-full border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
         />
       </div>
 
@@ -387,7 +387,7 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
                     disabled={!product.category || uploadingIdx === idx}
                     title={!product.category ? "Selecciona una categoría primero" : img.src ? "Cambiar imagen" : "Subir imagen"}
                     onClick={() => fileInputRefs.current[idx]?.click()}
-                    className="shrink-0 px-4 py-2 text-sm rounded-lg border border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 transition disabled:opacity-40 disabled:cursor-not-allowed font-medium"
+                    className="shrink-0 min-h-[44px] px-4 py-2 text-sm rounded-xl border border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100 transition disabled:opacity-40 disabled:cursor-not-allowed font-medium"
                   >
                     {uploadingIdx === idx ? "Subiendo…" : img.src ? "Cambiar imagen" : "Subir imagen"}
                   </button>
@@ -396,7 +396,7 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
                   value={img.alt}
                   onChange={(e) => setImage(idx, "alt", e.target.value)}
                   placeholder="Descripción de la imagen (para accesibilidad)"
-                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
                   required
                 />
               </div>
@@ -417,20 +417,20 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
 
       {error && <p className="text-red-600 text-sm">{error}</p>}
 
-      <div className="flex gap-3 pt-2">
-        <button
-          type="submit"
-          disabled={saving || idExists}
-          className="bg-amber-600 hover:bg-amber-700 text-white font-semibold px-5 py-2 rounded-lg text-sm transition disabled:opacity-50"
-        >
-          {saving ? "Guardando..." : mode === "new" ? "Crear producto" : "Guardar cambios"}
-        </button>
+      <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:items-center">
         <a
           href="/admin/products"
-          className="text-gray-500 hover:text-gray-700 px-4 py-2 rounded-lg text-sm border border-gray-200 hover:border-gray-300 transition"
+          className="inline-flex min-h-[48px] sm:min-h-0 items-center justify-center rounded-xl border border-gray-200 px-4 py-3 text-center text-sm font-medium text-gray-600 transition hover:border-gray-300 sm:inline-flex sm:py-2"
         >
           Cancelar
         </a>
+        <button
+          type="submit"
+          disabled={saving || idExists}
+          className="min-h-[48px] sm:min-h-0 w-full sm:w-auto rounded-xl bg-amber-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:opacity-50 sm:py-2"
+        >
+          {saving ? "Guardando..." : mode === "new" ? "Crear producto" : "Guardar cambios"}
+        </button>
       </div>
     </form>
   );

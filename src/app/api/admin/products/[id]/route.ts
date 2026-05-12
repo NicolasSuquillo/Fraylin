@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getSession } from "@/lib/admin-auth";
+import { tryDeletePublicUploads } from "@/lib/delete-public-upload";
 import { readFileSync, writeFileSync } from "fs";
 import { join } from "path";
 import type { Product } from "@/types";
@@ -31,8 +32,15 @@ export async function PUT(
     return NextResponse.json({ error: "Producto no encontrado" }, { status: 404 });
   }
 
+  const previous = data.products[idx] as Product;
   data.products[idx] = updated;
   writeData(data);
+
+  const prevSrcs = new Set((previous.images ?? []).map((i) => i.src.trim()));
+  const nextSrcs = new Set((updated.images ?? []).map((i) => i.src.trim()));
+  const orphaned = [...prevSrcs].filter((s) => s && !nextSrcs.has(s));
+  tryDeletePublicUploads(orphaned);
+
   return NextResponse.json({ ok: true });
 }
 
@@ -52,7 +60,11 @@ export async function DELETE(
     return NextResponse.json({ error: "Producto no encontrado" }, { status: 404 });
   }
 
+  const removed = data.products[idx] as Product;
   data.products.splice(idx, 1);
   writeData(data);
+
+  tryDeletePublicUploads((removed.images ?? []).map((i) => i.src.trim()));
+
   return NextResponse.json({ ok: true });
 }

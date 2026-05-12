@@ -88,7 +88,7 @@ export default function Header() {
                 key={link.href}
                 href={link.href}
                 onClick={() => setMenuOpen(false)}
-                className="px-3 py-2.5 text-accent-cream/80 hover:text-brand-primary hover:bg-brand-primary/10 rounded-lg text-sm font-medium transition-colors"
+                className="px-3 py-2.5 text-text-primary hover:text-brand-dark hover:bg-brand-primary/12 rounded-lg text-sm font-medium transition-colors active:bg-brand-primary/18"
               >
                 {link.label}
               </a>
@@ -96,7 +96,7 @@ export default function Header() {
             <a
               href="#contacto"
               onClick={() => setMenuOpen(false)}
-              className="mt-2 px-4 py-2.5 border border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-neutral-dark text-sm font-semibold rounded-lg text-center transition-colors"
+              className="mt-2 px-4 py-2.5 border border-brand-dark/25 bg-brand-primary/10 text-brand-dark hover:bg-brand-primary hover:text-neutral-dark hover:border-brand-primary text-sm font-semibold rounded-lg text-center transition-colors"
             >
               Cotizar ahora
             </a>

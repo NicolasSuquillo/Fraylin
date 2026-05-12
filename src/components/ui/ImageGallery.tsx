@@ -12,18 +12,49 @@ interface ImageGalleryProps {
 
 const PLACEHOLDER_DIMS = { w: 800, h: 600 };
 
+function GallerySlideImage({ image }: { image: ProductImage }) {
+  const [dims, setDims] = useState(PLACEHOLDER_DIMS);
+  return (
+    <SafeImage
+      src={image.src}
+      alt={image.alt}
+      width={dims.w}
+      height={dims.h}
+      className="object-contain max-h-full max-w-full w-auto h-auto p-2 sm:p-3"
+      sizes="(max-width: 1024px) 92vw, min(860px, 65vw)"
+      priority
+      onLoadingComplete={(img) =>
+        setDims({ w: img.naturalWidth, h: img.naturalHeight })
+      }
+    />
+  );
+}
+
+function LightboxSlideImage({ image }: { image: ProductImage }) {
+  const [dims, setDims] = useState(PLACEHOLDER_DIMS);
+  return (
+    <SafeImage
+      src={image.src}
+      alt={image.alt}
+      width={dims.w}
+      height={dims.h}
+      className="object-contain max-w-full max-h-full w-auto h-auto"
+      sizes="100vw"
+      priority
+      onLoadingComplete={(img) =>
+        setDims({ w: img.naturalWidth, h: img.naturalHeight })
+      }
+    />
+  );
+}
+
 export default function ImageGallery({
   images,
   productName,
 }: ImageGalleryProps) {
   const [current, setCurrent] = useState(0);
-  const [dims, setDims] = useState(PLACEHOLDER_DIMS);
   const [lightbox, setLightbox] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
-
-  useEffect(() => {
-    setDims(PLACEHOLDER_DIMS);
-  }, [current, images[current]?.src]);
 
   const prev = useCallback(() => {
     setCurrent((c) => (c === 0 ? images.length - 1 : c - 1));
@@ -62,18 +93,9 @@ export default function ImageGallery({
           className="relative flex min-h-[min(260px,42vh)] flex-1 w-full min-w-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-b from-stone-100 to-stone-200/80 shadow-inner cursor-zoom-in group lg:min-h-[min(480px,calc(92vh-11rem))] lg:max-h-[min(78vh,calc(92vh-11rem))]"
           onClick={() => setLightbox(true)}
         >
-          <SafeImage
+          <GallerySlideImage
             key={images[current].src}
-            src={images[current].src}
-            alt={images[current].alt}
-            width={dims.w}
-            height={dims.h}
-            className="object-contain max-h-full max-w-full w-auto h-auto p-2 sm:p-3"
-            sizes="(max-width: 1024px) 92vw, min(860px, 65vw)"
-            priority
-            onLoadingComplete={(img) =>
-              setDims({ w: img.naturalWidth, h: img.naturalHeight })
-            }
+            image={images[current]}
           />
           <span className="absolute top-2 right-2 bg-black/40 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
             <ZoomIn size={16} />
@@ -155,15 +177,9 @@ export default function ImageGallery({
               </button>
             </>
           )}
-          <SafeImage
-            key={`lb-${images[current].src}`}
-            src={images[current].src}
-            alt={images[current].alt}
-            width={dims.w}
-            height={dims.h}
-            className="object-contain max-w-full max-h-full w-auto h-auto"
-            sizes="100vw"
-            priority
+          <LightboxSlideImage
+            key={images[current].src}
+            image={images[current]}
           />
         </div>
       </dialog>

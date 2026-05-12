@@ -28,15 +28,15 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+      className="fixed inset-0 z-50 flex items-end justify-center sm:items-center p-0 sm:p-4 bg-black/70 backdrop-blur-sm pt-[env(safe-area-inset-top)] pb-[env(safe-area-inset-bottom)]"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
     >
-      <div className="bg-surface-primary rounded-3xl shadow-2xl border border-stone-200 w-full max-w-[min(98vw,1100px)] flex flex-col max-h-[92vh]">
-        <div className="flex items-center justify-between gap-3 p-5 border-b border-stone-100 min-w-0 shrink-0">
+      <div className="bg-surface-primary rounded-t-3xl sm:rounded-3xl shadow-2xl border border-stone-200 w-full max-w-[min(100vw,1100px)] sm:max-w-[min(98vw,1100px)] flex flex-col max-h-[min(92dvh,92vh)] sm:max-h-[92vh] min-h-0">
+        <div className="flex items-start justify-between gap-3 p-4 sm:p-5 border-b border-stone-100 min-w-0 shrink-0">
           <h2
-            className="text-lg font-bold text-text-primary pr-4"
+            className="text-base sm:text-lg font-bold text-text-primary pr-2 min-w-0 flex-1 break-words text-pretty leading-snug"
             style={{ fontFamily: "var(--font-heading)" }}
           >
             {product.name}
@@ -50,7 +50,7 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
           </button>
         </div>
 
-        <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:p-5 flex flex-col lg:flex-row lg:items-stretch gap-5 lg:gap-8">
+        <div className="flex-1 min-h-0 overflow-y-auto overscroll-contain p-4 sm:p-5 flex flex-col lg:flex-row lg:items-stretch gap-5 lg:gap-8">
           <div className="w-full lg:flex-1 lg:min-w-0 lg:min-h-0 flex flex-col">
             <ImageGallery images={product.images} productName={product.name} />
           </div>

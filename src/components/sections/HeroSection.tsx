@@ -22,7 +22,7 @@ export default function HeroSection() {
         }}
       />
 
-      <div className="relative z-10 text-center px-4 sm:px-6 max-w-4xl mx-auto pt-20">
+      <div className="relative z-10 text-center px-4 sm:px-6 max-w-4xl mx-auto pt-24 md:pt-28">
         <Reveal immediate delay={0}>
           <h1
             className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-white mb-4 leading-tight tracking-wider"

@@ -51,48 +51,6 @@
   ],
   "products": [
     {
-      "id": "CER-001",
-      "category": "ceramica",
-      "name": "Cerámica Mármol Blanco 60x60",
-      "price": "desde $18/m²",
-      "description": "Cerámica de alta calidad con acabado mármol. Ideal para salas y dormitorios. Resistente a manchas y de fácil limpieza.",
-      "featured": true,
-      "images": [
-        {
-          "src": "/products/ceramica/ceramica-marmol-blanco-01.jpg",
-          "alt": "Cerámica mármol blanco 60x60"
-        }
-      ]
-    },
-    {
-      "id": "CER-002",
-      "category": "ceramica",
-      "name": "Cerámica Rústica 45x45",
-      "price": "desde $14/m²",
-      "description": "Acabado rústico antideslizante. Ideal para exteriores y terrazas.",
-      "featured": false,
-      "images": [
-        {
-          "src": "/products/ceramica/ceramica-rustica-45x45-01.jpg",
-          "alt": "Cerámica rústica 45x45"
-        }
-      ]
-    },
-    {
-      "id": "POR-001",
-      "category": "porcelanato",
-      "name": "Porcelanato Gris Cemento 60x60",
-      "price": "desde $22/m²",
-      "description": "Porcelanato de alta resistencia con efecto cemento. Perfecto para salas modernas.",
-      "featured": true,
-      "images": [
-        {
-          "src": "/products/porcelanato/porcelanato-gris-cemento-01.jpg",
-          "alt": "Porcelanato gris cemento 60x60"
-        }
-      ]
-    },
-    {
       "id": "GRI-001",
       "category": "griferia-sanitarios",
       "name": "Grifería Monocomando Acero",
@@ -101,52 +59,8 @@
       "featured": false,
       "images": [
         {
-          "src": "/products/griferia-sanitarios/griferia-monocomando-01.jpg",
+          "src": "/products/griferia-sanitarios/1778470077879-1000349893.jpg",
           "alt": "Grifería monocomando acero cromado"
-        }
-      ]
-    },
-    {
-      "id": "MUE-001",
-      "category": "muebles",
-      "name": "Mueble de Baño con Lavabo",
-      "price": "desde $180",
-      "description": "Mueble de baño completo con lavabo incluido. Acabado en blanco mate.",
-      "featured": true,
-      "images": [
-        {
-          "src": "/products/muebles/mueble-bano-lavabo-01.jpg",
-          "alt": "Mueble de baño con lavabo blanco"
-        }
-      ]
-    },
-    {
-      "id": "REP-001",
-      "category": "repisas",
-      "name": "Repisa Flotante Madera",
-      "price": "desde $25",
-      "description": "Repisa flotante.",
-      "featured": false,
-      "images": [
-        {
-          "src": "/products/repisas/REP-001-01.png",
-          "alt": "Repisa flotante de madera natural"
-        },
-        {
-          "src": "/products/repisas/REP-001-02.png",
-          "alt": "Repisa flotante de madera natural"
-        },
-        {
-          "src": "/products/repisas/REP-001-03.png",
-          "alt": "Repisa flotante de madera natural"
-        },
-        {
-          "src": "/products/repisas/REP-001-04.png",
-          "alt": "Repisa flotante de madera natural"
-        },
-        {
-          "src": "/products/repisas/1778166394227-captura-de-pantalla-2025-02-13-153553.png",
-          "alt": "REPISA"
         }
       ]
     },

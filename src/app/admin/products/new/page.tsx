@@ -1,7 +1,9 @@
 ﻿import { getSession } from "@/lib/admin-auth";
 import { redirect } from "next/navigation";
+import Link from "next/link";
 import { readFileSync } from "fs";
 import { join } from "path";
+import { ChevronLeft } from "lucide-react";
 import type { Category, Product } from "@/types";
 import ProductForm from "../ProductForm";
 
@@ -16,7 +18,14 @@ export default async function NewProductPage() {
   const products: Product[] = data.products;
 
   return (
-    <div>
+    <div className="max-w-6xl mx-auto">
+      <Link
+        href="/admin/products"
+        className="inline-flex items-center gap-1 text-sm font-medium text-amber-800 hover:text-amber-950 mb-4 min-h-[44px] -ml-1 px-1 rounded-lg hover:bg-amber-50"
+      >
+        <ChevronLeft className="w-4 h-4 shrink-0" aria-hidden />
+        Productos
+      </Link>
       <h1 className="text-2xl font-bold text-gray-800 mb-6">Agregar producto</h1>
       <ProductForm categories={categories} products={products} mode="new" />
     </div>

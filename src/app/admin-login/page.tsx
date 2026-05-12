@@ -16,7 +16,7 @@ export default function LoginPage() {
 
     const res = await fetch("/api/admin/login", {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
+      headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "1" },
       body: JSON.stringify({ password }),
     });
 
@@ -31,9 +31,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="bg-white p-8 rounded-xl shadow-md w-full max-w-sm">
-        <h1 className="text-2xl font-bold text-gray-800 mb-6">Panel Fraylin</h1>
+    <div className="min-h-dvh flex items-center justify-center bg-gray-50 px-4 py-10 pt-[max(2.5rem,env(safe-area-inset-top))] pb-[max(2.5rem,env(safe-area-inset-bottom))]">
+      <div className="bg-white p-6 sm:p-8 rounded-2xl shadow-md border border-gray-100 w-full max-w-sm">
+        <h1 className="text-2xl font-bold text-gray-800 mb-1">Panel Fraylin</h1>
+        <p className="text-sm text-gray-500 mb-6">Introduce la contraseña del panel.</p>
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -43,7 +44,9 @@ export default function LoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-amber-500"
+              autoComplete="current-password"
+              enterKeyHint="go"
+              className="w-full min-h-[48px] border border-gray-300 rounded-xl px-4 py-3 text-base focus:outline-none focus:ring-2 focus:ring-amber-500"
               required
               autoFocus
             />
@@ -52,7 +55,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full bg-amber-600 hover:bg-amber-700 text-white font-semibold py-2 rounded-lg transition disabled:opacity-50"
+            className="w-full min-h-[48px] rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-semibold py-3 transition disabled:opacity-50 active:scale-[0.99]"
           >
             {loading ? "Entrando..." : "Ingresar"}
           </button>
