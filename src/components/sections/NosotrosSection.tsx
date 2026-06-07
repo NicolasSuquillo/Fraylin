@@ -95,10 +95,6 @@ export default function NosotrosSection() {
                   costo adicional
                 </li>
                 <li className="flex items-center gap-2">
-                  <span className="text-neutral-dark/70">✓</span> Instalación
-                  profesional a domicilio
-                </li>
-                <li className="flex items-center gap-2">
                   <span className="text-neutral-dark/70">✓</span> Atención personalizada
                   y trato directo
                 </li>

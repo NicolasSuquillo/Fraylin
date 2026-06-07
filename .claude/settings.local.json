@@ -24,7 +24,12 @@
       "Bash(Select-Object Name, PSIsContainer)",
       "Bash(python -c ' *)",
       "Bash(ngrok *)",
-      "Bash(winget install *)"
+      "Bash(winget install *)",
+      "Bash(npm install *)",
+      "Bash(where ngrok *)",
+      "Bash(Get-ChildItem -Path \"C:\\\\Users\\\\nicolas.suquillo\\\\Documents\\\\PRUEBAS\\\\Fraylin\" -Recurse -Directory -ErrorAction SilentlyContinue)",
+      "Bash(Select-Object -First 50)",
+      "Bash(Format-Table FullName)"
     ]
   }
 }

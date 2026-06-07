@@ -53,14 +53,14 @@
     {
       "id": "GRI-001",
       "category": "griferia-sanitarios",
-      "name": "Grifería Monocomando Acero",
-      "price": "$45",
-      "description": "Grifería monocomando acabado cromado. Instalación disponible.",
+      "name": "Grifería Alta Monocomando para Lavamanos",
+      "price": "$65",
+      "description": "Grifería monocomando alto 29cm, para Lavamanos.\nDiametro nominal 95mm.",
       "featured": false,
       "images": [
         {
-          "src": "/products/griferia-sanitarios/1778470077879-1000349893.jpg",
-          "alt": "Grifería monocomando acero cromado"
+          "src": "/products/griferia-sanitarios/1780607980351-griferia-monomando-alta.jpg",
+          "alt": "Grifería monocomando Lavamanos."
         }
       ]
     },
@@ -68,55 +68,167 @@
       "id": "REP-002",
       "category": "repisas",
       "name": "Repisa de llaves multiuso",
-      "price": "desde $10",
+      "price": "Desde $10",
       "description": "Repisa organizador moderno para llaves y accesorios.",
-      "featured": false,
-      "images": [
-        {
-          "src": "/products/repisas/REP-002-01.png",
-          "alt": "Repisa flotante de madera natural"
-        }
-      ]
-    },
-    {
-      "id": "PIE-001",
-      "category": "piedra-decorativa",
-      "name": "Fachaleta Piedra Natural",
-      "price": "desde $28/m²",
-      "description": "Piedra natural para fachadas y muros interiores. Acabado rústico elegante.",
       "featured": true,
       "images": [
         {
-          "src": "/products/piedra-decorativa/fachaleta-piedra-natural-01.jpg",
-          "alt": "Fachaleta de piedra natural para fachadas"
-        }
-      ]
-    },
-    {
-      "id": "PEG-001",
-      "category": "pegas-materiales",
-      "name": "Pegante para Cerámica y Porcelanato",
-      "price": "$8 / saco 25kg",
-      "description": "Adhesivo cementoso de alta resistencia para instalación de cerámica y porcelanato.",
-      "featured": false,
-      "images": [
-        {
-          "src": "/products/pegas-materiales/pegante-ceramica-01.jpg",
-          "alt": "Pegante para cerámica y porcelanato"
+          "src": "/products/repisas/1780329718180-repisa-gris.jpg",
+          "alt": "Repisa flotante de madera natural"
         }
       ]
     },
     {
       "id": "FER-001",
       "category": "ferreteria",
-      "name": "Juego de Herramientas Básico",
-      "price": "desde $35",
-      "description": "Set de herramientas esenciales para el hogar y pequeñas reparaciones.",
+      "name": "LLave de manguera FV liviana",
+      "price": "Desde $8.00",
+      "description": "LLave de Manguera FV Liviana",
       "featured": false,
       "images": [
         {
-          "src": "/products/ferreteria/herramientas-basico-01.jpg",
-          "alt": "Juego de herramientas básico"
+          "src": "/products/ferreteria/1780330309432-whatsapp-image-2020-01-23-at-2.27.20-pm.jpeg",
+          "alt": "LLave de Manguera liviana FV"
+        }
+      ]
+    },
+    {
+      "id": "GRI-002",
+      "category": "griferia-sanitarios",
+      "name": "Juego de Ducha Monocomando con brazo y cabeza de ducha incluidos. Marca Briggs.",
+      "price": "Desde $95",
+      "description": "Juego Monocomando para ducha cromo, Marca Briggs.",
+      "featured": true,
+      "images": [
+        {
+          "src": "/products/griferia-sanitarios/1780329106490-ducha-monocomando-briggs.jpg",
+          "alt": "DUCHA MONOCOMANDO BRIGGS"
+        }
+      ]
+    },
+    {
+      "id": "GRI-003",
+      "category": "griferia-sanitarios",
+      "name": "Inodoro One Piece Advance Kingsley EF Blanco, BRIGGS",
+      "price": "Desde: $155",
+      "description": "Inodoro Kingsley advance Alargado Blanco, dual flush, asiento de caída lenta, Marca: Briggs.",
+      "featured": true,
+      "images": [
+        {
+          "src": "/products/griferia-sanitarios/1780331135871-kingsley.jpg",
+          "alt": "Inodoro Kingsley"
+        }
+      ]
+    },
+    {
+      "id": "GRI-004",
+      "category": "griferia-sanitarios",
+      "name": "Fregadero 2 pozos, escurridera derecha 120x50cm, TEKA ESPAÑOL",
+      "price": "OFERTA $139",
+      "description": "Fregadero de Acero Inoxidable\nDos pozos y escurridera\nPara sobreponer en hormigon\nCubeta profundidad 155cm\nIncluye cestillas 3 1/2\"",
+      "featured": true,
+      "images": [
+        {
+          "src": "/products/griferia-sanitarios/1780335792108-fregadero-2-p-teka.jpg",
+          "alt": "Fregadero 2 pozos TEKA"
+        }
+      ]
+    },
+    {
+      "id": "GRI-005",
+      "category": "griferia-sanitarios",
+      "name": "Inodoro EGO Advance Blanco, Marca: Briggs",
+      "price": "Desde $119",
+      "description": "Inodoro EGO Advance Blanco\nDisponible Redondo y Alargado\nDoble Push\nAsiento de Caída Lenta",
+      "featured": true,
+      "images": [
+        {
+          "src": "/products/griferia-sanitarios/1780336895049-inodoro-ego-advance.jpg",
+          "alt": "Inodoro EGO Advance"
+        }
+      ]
+    },
+    {
+      "id": "GRI-006",
+      "category": "griferia-sanitarios",
+      "name": "Fregadero 2 Pozos Briggs, 120*50cm, escurridera izquierda.",
+      "price": "Desde: $85",
+      "description": "Fregadero 2 pozos 120*50cm\nEscurridera izquierda\nIncluye desague y Sifon Completo\nPara empotrar\nAcero inoxidable\n",
+      "featured": true,
+      "images": [
+        {
+          "src": "/products/griferia-sanitarios/1780344476224-fregadero-briggs-2-pozos.jpg",
+          "alt": "Fregadero 2 pozos Briggs"
+        }
+      ]
+    },
+    {
+      "id": "MUE-001",
+      "category": "muebles",
+      "name": "Mueblé de baño con base de Porcelanato de Melamina",
+      "price": "$98",
+      "description": "Mueble de baño color cedro de 60x50cm\nAlto 80cm\nBase de Porcelanato\nNo incluye lavamanos",
+      "featured": false,
+      "images": [
+        {
+          "src": "/products/muebles/1780542834645-img_5872.jpg",
+          "alt": "Mueble de baño moderno"
+        }
+      ]
+    },
+    {
+      "id": "POR-001",
+      "category": "porcelanato",
+      "name": "Travertino/Marmol de 45,5x91,5cm ",
+      "price": "$18,50",
+      "description": "Planchas de Mármol de 45,5x91,1\nIdeal para resaltar ambientes modernos\n",
+      "featured": false,
+      "images": [
+        {
+          "src": "/products/porcelanato/1780545046809-img_5981.jpg",
+          "alt": "Travertino o Marmol"
+        }
+      ]
+    },
+    {
+      "id": "REP-003",
+      "category": "repisas",
+      "name": "Repisa de llaves moderna de Melamina",
+      "price": "$12",
+      "description": "Organizador Moderno para llaves y accesorios \nMaterial:Melamina\nTamaño: 40x17 cm",
+      "featured": false,
+      "images": [
+        {
+          "src": "/products/repisas/1780546602221-img_5976.jpg",
+          "alt": "Repisa 40x17cm"
+        }
+      ]
+    },
+    {
+      "id": "REP-004",
+      "category": "repisas",
+      "name": "Repisa de Llaves de Melamina",
+      "price": "$12",
+      "description": "Repisa Moderna para llaves y accesorios\nMaterial: MDF\nMedidas: 29x25cm",
+      "featured": false,
+      "images": [
+        {
+          "src": "/products/repisas/1780603509186-repisa-wengue.jpg",
+          "alt": "Repisa Wengue"
+        }
+      ]
+    },
+    {
+      "id": "MUE-002",
+      "category": "muebles",
+      "name": "Mueble auxiliar de Melamina",
+      "price": "$45",
+      "description": "Mueble de Melamina multiuso Blanco con Gris\nMedidas: 48x45 cm.  Alto: 50cm.\n",
+      "featured": false,
+      "images": [
+        {
+          "src": "/products/muebles/1780604119623-mueble-auxiliar.jpg",
+          "alt": "Mueble auxiliar"
         }
       ]
     }

@@ -5,8 +5,24 @@ import { join, extname } from "path";
 
 const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 
+const EXT_ALIASES: Record<string, string> = {
+  ".jpeg": ".jpg",
+  ".tiff": ".tif",
+};
+
+function normalizeExt(raw: string): string {
+  const lower = raw.toLowerCase();
+  return EXT_ALIASES[lower] ?? lower;
+}
+
 function sanitize(name: string) {
-  return name.toLowerCase().replace(/[^a-z0-9.\-_]/g, "-");
+  return name
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9\-_]/g, "-")
+    .replace(/-{2,}/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 export async function POST(req: NextRequest) {
@@ -27,8 +43,8 @@ export async function POST(req: NextRequest) {
     if (!ALLOWED_TYPES.includes(file.type)) {
       return NextResponse.json({ error: "Tipo de archivo no permitido" }, { status: 400 });
     }
-    const ext = extname(file.name) || ".jpg";
-    const base = sanitize(file.name.replace(ext, ""));
+    const ext = normalizeExt(extname(file.name) || ".jpg");
+    const base = sanitize(file.name.slice(0, file.name.lastIndexOf(".")) || file.name);
     const filename = `${Date.now()}-${base}${ext}`;
     const dir = join(process.cwd(), "public", "gallery");
     mkdirSync(dir, { recursive: true });
@@ -45,8 +61,8 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Tipo de archivo no permitido" }, { status: 400 });
   }
 
-  const ext = extname(file.name) || ".jpg";
-  const base = sanitize(file.name.replace(ext, ""));
+  const ext = normalizeExt(extname(file.name) || ".jpg");
+  const base = sanitize(file.name.slice(0, file.name.lastIndexOf(".")) || file.name);
   const filename = `${Date.now()}-${base}${ext}`;
 
   const dir = join(process.cwd(), "public", "products", category);

@@ -25,8 +25,8 @@ export default function Header() {
 
   return (
     <header
-      className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 bg-neutral-dark/95 backdrop-blur-md border-b border-brand-primary/10 ${
-        scrolled ? "shadow-[0_4px_20px_-4px_rgba(0,0,0,0.8)]" : ""
+      className={`fixed top-0 left-0 right-0 z-40 transition-all duration-300 bg-white/95 backdrop-blur-md border-b border-brand-primary/15 ${
+        scrolled ? "shadow-[0_4px_24px_-6px_rgba(0,0,0,0.1)]" : ""
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -43,7 +43,7 @@ export default function Header() {
               className="rounded-lg"
               priority
             />
-            <p className="text-[11px] sm:text-xs leading-snug max-w-[13rem] sm:max-w-[11rem] text-accent-cream/60">
+            <p className="text-[11px] sm:text-xs leading-snug max-w-[13rem] sm:max-w-[11rem] text-text-secondary group-hover:text-brand-dark transition-colors">
               Acabados para la construcción
             </p>
           </a>
@@ -53,35 +53,35 @@ export default function Header() {
               <a
                 key={link.href}
                 href={link.href}
-                className="px-3 py-2 rounded-lg text-sm font-medium transition-colors text-accent-cream/80 hover:text-brand-primary hover:bg-brand-primary/10"
+                className="px-3 py-2 rounded-lg text-sm font-medium transition-colors text-text-primary hover:text-brand-dark hover:bg-brand-primary/10"
               >
                 {link.label}
               </a>
             ))}
             <a
               href="#contacto"
-              className="ml-2 px-4 py-2 border border-brand-primary text-brand-primary hover:bg-brand-primary hover:text-neutral-dark text-sm font-semibold rounded-lg transition-colors"
+              className="ml-2 px-4 py-2 border border-brand-primary bg-brand-primary text-neutral-dark hover:bg-brand-dark hover:border-brand-dark hover:text-accent-cream text-sm font-semibold rounded-lg transition-colors"
             >
               Cotizar
             </a>
           </nav>
 
           <button
-            className="md:hidden p-2 rounded-lg"
+            className="md:hidden p-2 rounded-lg text-text-primary hover:bg-brand-primary/10 hover:text-brand-dark transition-colors"
             onClick={() => setMenuOpen((prev) => !prev)}
             aria-label="Menú"
           >
             {menuOpen ? (
-              <X size={24} className="text-accent-cream" />
+              <X size={24} />
             ) : (
-              <Menu size={24} className="text-accent-cream" />
+              <Menu size={24} />
             )}
           </button>
         </div>
       </div>
 
       {menuOpen && (
-        <div className="md:hidden bg-surface-primary border-t border-brand-primary/20 shadow-lg">
+        <div className="md:hidden bg-white border-t border-brand-primary/15 shadow-lg">
           <nav className="px-4 py-3 flex flex-col gap-1">
             {navLinks.map((link) => (
               <a
@@ -96,7 +96,7 @@ export default function Header() {
             <a
               href="#contacto"
               onClick={() => setMenuOpen(false)}
-              className="mt-2 px-4 py-2.5 border border-brand-dark/25 bg-brand-primary/10 text-brand-dark hover:bg-brand-primary hover:text-neutral-dark hover:border-brand-primary text-sm font-semibold rounded-lg text-center transition-colors"
+              className="mt-2 px-4 py-2.5 border border-brand-primary bg-brand-primary text-neutral-dark hover:bg-brand-dark hover:border-brand-dark hover:text-accent-cream text-sm font-semibold rounded-lg text-center transition-colors"
             >
               Cotizar ahora
             </a>

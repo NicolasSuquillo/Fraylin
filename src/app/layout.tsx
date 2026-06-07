@@ -37,6 +37,22 @@ export default function RootLayout({
 }) {
   return (
     <html lang="es" className={playfairDisplay.variable}>
+      <head>
+        <link
+          rel="preload"
+          as="image"
+          href="/fondo-mobile.webp"
+          type="image/webp"
+          media="(max-width: 767px)"
+        />
+        <link
+          rel="preload"
+          as="image"
+          href="/fondo.webp"
+          type="image/webp"
+          media="(min-width: 768px)"
+        />
+      </head>
       <body>{children}</body>
     </html>
   );
