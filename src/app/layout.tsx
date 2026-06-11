@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Playfair_Display } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
+import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { CartProvider } from "@/components/cart/CartProvider";
 import CartDrawer from "@/components/cart/CartDrawer";
@@ -48,6 +50,8 @@ export default function RootLayout({
           {children}
           <CartDrawer />
         </CartProvider>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   );
