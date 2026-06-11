@@ -5,6 +5,14 @@ const externalHost = appUrl ? new URL(appUrl).host : undefined;
 
 const nextConfig: NextConfig = {
   ...(externalHost ? { allowedDevOrigins: [externalHost] } : {}),
+  images: {
+    remotePatterns: [
+      {
+        protocol: "https",
+        hostname: "*.public.blob.vercel-storage.com",
+      },
+    ],
+  },
 };
 
 export default nextConfig;

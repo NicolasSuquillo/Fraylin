@@ -12,29 +12,30 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   } as const;
 
   /*
-   * Nav inferior fijo: borde superior + fila de pestañas (min-h 52px en AdminNav) +
-   * padding inferior con zona segura + margen para que no tape CTAs al hacer scroll.
+   * Nav inferior fijo: min-h 52px + py-2 + borde + zona segura + margen extra
+   * para que el último CTA no quede tapado al llegar al final del scroll.
    */
   const mobileBottomNavSpacerStyle = {
-    height: "calc(env(safe-area-inset-bottom, 0px) + 52px + 1px + 16px)",
+    height: "calc(env(safe-area-inset-bottom, 0px) + 52px + 16px + 1px + 24px)",
   } as const;
 
   return (
     <div className="min-h-dvh bg-gray-50">
       <AdminNav />
-      <main className="relative z-0 min-h-dvh overflow-y-auto overscroll-y-contain px-4 pt-0 pb-0 sm:px-5 md:ml-52 md:p-8">
+      <main className="relative z-0 md:ml-52 h-dvh max-h-dvh overflow-y-auto overscroll-y-contain">
         {/* Reserva espacio real en el flujo: barras fixed no ocupan sitio */}
         <div
           className="md:hidden shrink-0 w-full pointer-events-none"
           style={mobileHeaderSpacerStyle}
           aria-hidden
         />
-        {children}
+        <div className="px-4 sm:px-5 md:px-8 md:pt-8">{children}</div>
         <div
           className="md:hidden shrink-0 w-full pointer-events-none"
           style={mobileBottomNavSpacerStyle}
           aria-hidden
         />
+        <div className="hidden md:block h-8 shrink-0" aria-hidden />
       </main>
     </div>
   );

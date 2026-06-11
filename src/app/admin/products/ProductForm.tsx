@@ -2,7 +2,9 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 import * as LucideIcons from "lucide-react";
+import { parsePriceInput } from "@/lib/money";
 import type { Product, Category, ProductImage } from "@/types";
 
 function CategoryIcon({ name, size = 14 }: { name: string; size?: number }) {
@@ -21,13 +23,27 @@ interface Props {
 
 function generateId(categorySlug: string, existingProducts: Product[]): string {
   const prefix = categorySlug.replace(/-/g, "").slice(0, 3).toUpperCase();
-  const count = existingProducts.filter((p) => p.category === categorySlug).length;
-  const seq = String(count + 1).padStart(3, "0");
-  return `${prefix}-${seq}`;
+  // Usa el máximo existente, no el conteo: tras borrar productos el conteo colisiona
+  let max = 0;
+  for (const p of existingProducts) {
+    const match = p.id.match(new RegExp(`^${prefix}-(\\d+)$`));
+    if (match) max = Math.max(max, parseInt(match[1], 10));
+  }
+  return `${prefix}-${String(max + 1).padStart(3, "0")}`;
 }
 
 function emptyProduct(): Product {
-  return { id: "", category: "", name: "", price: "", description: "", featured: false, images: [{ src: "", alt: "" }] };
+  return {
+    id: "",
+    category: "",
+    name: "",
+    price: "",
+    priceCents: null,
+    stock: null,
+    description: "",
+    featured: false,
+    images: [{ src: "", alt: "" }],
+  };
 }
 
 // ── Combo filtrable ──────────────────────────────────────────────────────────
@@ -148,6 +164,9 @@ function CategoryCombobox({ categories, products, value, onChange, disabled }: C
 export default function ProductForm({ categories, products, initial, mode }: Props) {
   const router = useRouter();
   const [product, setProduct] = useState<Product>(initial ?? emptyProduct());
+  const [priceInput, setPriceInput] = useState(
+    initial?.priceCents != null ? (initial.priceCents / 100).toFixed(2) : ""
+  );
   const [idTouched, setIdTouched] = useState(false);
   const [idFlash, setIdFlash] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -159,6 +178,8 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
     mode === "new" &&
     product.id !== "" &&
     products.some((p) => p.id === product.id);
+
+  const priceInvalid = priceInput.trim() !== "" && parsePriceInput(priceInput) == null;
 
   function setField<K extends keyof Product>(key: K, value: Product[K]) {
     setProduct((p) => ({ ...p, [key]: value }));
@@ -193,23 +214,38 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
   async function handleFileUpload(idx: number, file: File) {
     if (!product.category) return;
     setUploadingIdx(idx);
-    const form = new FormData();
-    form.append("file", file);
-    form.append("category", product.category);
-    const res = await fetch("/api/admin/upload", { method: "POST", body: form });
-    setUploadingIdx(null);
-    if (res.ok) {
-      const { src } = await res.json();
-      setImage(idx, "src", src);
-    } else {
-      const data = await res.json();
-      setError(data.error ?? "Error al subir imagen");
+    setError("");
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("category", product.category);
+      const res = await fetch("/api/admin/upload", { method: "POST", body: form });
+      if (res.ok) {
+        const { src } = await res.json();
+        setProduct((p) => {
+          const images = [...p.images];
+          const alt = images[idx].alt?.trim() ? images[idx].alt : p.name;
+          images[idx] = { ...images[idx], src, alt };
+          return { ...p, images };
+        });
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError((data as { error?: string }).error ?? "Error al subir imagen");
+      }
+    } catch {
+      setError("Sin conexión: no se pudo subir la imagen. Inténtalo de nuevo.");
+    } finally {
+      setUploadingIdx(null);
     }
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (idExists) return;
+    if (idExists || priceInvalid) return;
+    if (!product.category) {
+      setError("Selecciona una categoría antes de guardar.");
+      return;
+    }
     if (product.images.some((im) => !im.src?.trim())) {
       setError("Sube todas las imágenes antes de guardar.");
       return;
@@ -220,20 +256,24 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
     const url = mode === "new" ? "/api/admin/products" : `/api/admin/products/${initial!.id}`;
     const method = mode === "new" ? "POST" : "PUT";
 
-    const res = await fetch(url, {
-      method,
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(product),
-    });
+    try {
+      const res = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(product),
+      });
 
-    setSaving(false);
-
-    if (res.ok) {
-      router.push("/admin/products");
-      router.refresh();
-    } else {
-      const data = await res.json();
-      setError(data.error ?? "Error al guardar");
+      if (res.ok) {
+        router.push("/admin/products");
+        router.refresh();
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
+      setError((data as { error?: string }).error ?? "Error al guardar");
+    } catch {
+      setError("Sin conexión: no se pudo guardar. Revisa tu internet e inténtalo de nuevo.");
+    } finally {
+      setSaving(false);
     }
   }
 
@@ -247,6 +287,11 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
           Categoría <span className="text-red-500">*</span>
+          {mode === "edit" && (
+            <span className="ml-2 text-xs text-gray-400 font-normal">
+              (puedes moverlo de categoría; el ID no cambia)
+            </span>
+          )}
         </label>
         <CategoryCombobox
           key={product.category}
@@ -254,7 +299,6 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
           products={products}
           value={product.category}
           onChange={handleCategoryChange}
-          disabled={mode === "edit"}
         />
       </div>
 
@@ -301,15 +345,67 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
         />
       </div>
 
-      {/* Precio */}
+      {/* Precio referencial */}
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">Precio</label>
+        <label className="block text-sm font-medium text-gray-700 mb-1">
+          Precio referencial / texto (cotización)
+        </label>
         <input
           value={product.price ?? ""}
           onChange={(e) => setField("price", e.target.value)}
           placeholder="Ej: desde $18/m²"
           className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
         />
+      </div>
+
+      {/* Precio online y stock */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Precio online (USD)
+            <span className="ml-2 text-xs text-gray-400 font-normal">
+              (vacío = no comprable online)
+            </span>
+          </label>
+          <input
+            type="text"
+            inputMode="decimal"
+            value={priceInput}
+            onChange={(e) => {
+              setPriceInput(e.target.value);
+              setField("priceCents", parsePriceInput(e.target.value));
+            }}
+            placeholder="Ej: 12.50"
+            className={`w-full min-h-[44px] border rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 ${
+              priceInvalid
+                ? "border-red-400 bg-red-50 focus:ring-red-400"
+                : "border-gray-300 focus:ring-amber-500"
+            }`}
+          />
+          {priceInvalid && (
+            <p className="text-red-600 text-xs mt-1">
+              Precio inválido — usa solo números, ej: 12.50
+            </p>
+          )}
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Stock
+            <span className="ml-2 text-xs text-gray-400 font-normal">(vacío = sin control)</span>
+          </label>
+          <input
+            type="number"
+            min={0}
+            step={1}
+            value={product.stock ?? ""}
+            onChange={(e) => {
+              const raw = e.target.value;
+              setField("stock", raw === "" ? null : Math.max(0, parseInt(raw, 10)));
+            }}
+            placeholder="Ej: 20"
+            className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+          />
+        </div>
       </div>
 
       {/* Descripción */}
@@ -343,7 +439,7 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
           <label className="block text-sm font-medium text-gray-700">
             Imágenes <span className="text-red-500">*</span>
           </label>
-          <button type="button" onClick={addImage} className="text-xs text-amber-600 hover:underline">
+          <button type="button" onClick={addImage} className="text-xs text-amber-700 hover:underline">
             + Agregar imagen
           </button>
         </div>
@@ -415,18 +511,22 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
         </div>
       </div>
 
-      {error && <p className="text-red-600 text-sm">{error}</p>}
+      {error && (
+        <p role="alert" className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800">
+          {error}
+        </p>
+      )}
 
       <div className="flex flex-col-reverse gap-3 pt-4 sm:flex-row sm:items-center">
-        <a
+        <Link
           href="/admin/products"
           className="inline-flex min-h-[48px] sm:min-h-0 items-center justify-center rounded-xl border border-gray-200 px-4 py-3 text-center text-sm font-medium text-gray-600 transition hover:border-gray-300 sm:inline-flex sm:py-2"
         >
           Cancelar
-        </a>
+        </Link>
         <button
           type="submit"
-          disabled={saving || idExists}
+          disabled={saving || idExists || priceInvalid}
           className="min-h-[48px] sm:min-h-0 w-full sm:w-auto rounded-xl bg-amber-600 px-6 py-3 text-sm font-semibold text-white transition hover:bg-amber-700 disabled:opacity-50 sm:py-2"
         >
           {saving ? "Guardando..." : mode === "new" ? "Crear producto" : "Guardar cambios"}

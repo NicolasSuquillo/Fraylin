@@ -1,7 +1,16 @@
-import galleryData from "../data/gallery.json";
+import { asc } from "drizzle-orm";
+import { db } from "@/db";
+import { galleryItems } from "@/db/schema";
 import type { GalleryItem } from "@/types";
 
-export function getGalleryItems(): GalleryItem[] {
-  const data = galleryData as { items: GalleryItem[] };
-  return data.items ?? [];
+export async function getGalleryItems(): Promise<GalleryItem[]> {
+  const rows = await db
+    .select()
+    .from(galleryItems)
+    .orderBy(asc(galleryItems.position));
+  return rows.map((row) => ({
+    src: row.src,
+    alt: row.alt,
+    caption: row.caption ?? undefined,
+  }));
 }

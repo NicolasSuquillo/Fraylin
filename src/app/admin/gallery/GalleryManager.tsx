@@ -71,44 +71,53 @@ export default function GalleryManager({ initialItems }: { initialItems: Gallery
 
     setError("");
     setDeletingKey(row._key);
-    const res = await fetch("/api/admin/gallery/item", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ src: row.src.trim() }),
-    });
-    setDeletingKey(null);
+    try {
+      const res = await fetch("/api/admin/gallery/item", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ src: row.src.trim() }),
+      });
 
-    if (!res.ok) {
-      const data = await res.json().catch(() => ({}));
-      setError((data as { error?: string }).error ?? "No se pudo eliminar");
-      return;
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError((data as { error?: string }).error ?? "No se pudo eliminar");
+        return;
+      }
+
+      setItems((prev) => {
+        const next = prev.filter((_, i) => i !== idx);
+        return next.length === 0 ? [emptyRow()] : next;
+      });
+      fileRefs.current.delete(row._key);
+      setFeedback("delete");
+      router.refresh();
+    } catch {
+      setError("Sin conexión: no se pudo eliminar. Inténtalo de nuevo.");
+    } finally {
+      setDeletingKey(null);
     }
-
-    setItems((prev) => {
-      const next = prev.filter((_, i) => i !== idx);
-      return next.length === 0 ? [emptyRow()] : next;
-    });
-    fileRefs.current.delete(row._key);
-    setFeedback("delete");
-    router.refresh();
   }
 
   async function handleUpload(idx: number, rowKey: string, file: File) {
     setUploadingKey(rowKey);
     setError("");
-    const form = new FormData();
-    form.append("file", file);
-    form.append("destination", "gallery");
-    const res = await fetch("/api/admin/upload", { method: "POST", body: form });
-    setUploadingKey(null);
-    if (res.ok) {
-      const { src } = await res.json();
-      update(idx, { src });
-      setUploadSuccessKey(rowKey);
-      setError("");
-    } else {
-      const data = await res.json();
-      setError(data.error ?? "Error al subir");
+    try {
+      const form = new FormData();
+      form.append("file", file);
+      form.append("destination", "gallery");
+      const res = await fetch("/api/admin/upload", { method: "POST", body: form });
+      if (res.ok) {
+        const { src } = await res.json();
+        update(idx, { src });
+        setUploadSuccessKey(rowKey);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError((data as { error?: string }).error ?? "Error al subir");
+      }
+    } catch {
+      setError("Sin conexión: no se pudo subir la imagen. Inténtalo de nuevo.");
+    } finally {
+      setUploadingKey(null);
     }
   }
 
@@ -118,6 +127,15 @@ export default function GalleryManager({ initialItems }: { initialItems: Gallery
 
   async function handleSave(e: React.FormEvent) {
     e.preventDefault();
+    // Una fila con imagen subida pero sin alt NO se puede descartar en silencio:
+    // el guardado reemplaza la lista completa y borraría el archivo subido.
+    const incomplete = items.findIndex((it) => it.src.trim() && !it.alt.trim());
+    if (incomplete !== -1) {
+      setError(
+        `La imagen ${incomplete + 1} no tiene texto alternativo. Complétalo o elimínala antes de guardar.`
+      );
+      return;
+    }
     const valid = items.filter((it) => it.src.trim() && it.alt.trim());
     if (valid.length === 0) {
       setError("Agrega al menos una imagen con descripción alternativa.");
@@ -126,33 +144,38 @@ export default function GalleryManager({ initialItems }: { initialItems: Gallery
     setSaving(true);
     setError("");
     setFeedback(null);
-    const res = await fetch("/api/admin/gallery", {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        items: valid.map((it) => ({
-          src: it.src.trim(),
-          alt: it.alt.trim(),
-          caption: (it.caption ?? "").trim(),
-        })),
-      }),
-    });
-    setSaving(false);
-    if (res.ok) {
-      setFeedback("save");
-      router.refresh();
-      setItems(valid);
-    } else {
-      const data = await res.json();
-      setError(data.error ?? "Error al guardar");
+    try {
+      const res = await fetch("/api/admin/gallery", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          items: valid.map((it) => ({
+            src: it.src.trim(),
+            alt: it.alt.trim(),
+            caption: (it.caption ?? "").trim(),
+          })),
+        }),
+      });
+      if (res.ok) {
+        setFeedback("save");
+        router.refresh();
+        setItems(valid);
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setError((data as { error?: string }).error ?? "Error al guardar");
+      }
+    } catch {
+      setError("Sin conexión: no se pudo guardar. Inténtalo de nuevo.");
+    } finally {
+      setSaving(false);
     }
   }
 
   return (
     <form onSubmit={handleSave} className="space-y-6 max-w-3xl pb-4">
       <p className="text-sm text-gray-600 leading-relaxed">
-        Las fotos se guardan en <code className="bg-gray-100 px-1 rounded text-xs">public/gallery/</code>.
-        Tras guardar, la web usará esta lista en la sección “Galería de trabajos”.
+        Sube las fotos, agrega su descripción y pulsa <strong>Guardar galería</strong> para
+        publicarlas en la sección “Galería de trabajos” de la web.
       </p>
 
       {feedback && (

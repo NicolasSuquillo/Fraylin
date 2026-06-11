@@ -1,10 +1,8 @@
 import { getSession } from "@/lib/admin-auth";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
-import { readFileSync } from "fs";
-import { join } from "path";
 import { ChevronLeft } from "lucide-react";
-import type { Product, Category } from "@/types";
+import { getAllProducts, getCategories } from "@/lib/products";
 import ProductForm from "../../ProductForm";
 
 export const dynamic = "force-dynamic";
@@ -18,13 +16,10 @@ export default async function EditProductPage({
   if (!session) redirect("/admin-login");
 
   const { id } = await params;
-  const data = JSON.parse(readFileSync(join(process.cwd(), "src/data/products.json"), "utf-8"));
-  const product: Product | undefined = data.products.find((p: Product) => p.id === id);
-  const categories: Category[] = data.categories;
+  const [products, categories] = await Promise.all([getAllProducts(), getCategories()]);
+  const product = products.find((p) => p.id === id);
 
   if (!product) notFound();
-
-  const products: Product[] = data.products;
 
   return (
     <div className="max-w-6xl mx-auto">

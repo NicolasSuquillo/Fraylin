@@ -92,6 +92,15 @@ function emptyCategory(): Category {
   return { slug: "", label: "", icon: "Box", description: "" };
 }
 
+function slugify(text: string): string {
+  return text
+    .normalize("NFD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 interface EditState {
   slug: string;
   data: Category;
@@ -102,9 +111,11 @@ export default function CategoriesManager({ categories }: { categories: Category
   const editPanelRef = useRef<HTMLDivElement>(null);
   const editLabelInputRef = useRef<HTMLInputElement>(null);
   const [newCat, setNewCat] = useState<Category>(emptyCategory());
+  const [slugTouched, setSlugTouched] = useState(false);
   const [adding, setAdding] = useState(false);
   const [addError, setAddError] = useState("");
   const [deleting, setDeleting] = useState<string | null>(null);
+  const [deleteError, setDeleteError] = useState("");
   const [edit, setEdit] = useState<EditState | null>(null);
   const [saving, setSaving] = useState(false);
   const [editError, setEditError] = useState("");
@@ -131,31 +142,43 @@ export default function CategoriesManager({ categories }: { categories: Category
     e.preventDefault();
     setAddError("");
     setAdding(true);
-    const res = await fetch("/api/admin/categories", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(newCat),
-    });
-    setAdding(false);
-    if (res.ok) {
-      setNewCat(emptyCategory());
-      router.refresh();
-    } else {
-      const data = await res.json();
-      setAddError(data.error ?? "Error al agregar");
+    try {
+      const res = await fetch("/api/admin/categories", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newCat),
+      });
+      if (res.ok) {
+        setNewCat(emptyCategory());
+        setSlugTouched(false);
+        router.refresh();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setAddError((data as { error?: string }).error ?? "Error al agregar");
+      }
+    } catch {
+      setAddError("Sin conexión: no se pudo agregar. Inténtalo de nuevo.");
+    } finally {
+      setAdding(false);
     }
   }
 
   async function handleDelete(slug: string) {
     if (!confirm(`¿Eliminar categoría "${slug}"? Solo es posible si no tiene productos.`)) return;
+    setDeleteError("");
     setDeleting(slug);
-    const res = await fetch(`/api/admin/categories/${slug}`, { method: "DELETE" });
-    setDeleting(null);
-    if (!res.ok) {
-      const data = await res.json();
-      alert(data.error ?? "Error al eliminar");
-    } else {
-      router.refresh();
+    try {
+      const res = await fetch(`/api/admin/categories/${slug}`, { method: "DELETE" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setDeleteError((data as { error?: string }).error ?? "Error al eliminar");
+      } else {
+        router.refresh();
+      }
+    } catch {
+      setDeleteError("Sin conexión: no se pudo eliminar. Inténtalo de nuevo.");
+    } finally {
+      setDeleting(null);
     }
   }
 
@@ -164,23 +187,34 @@ export default function CategoriesManager({ categories }: { categories: Category
     if (!edit) return;
     setEditError("");
     setSaving(true);
-    const res = await fetch(`/api/admin/categories/${edit.slug}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(edit.data),
-    });
-    setSaving(false);
-    if (res.ok) {
-      setEdit(null);
-      router.refresh();
-    } else {
-      const data = await res.json();
-      setEditError(data.error ?? "Error al guardar");
+    try {
+      const res = await fetch(`/api/admin/categories/${edit.slug}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(edit.data),
+      });
+      if (res.ok) {
+        setEdit(null);
+        router.refresh();
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setEditError((data as { error?: string }).error ?? "Error al guardar");
+      }
+    } catch {
+      setEditError("Sin conexión: no se pudo guardar. Inténtalo de nuevo.");
+    } finally {
+      setSaving(false);
     }
   }
 
   return (
     <div className="space-y-6 max-w-2xl">
+      {deleteError && (
+        <p role="alert" className="rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800">
+          {deleteError}
+        </p>
+      )}
+
       {/* Móvil: tarjetas */}
       <div className="md:hidden space-y-3">
         {categories.map((c) => (
@@ -245,7 +279,7 @@ export default function CategoriesManager({ categories }: { categories: Category
                   <button
                     type="button"
                     onClick={() => setEdit({ slug: c.slug, data: { ...c } })}
-                    className="text-amber-600 hover:underline"
+                    className="text-amber-700 hover:underline"
                   >
                     Editar
                   </button>
@@ -338,22 +372,37 @@ export default function CategoriesManager({ categories }: { categories: Category
         <form onSubmit={handleAdd} className="space-y-3">
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Slug *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
               <input
-                value={newCat.slug}
-                onChange={(e) => setNewField("slug", e.target.value.toLowerCase().replace(/\s+/g, "-"))}
-                placeholder="Ej: pisos-exteriores"
+                value={newCat.label}
+                onChange={(e) => {
+                  const label = e.target.value;
+                  setNewCat((c) => ({
+                    ...c,
+                    label,
+                    slug: slugTouched ? c.slug : slugify(label),
+                  }));
+                }}
+                placeholder="Ej: Pisos Exteriores"
                 className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
                 required
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Nombre *</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Slug *
+                <span className="ml-2 text-xs text-gray-400 font-normal">
+                  (se genera del nombre, puedes cambiarlo)
+                </span>
+              </label>
               <input
-                value={newCat.label}
-                onChange={(e) => setNewField("label", e.target.value)}
-                placeholder="Ej: Pisos Exteriores"
-                className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                value={newCat.slug}
+                onChange={(e) => {
+                  setSlugTouched(true);
+                  setNewField("slug", e.target.value.toLowerCase().replace(/\s+/g, "-"));
+                }}
+                placeholder="Ej: pisos-exteriores"
+                className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm font-mono focus:outline-none focus:ring-2 focus:ring-amber-500"
                 required
               />
             </div>

@@ -1,21 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/admin-auth";
 import { tryDeletePublicUpload } from "@/lib/delete-public-upload";
-import { readFileSync, writeFileSync } from "fs";
-import { join } from "path";
-import type { GalleryItem } from "@/types";
+import { db } from "@/db";
+import { galleryItems } from "@/db/schema";
 
-const DATA_PATH = join(process.cwd(), "src/data/gallery.json");
-
-function readData(): { items: GalleryItem[] } {
-  return JSON.parse(readFileSync(DATA_PATH, "utf-8"));
-}
-
-function writeData(data: { items: GalleryItem[] }) {
-  writeFileSync(DATA_PATH, JSON.stringify(data, null, 2), "utf-8");
-}
-
-/** Quita una entrada por `src`, borra el archivo en disco y persiste gallery.json */
+/** Quita una entrada por `src`, borra el archivo en disco y persiste en BD */
 export async function DELETE(req: NextRequest) {
   if (!(await getSession())) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
@@ -28,21 +19,17 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ error: "JSON inválido" }, { status: 400 });
   }
 
-  const raw = body.src?.trim();
-  if (!raw) {
+  const normalized = body.src?.trim();
+  if (!normalized) {
     return NextResponse.json({ error: "Falta src" }, { status: 400 });
   }
 
-  const data = readData();
-  const normalized = raw;
-  const items = data.items.filter((it) => it.src.trim() !== normalized);
+  await db.delete(galleryItems).where(eq(galleryItems.src, normalized));
 
-  writeData({ items });
+  await tryDeletePublicUpload(normalized);
 
-  tryDeletePublicUpload(normalized);
+  const remaining = await db.$count(galleryItems);
 
-  return NextResponse.json({
-    ok: true,
-    remaining: items.length,
-  });
+  revalidatePath("/");
+  return NextResponse.json({ ok: true, remaining });
 }

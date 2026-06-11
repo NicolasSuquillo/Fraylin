@@ -1,8 +1,6 @@
 import { getSession } from "@/lib/admin-auth";
 import { redirect } from "next/navigation";
-import { readFileSync } from "fs";
-import { join } from "path";
-import type { GalleryItem } from "@/types";
+import { getGalleryItems } from "@/lib/gallery";
 import GalleryManager from "./GalleryManager";
 
 export const dynamic = "force-dynamic";
@@ -11,10 +9,7 @@ export default async function AdminGalleryPage() {
   const session = await getSession();
   if (!session) redirect("/admin-login");
 
-  const raw = JSON.parse(
-    readFileSync(join(process.cwd(), "src/data/gallery.json"), "utf-8")
-  ) as { items: GalleryItem[] };
-  const items = raw.items ?? [];
+  const items = await getGalleryItems();
 
   return (
     <div className="max-w-6xl mx-auto">

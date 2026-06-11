@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Playfair_Display } from "next/font/google";
 import "./globals.css";
+import { CartProvider } from "@/components/cart/CartProvider";
+import CartDrawer from "@/components/cart/CartDrawer";
 
 const playfairDisplay = Playfair_Display({
   subsets: ["latin"],
@@ -40,24 +42,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es" className={playfairDisplay.variable}>
-      <head>
-        <link
-          rel="preload"
-          as="image"
-          href="/fondo-mobile.webp"
-          type="image/webp"
-          media="(max-width: 767px)"
-        />
-        <link
-          rel="preload"
-          as="image"
-          href="/fondo.webp"
-          type="image/webp"
-          media="(min-width: 768px)"
-        />
-      </head>
-      <body>{children}</body>
+    <html lang="es" className={playfairDisplay.variable} data-scroll-behavior="smooth">
+      <body>
+        <CartProvider>
+          {children}
+          <CartDrawer />
+        </CartProvider>
+      </body>
     </html>
   );
 }

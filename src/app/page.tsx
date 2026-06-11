@@ -11,14 +11,32 @@ import Footer from "@/components/layout/Footer";
 import FloatingWhatsApp from "@/components/ui/FloatingWhatsApp";
 import ScrollToTop from "@/components/ui/ScrollToTop";
 
-export default function Home() {
-  const products = getAllProducts();
-  const categories = getCategories();
-  const featuredProducts = getFeaturedProducts();
-  const galleryItems = getGalleryItems();
+export const revalidate = 3600;
+
+export default async function Home() {
+  const [products, categories, featuredProducts, galleryItems] = await Promise.all([
+    getAllProducts(),
+    getCategories(),
+    getFeaturedProducts(),
+    getGalleryItems(),
+  ]);
 
   return (
     <>
+      <link
+        rel="preload"
+        as="image"
+        href="/fondo-mobile.webp"
+        type="image/webp"
+        media="(max-width: 767px)"
+      />
+      <link
+        rel="preload"
+        as="image"
+        href="/fondo.webp"
+        type="image/webp"
+        media="(min-width: 768px)"
+      />
       <ScrollToTop />
       <Header />
       <main>

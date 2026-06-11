@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Package, Tags, Images, LogOut } from "lucide-react";
+import { Package, Tags, Images, ShoppingCart, LogOut } from "lucide-react";
 
 const links = [
   { href: "/admin/products", label: "Productos", Icon: Package },
   { href: "/admin/categories", label: "Categorías", Icon: Tags },
+  { href: "/admin/orders", label: "Pedidos", Icon: ShoppingCart },
   { href: "/admin/gallery", label: "Galería", Icon: Images },
 ] as const;
 
@@ -15,15 +16,19 @@ export default function AdminNav() {
   const router = useRouter();
 
   async function handleLogout() {
-    await fetch("/api/admin/logout", { method: "POST" });
-    router.push("/admin-login");
+    try {
+      await fetch("/api/admin/logout", { method: "POST" });
+    } finally {
+      router.push("/admin-login");
+      router.refresh();
+    }
   }
 
   return (
     <>
       {/* Sidebar — escritorio: fijo para no afectar el flujo del main */}
       <aside className="hidden md:flex fixed inset-y-0 left-0 z-30 w-52 bg-white border-r border-gray-200 flex-col py-8 px-4 shrink-0 shadow-sm">
-        <p className="text-lg font-bold text-amber-700 mb-8 px-1">Fraylin Admin</p>
+        <p className="text-lg font-bold text-amber-800 mb-8 px-1">Fraylin Admin</p>
         <nav className="flex-1 space-y-1">
           {links.map(({ href, label, Icon }) => (
             <Link

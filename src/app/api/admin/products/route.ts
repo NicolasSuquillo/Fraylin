@@ -1,24 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/admin-auth";
-import { readFileSync, writeFileSync } from "fs";
-import { join } from "path";
+import { db } from "@/db";
+import { products, productImages } from "@/db/schema";
+import { getAllProducts, getCategories } from "@/lib/products";
+import { validateProductPayload } from "@/lib/validate-product";
 import type { Product } from "@/types";
-
-const DATA_PATH = join(process.cwd(), "src/data/products.json");
-
-function readData() {
-  return JSON.parse(readFileSync(DATA_PATH, "utf-8"));
-}
-
-function writeData(data: unknown) {
-  writeFileSync(DATA_PATH, JSON.stringify(data, null, 2), "utf-8");
-}
 
 export async function GET() {
   if (!(await getSession())) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
-  return NextResponse.json(readData());
+  const [allProducts, categories] = await Promise.all([getAllProducts(), getCategories()]);
+  return NextResponse.json({ products: allProducts, categories });
 }
 
 export async function POST(req: NextRequest) {
@@ -26,14 +21,43 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const product: Product = await req.json();
-  const data = readData();
+  const product: Product = await req.json().catch(() => null);
+  const invalid = validateProductPayload(product, { requireId: true });
+  if (invalid) {
+    return NextResponse.json({ error: invalid }, { status: 400 });
+  }
 
-  if (data.products.find((p: Product) => p.id === product.id)) {
+  const existing = await db.query.products.findFirst({
+    where: eq(products.id, product.id),
+  });
+  if (existing) {
     return NextResponse.json({ error: "ID ya existe" }, { status: 409 });
   }
 
-  data.products.push(product);
-  writeData(data);
+  await db.transaction(async (tx) => {
+    await tx.insert(products).values({
+      id: product.id,
+      categorySlug: product.category,
+      name: product.name,
+      description: product.description ?? null,
+      displayPrice: product.price ?? null,
+      priceCents: product.priceCents ?? null,
+      stock: product.stock ?? null,
+      featured: product.featured ?? false,
+    });
+
+    if (product.images.length > 0) {
+      await tx.insert(productImages).values(
+        product.images.map((image, index) => ({
+          productId: product.id,
+          src: image.src,
+          alt: image.alt,
+          position: index,
+        }))
+      );
+    }
+  });
+
+  revalidatePath("/");
   return NextResponse.json({ ok: true }, { status: 201 });
 }

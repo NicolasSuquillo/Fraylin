@@ -30,7 +30,7 @@ export default function DestacadosSection({
   return (
     <section
       aria-label="Productos destacados"
-      className="py-16 bg-accent-cream border-y border-brand-primary/10"
+      className="py-12 md:py-16 bg-accent-cream border-y border-brand-primary/10"
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal>

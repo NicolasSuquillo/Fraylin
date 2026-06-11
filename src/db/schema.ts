@@ -73,12 +73,15 @@ export const orderStatusEnum = pgEnum("order_status", [
   "cancelled",
 ]);
 
+export const paymentMethodEnum = pgEnum("payment_method", ["payphone", "transferencia"]);
+
 export const orders = pgTable(
   "orders",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     clientTransactionId: text("client_transaction_id").notNull(),
     status: orderStatusEnum("status").notNull().default("pending"),
+    paymentMethod: paymentMethodEnum("payment_method").notNull().default("payphone"),
     fulfillmentStatus: text("fulfillment_status").notNull().default("nuevo"),
     customerName: text("customer_name").notNull(),
     customerPhone: text("customer_phone").notNull(),

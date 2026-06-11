@@ -8,6 +8,13 @@
       "when": 1781141557680,
       "tag": "0000_bitter_albert_cleary",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1781210968524,
+      "tag": "0001_fat_molecule_man",
+      "breakpoints": true
     }
   ]
 }

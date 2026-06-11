@@ -14,19 +14,24 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
 
-    const res = await fetch("/api/admin/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "1" },
-      body: JSON.stringify({ password }),
-    });
+    try {
+      const res = await fetch("/api/admin/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json", "ngrok-skip-browser-warning": "1" },
+        body: JSON.stringify({ password }),
+      });
 
-    setLoading(false);
-
-    if (res.ok) {
-      router.push("/admin/products");
-    } else {
-      const data = await res.json();
-      setError(data.error ?? "Error al iniciar sesión");
+      if (res.ok) {
+        router.push("/admin/products");
+        router.refresh();
+        return;
+      }
+      const data = await res.json().catch(() => ({}));
+      setError((data as { error?: string }).error ?? "Error al iniciar sesión");
+    } catch {
+      setError("Sin conexión: no se pudo iniciar sesión. Inténtalo de nuevo.");
+    } finally {
+      setLoading(false);
     }
   }
 

@@ -2,6 +2,7 @@
 
 import { Sparkles } from "lucide-react";
 import SafeImage from "@/components/ui/SafeImage";
+import { formatUSD } from "@/lib/money";
 import type { Product } from "@/types";
 
 interface ProductCardProps {
@@ -10,6 +11,9 @@ interface ProductCardProps {
 }
 
 export default function ProductCard({ product, onSelect }: ProductCardProps) {
+  const buyable = product.priceCents != null;
+  const soldOut = buyable && product.stock === 0;
+
   return (
     <button
       type="button"
@@ -30,15 +34,22 @@ export default function ProductCard({ product, onSelect }: ProductCardProps) {
             Destacado
           </span>
         )}
-        {product.price && (
+        {(buyable || product.price) && (
           <span className="absolute top-2 right-2 bg-brand-primary/20 text-brand-primary text-xs font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm border border-brand-primary/30">
-            {product.price}
+            {buyable ? formatUSD(product.priceCents!) : product.price}
           </span>
         )}
         {product.images.length > 1 && (
           <span className="absolute bottom-2 right-2 bg-black/50 text-white text-xs px-2 py-0.5 rounded-full">
             +{product.images.length - 1} fotos
           </span>
+        )}
+        {soldOut && (
+          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+            <span className="bg-white/90 text-text-primary text-sm font-bold uppercase tracking-wide px-4 py-2 rounded-full">
+              Agotado
+            </span>
+          </div>
         )}
       </div>
       <div className="flex flex-1 flex-col p-3 sm:p-4">

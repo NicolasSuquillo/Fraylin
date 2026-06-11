@@ -8,11 +8,11 @@
     "start": "next start",
     "lint": "eslint",
     "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:seed": "tsx scripts/seed.ts"
+    "db:migrate": "drizzle-kit migrate"
   },
   "dependencies": {
     "@use-gesture/react": "^10.3.1",
+    "@vercel/blob": "^2.4.0",
     "clsx": "^2.1.1",
     "drizzle-orm": "^0.45.2",
     "lucide-react": "^1.14.0",

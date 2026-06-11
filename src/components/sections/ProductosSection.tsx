@@ -47,7 +47,7 @@ export default function ProductosSection({
           />
         </Reveal>
 
-        <div className="mb-10 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
+        <div className="mb-10 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
           <Reveal delay={0.05}>
             <div className="w-full lg:max-w-md lg:shrink-0">
               <ProductSearch

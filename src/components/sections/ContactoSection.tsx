@@ -8,16 +8,20 @@ import { BUSINESS, buildWhatsAppUrl } from "@/lib/constants";
 
 export default function ContactoSection() {
   const [form, setForm] = useState({ nombre: "", telefono: "", mensaje: "" });
+  const [sent, setSent] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const msg = `Hola Fraylin! 👋\n\n*Nombre:* ${form.nombre}\n*Teléfono:* ${form.telefono}\n*Mensaje:* ${form.mensaje}`;
     const url = buildWhatsAppUrl(BUSINESS.whatsapp[0].number, msg);
     window.open(url, "_blank");
+    setForm({ nombre: "", telefono: "", mensaje: "" });
+    setSent(true);
+    setTimeout(() => setSent(false), 3000);
   };
 
   return (
-    <section id="contacto" className="py-20 bg-neutral-dark text-white">
+    <section id="contacto" className="py-16 md:py-20 bg-neutral-dark text-white">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal delay={0}>
           <SectionHeading
@@ -78,8 +82,15 @@ export default function ContactoSection() {
                 <Send size={18} />
                 Enviar por WhatsApp
               </button>
-              <p className="text-xs text-white/40 text-center">
-                Al enviar, se abrirá WhatsApp con tu mensaje listo para enviar.
+              <p
+                className={`text-xs text-center transition-colors ${
+                  sent ? "text-green-400 font-semibold" : "text-white/40"
+                }`}
+                aria-live="polite"
+              >
+                {sent
+                  ? "¡Mensaje preparado en WhatsApp!"
+                  : "Al enviar, se abrirá WhatsApp con tu mensaje listo para enviar."}
               </p>
             </form>
           </div>

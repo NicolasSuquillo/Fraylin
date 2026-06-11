@@ -1,8 +1,6 @@
 ﻿import { getSession } from "@/lib/admin-auth";
 import { redirect } from "next/navigation";
-import { readFileSync } from "fs";
-import { join } from "path";
-import type { Category } from "@/types";
+import { getCategories } from "@/lib/products";
 import CategoriesManager from "./CategoriesManager";
 
 export const dynamic = "force-dynamic";
@@ -11,8 +9,7 @@ export default async function CategoriesPage() {
   const session = await getSession();
   if (!session) redirect("/admin-login");
 
-  const data = JSON.parse(readFileSync(join(process.cwd(), "src/data/products.json"), "utf-8"));
-  const categories: Category[] = data.categories;
+  const categories = await getCategories();
 
   return (
     <div className="max-w-6xl mx-auto">
