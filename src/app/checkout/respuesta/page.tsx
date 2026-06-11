@@ -1,3 +1,4 @@
+import { revalidatePath } from "next/cache";
 import Link from "next/link";
 import { CheckCircle2, Clock, XCircle } from "lucide-react";
 import Header from "@/components/layout/Header";
@@ -22,6 +23,9 @@ export default async function RespuestaPage({ searchParams }: RespuestaPageProps
     try {
       if (payphoneId > 0) {
         order = await finalizeOrder(order.id, payphoneId);
+        if (order.status === "paid") {
+          revalidatePath("/");
+        }
       } else {
         order = await cancelOrder(order.id);
       }
