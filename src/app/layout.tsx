@@ -21,6 +21,10 @@ export const metadata: Metadata = {
     "Tienda de acabados para la construcción en Quito. Cerámica, porcelanato, grifería, muebles de baño, piedra decorativa. Asesoría e instalación a domicilio.",
   keywords:
     "acabados construcción Quito, cerámica, porcelanato, grifería, sanitarios, muebles baño, piedra decorativa, Fraylin",
+  icons: {
+    icon: "/logotipo.png",
+    apple: "/logotipo.png",
+  },
   openGraph: {
     title: "Fraylin — Acabados para la Construcción",
     description:
