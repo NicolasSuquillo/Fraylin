@@ -5,6 +5,7 @@ import { tryDeletePublicUploads } from "@/lib/delete-public-upload";
 import { db } from "@/db";
 import { galleryItems } from "@/db/schema";
 import { getGalleryItems } from "@/lib/gallery";
+import { touchCatalogVersion } from "@/lib/cache-version";
 import type { GalleryItem } from "@/types";
 
 export async function GET() {
@@ -55,6 +56,7 @@ export async function PUT(req: NextRequest) {
   const removedSrcs = [...oldSrcs].filter((s) => !newSrcs.has(s));
   await tryDeletePublicUploads(removedSrcs);
 
+  await touchCatalogVersion();
   revalidatePath("/");
   return NextResponse.json({ ok: true });
 }

@@ -5,6 +5,7 @@ import { getSession } from "@/lib/admin-auth";
 import { tryDeletePublicUpload } from "@/lib/delete-public-upload";
 import { db } from "@/db";
 import { galleryItems } from "@/db/schema";
+import { touchCatalogVersion } from "@/lib/cache-version";
 
 /** Quita una entrada por `src`, borra el archivo en disco y persiste en BD */
 export async function DELETE(req: NextRequest) {
@@ -30,6 +31,7 @@ export async function DELETE(req: NextRequest) {
 
   const remaining = await db.$count(galleryItems);
 
+  await touchCatalogVersion();
   revalidatePath("/");
   return NextResponse.json({ ok: true, remaining });
 }

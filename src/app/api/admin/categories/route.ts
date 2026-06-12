@@ -5,6 +5,7 @@ import { getSession } from "@/lib/admin-auth";
 import { db } from "@/db";
 import { categories } from "@/db/schema";
 import { getCategories } from "@/lib/products";
+import { touchCatalogVersion } from "@/lib/cache-version";
 import type { Category } from "@/types";
 
 export async function GET() {
@@ -50,6 +51,7 @@ export async function POST(req: NextRequest) {
     position: total,
   });
 
+  await touchCatalogVersion();
   revalidatePath("/");
   return NextResponse.json({ ok: true }, { status: 201 });
 }

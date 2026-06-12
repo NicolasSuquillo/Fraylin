@@ -6,6 +6,7 @@ import Footer from "@/components/layout/Footer";
 import { BUSINESS, buildWhatsAppUrl } from "@/lib/constants";
 import { formatUSD } from "@/lib/money";
 import { cancelOrder, finalizeOrder, getOrderByClientTransactionId } from "@/lib/orders";
+import { touchCatalogVersion } from "@/lib/cache-version";
 import ClearCartOnSuccess from "./ClearCartOnSuccess";
 
 interface RespuestaPageProps {
@@ -15,24 +16,39 @@ interface RespuestaPageProps {
 export default async function RespuestaPage({ searchParams }: RespuestaPageProps) {
   const { id, clientTransactionId } = await searchParams;
 
-  let order = clientTransactionId ? await getOrderByClientTransactionId(clientTransactionId) : null;
+  let order = null;
+  try {
+    order = clientTransactionId ? await getOrderByClientTransactionId(clientTransactionId) : null;
+  } catch (error) {
+    console.error("Error al buscar pedido:", error);
+  }
   let confirmError = false;
 
   if (order && order.status === "pending") {
-    const payphoneId = id ? Number(id) : 0;
+    const payphoneId = id && /^\d+$/.test(id) ? Number(id) : NaN;
     try {
       if (payphoneId > 0) {
         order = await finalizeOrder(order.id, payphoneId);
         if (order.status === "paid") {
+          await touchCatalogVersion();
           revalidatePath("/");
         }
-      } else {
+      } else if (payphoneId === 0) {
+        // Payphone redirige con id=0 cuando el usuario cancela en la Cajita.
         order = await cancelOrder(order.id);
+      } else {
+        // id ausente o no numérico: no tocar la orden; mostrar estado de verificación.
+        confirmError = true;
       }
     } catch (error) {
       console.error("Error al confirmar pedido:", error);
       confirmError = true;
     }
+  }
+
+  // "processing" = otro request está confirmando (o quedó a medias): no es un fallo definitivo.
+  if (order?.status === "processing") {
+    confirmError = true;
   }
 
   const success = order?.status === "paid";

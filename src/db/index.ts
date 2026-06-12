@@ -14,8 +14,8 @@ const client =
   globalForDb.pgClient ??
   postgres(process.env.DATABASE_URL!, {
     prepare: false,
-    max: 2,
-    idle_timeout: 20,
+    max: 4,
+    idle_timeout: 120,
     max_lifetime: 60 * 30,
     connect_timeout: 10,
   });

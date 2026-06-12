@@ -116,7 +116,18 @@ export async function finalizeOrder(orderId: string, payphoneId: number): Promis
     return toOrder(existing, existing.items);
   }
 
-  const confirmation = await confirmPayphoneTransaction(payphoneId, claimed.clientTransactionId);
+  let confirmation;
+  try {
+    confirmation = await confirmPayphoneTransaction(payphoneId, claimed.clientTransactionId);
+  } catch (error) {
+    // Confirm falló (red, timeout, respuesta inválida): liberar la orden para
+    // que el cliente pueda reintentar recargando la página de respuesta.
+    await db
+      .update(orders)
+      .set({ status: "pending" })
+      .where(sql`${orders.id} = ${orderId} AND ${orders.status} = 'processing'`);
+    throw error;
+  }
   const approved = confirmation.statusCode === 3;
 
   const result = await db.transaction(async (tx) => {

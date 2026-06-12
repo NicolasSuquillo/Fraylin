@@ -13,6 +13,13 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
+// Fila única por `key`; se actualiza junto a cada revalidatePath("/") para
+// que el cliente detecte cambios de catálogo vía polling (CatalogVersionWatcher).
+export const cacheMeta = pgTable("cache_meta", {
+  key: text("key").primaryKey(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 export const categories = pgTable("categories", {
   slug: text("slug").primaryKey(),
   label: text("label").notNull(),

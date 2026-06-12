@@ -7,6 +7,7 @@ import {
   markOrderPaidManually,
   updateFulfillmentStatus,
 } from "@/lib/orders";
+import { touchCatalogVersion } from "@/lib/cache-version";
 
 export async function GET(
   _req: NextRequest,
@@ -34,7 +35,7 @@ export async function PATCH(
   }
 
   const { id } = await params;
-  const body = await req.json();
+  const body = await req.json().catch(() => ({}));
   const { fulfillmentStatus, action } = body;
 
   if (action === "markPaid") {
@@ -42,6 +43,7 @@ export async function PATCH(
     if (!order) {
       return NextResponse.json({ error: "Pedido no encontrado" }, { status: 404 });
     }
+    await touchCatalogVersion();
     revalidatePath("/admin/orders");
     revalidatePath(`/admin/orders/${id}`);
     revalidatePath("/");

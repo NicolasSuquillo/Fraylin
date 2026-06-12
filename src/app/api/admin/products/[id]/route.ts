@@ -3,6 +3,7 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/admin-auth";
 import { tryDeletePublicUploads } from "@/lib/delete-public-upload";
+import { touchCatalogVersion } from "@/lib/cache-version";
 import { db } from "@/db";
 import { products, productImages } from "@/db/schema";
 import { validateProductPayload } from "@/lib/validate-product";
@@ -65,6 +66,7 @@ export async function PUT(
   const orphaned = [...prevSrcs].filter((s) => s && !nextSrcs.has(s));
   await tryDeletePublicUploads(orphaned);
 
+  await touchCatalogVersion();
   revalidatePath("/");
   return NextResponse.json({ ok: true });
 }
@@ -92,6 +94,7 @@ export async function DELETE(
 
   await tryDeletePublicUploads(removed.images.map((i) => i.src.trim()));
 
+  await touchCatalogVersion();
   revalidatePath("/");
   return NextResponse.json({ ok: true });
 }

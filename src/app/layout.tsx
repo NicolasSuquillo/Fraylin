@@ -5,6 +5,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
 import { CartProvider } from "@/components/cart/CartProvider";
 import CartDrawer from "@/components/cart/CartDrawer";
+import CatalogVersionWatcher from "@/components/ui/CatalogVersionWatcher";
 
 const playfairDisplay = Playfair_Display({
   subsets: ["latin"],
@@ -50,6 +51,7 @@ export default function RootLayout({
           {children}
           <CartDrawer />
         </CartProvider>
+        <CatalogVersionWatcher />
         <Analytics />
         <SpeedInsights />
       </body>

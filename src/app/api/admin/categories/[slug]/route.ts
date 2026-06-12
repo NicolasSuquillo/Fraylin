@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/admin-auth";
 import { db } from "@/db";
 import { categories, products } from "@/db/schema";
+import { touchCatalogVersion } from "@/lib/cache-version";
 import type { Category } from "@/types";
 
 export async function PUT(
@@ -38,6 +39,7 @@ export async function PUT(
     })
     .where(eq(categories.slug, slug));
 
+  await touchCatalogVersion();
   revalidatePath("/");
   return NextResponse.json({ ok: true });
 }
@@ -66,6 +68,7 @@ export async function DELETE(
 
   await db.delete(categories).where(eq(categories.slug, slug));
 
+  await touchCatalogVersion();
   revalidatePath("/");
   return NextResponse.json({ ok: true });
 }

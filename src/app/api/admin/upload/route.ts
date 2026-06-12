@@ -63,7 +63,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ src: blob.url }, { status: 201 });
   }
 
-  if (!category) {
+  // Sanitizar evita que un slug malicioso (p. ej. "../x") escape el prefijo products/.
+  const safeCategory = category ? sanitize(category) : "";
+  if (!safeCategory) {
     return NextResponse.json({ error: "Faltan campos: file, category" }, { status: 400 });
   }
 
@@ -75,7 +77,7 @@ export async function POST(req: NextRequest) {
   const base = sanitize(file.name.slice(0, file.name.lastIndexOf(".")) || file.name);
   const filename = `${Date.now()}-${base}${ext}`;
 
-  const blob = await put(`products/${category}/${filename}`, file, {
+  const blob = await put(`products/${safeCategory}/${filename}`, file, {
     access: "public",
     addRandomSuffix: false,
   });

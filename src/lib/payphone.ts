@@ -25,6 +25,7 @@ export async function confirmPayphoneTransaction(
       "Content-Type": "application/json",
     },
     body: JSON.stringify({ id, clientTxId }),
+    signal: AbortSignal.timeout(15_000),
   });
 
   if (!res.ok) {
@@ -32,5 +33,9 @@ export async function confirmPayphoneTransaction(
     throw new Error(`Payphone Confirm falló (${res.status}): ${text}`);
   }
 
-  return res.json();
+  const data: PayphoneConfirmResponse = await res.json();
+  if (typeof data.statusCode !== "number" || data.transactionId == null) {
+    throw new Error(`Payphone Confirm devolvió una respuesta incompleta: ${JSON.stringify(data)}`);
+  }
+  return data;
 }

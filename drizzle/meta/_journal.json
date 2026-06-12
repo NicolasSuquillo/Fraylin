@@ -22,6 +22,13 @@
       "when": 1781234356943,
       "tag": "0002_fantastic_snowbird",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1781239841335,
+      "tag": "0003_steep_sprite",
+      "breakpoints": true
     }
   ]
 }

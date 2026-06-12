@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { orders, orderItems, products } from "@/db/schema";
 import { firstCheckoutError, validateCheckoutCustomer } from "@/lib/checkout-validation";
 import { computeTaxBreakdown } from "@/lib/money";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { PAYMENT_METHODS, type CheckoutCustomer, type PaymentMethod } from "@/types";
 
 interface CheckoutRequestItem {
@@ -23,7 +24,20 @@ function generateClientTransactionId(): string {
   return `FR${timestamp}${random}`.toUpperCase();
 }
 
+const MAX_ITEMS = 50;
+const MAX_QUANTITY = 99;
+const MAX_PRODUCT_ID_LENGTH = 100;
+const RATE_LIMIT_MAX = 10;
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 min
+
 export async function POST(req: NextRequest) {
+  if (!checkRateLimit(`checkout:${getClientIp(req)}`, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS)) {
+    return NextResponse.json(
+      { error: "Demasiados pedidos seguidos. Intenta de nuevo en unos minutos." },
+      { status: 429 }
+    );
+  }
+
   let body: CheckoutRequestBody;
   try {
     body = await req.json();
@@ -48,9 +62,19 @@ export async function POST(req: NextRequest) {
     if (!Array.isArray(items) || items.length === 0) {
       return NextResponse.json({ error: "El carrito está vacío" }, { status: 400 });
     }
+    if (items.length > MAX_ITEMS) {
+      return NextResponse.json({ error: "El carrito tiene demasiados productos" }, { status: 400 });
+    }
 
     for (const item of items) {
-      if (!item.productId || !Number.isInteger(item.quantity) || item.quantity < 1) {
+      if (
+        !item.productId ||
+        typeof item.productId !== "string" ||
+        item.productId.length > MAX_PRODUCT_ID_LENGTH ||
+        !Number.isInteger(item.quantity) ||
+        item.quantity < 1 ||
+        item.quantity > MAX_QUANTITY
+      ) {
         return NextResponse.json({ error: "Cantidad inválida" }, { status: 400 });
       }
     }
