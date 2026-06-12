@@ -27,7 +27,7 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
     };
   }, [onClose]);
 
-  const whatsappMessage = `Hola Fraylin, me interesa el producto: *${product.name}*${product.price ? ` (${product.price})` : ""}. ¿Podrían darme más información?`;
+  const whatsappMessage = `Hola Fraylin, me interesa el producto: *${product.name}*. ¿Podrían darme más información?`;
   const buyable = product.priceCents != null;
 
   return (
@@ -60,11 +60,11 @@ export default function ProductModal({ product, onClose }: ProductModalProps) {
           </div>
 
           <div className="flex flex-col gap-4 min-w-0 w-full lg:w-[min(100%,22rem)] lg:shrink-0 lg:max-w-sm">
-            {(buyable || product.price) && (
+            {buyable && (
               <div className="flex items-center gap-2">
                 <Tag size={18} className="text-brand-primary shrink-0" />
                 <span className="text-2xl font-bold text-brand-primary">
-                  {buyable ? formatUSD(product.priceCents!) : product.price}
+                  {formatUSD(product.priceCents!)}
                 </span>
               </div>
             )}

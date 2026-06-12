@@ -161,10 +161,6 @@ export default function ProductsTable({ products, categories }: Props) {
                 </dd>
               </div>
               <div className="flex justify-between gap-4">
-                <dt className="text-gray-500">Precio</dt>
-                <dd className="text-right">{p.price?.trim() ? p.price : "—"}</dd>
-              </div>
-              <div className="flex justify-between gap-4">
                 <dt className="text-gray-500">Precio online</dt>
                 <dd className="text-right">{p.priceCents != null ? formatUSD(p.priceCents) : "—"}</dd>
               </div>
@@ -209,7 +205,6 @@ export default function ProductsTable({ products, categories }: Props) {
             <tr>
               <th className="px-4 py-3 text-left font-medium text-gray-600">Producto</th>
               <th className="px-4 py-3 text-left font-medium text-gray-600">Categoría</th>
-              <th className="px-4 py-3 text-left font-medium text-gray-600">Precio</th>
               <th className="px-4 py-3 text-left font-medium text-gray-600">Precio online</th>
               <th className="px-4 py-3 text-left font-medium text-gray-600">Stock</th>
               <th className="px-4 py-3 text-left font-medium text-gray-600">Destacado</th>
@@ -229,7 +224,6 @@ export default function ProductsTable({ products, categories }: Props) {
                   </div>
                 </td>
                 <td className="px-4 py-3 text-gray-600">{categoryLabel(p.category)}</td>
-                <td className="px-4 py-3 text-gray-600">{p.price?.trim() ? p.price : "—"}</td>
                 <td className="px-4 py-3 text-gray-600">{p.priceCents != null ? formatUSD(p.priceCents) : "—"}</td>
                 <td className="px-4 py-3"><StockBadge stock={p.stock} /></td>
                 <td className="px-4 py-3 text-gray-600">{p.featured ? "Sí" : "—"}</td>

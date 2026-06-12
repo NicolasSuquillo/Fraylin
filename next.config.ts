@@ -5,6 +5,11 @@ const externalHost = appUrl ? new URL(appUrl).host : undefined;
 
 const nextConfig: NextConfig = {
   ...(externalHost ? { allowedDevOrigins: [externalHost] } : {}),
+  experimental: {
+    staleTimes: {
+      static: 0,
+    },
+  },
   images: {
     remotePatterns: [
       {

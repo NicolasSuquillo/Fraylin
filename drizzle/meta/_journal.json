@@ -15,6 +15,13 @@
       "when": 1781210968524,
       "tag": "0001_fat_molecule_man",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1781234356943,
+      "tag": "0002_fantastic_snowbird",
+      "breakpoints": true
     }
   ]
 }

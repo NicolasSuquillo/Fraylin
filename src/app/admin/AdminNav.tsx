@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Package, Tags, Images, ShoppingCart, LogOut } from "lucide-react";
+import { Package, Tags, Images, ShoppingCart, LogOut, ExternalLink } from "lucide-react";
 
 const links = [
   { href: "/admin/products", label: "Productos", Icon: Package },
@@ -45,6 +45,13 @@ export default function AdminNav() {
             </Link>
           ))}
         </nav>
+        <a
+          href="/"
+          className="flex items-center gap-2 text-sm text-gray-500 hover:text-amber-700 text-left px-3 py-2.5 rounded-xl hover:bg-gray-100 transition mb-1"
+        >
+          <ExternalLink className="w-4 h-4 shrink-0" aria-hidden />
+          Ver sitio
+        </a>
         <button
           type="button"
           onClick={handleLogout}
@@ -59,14 +66,23 @@ export default function AdminNav() {
       <header className="md:hidden fixed top-0 inset-x-0 z-50 bg-white/95 backdrop-blur-sm border-b border-gray-200 pt-[env(safe-area-inset-top,0px)]">
         <div className="flex h-14 items-center justify-between px-4">
           <p className="text-base font-bold text-amber-800">Fraylin Admin</p>
-          <button
-            type="button"
-            onClick={handleLogout}
-            className="flex items-center gap-1.5 min-h-[44px] rounded-lg text-sm font-medium text-gray-700 active:bg-gray-100 px-3 -mr-2"
-          >
-            <LogOut className="w-4 h-4 shrink-0" aria-hidden />
-            Salir
-          </button>
+          <div className="flex items-center -mr-2">
+            <a
+              href="/"
+              className="flex items-center gap-1.5 min-h-[44px] rounded-lg text-sm font-medium text-gray-700 active:bg-gray-100 px-3"
+            >
+              <ExternalLink className="w-4 h-4 shrink-0" aria-hidden />
+              Ver sitio
+            </a>
+            <button
+              type="button"
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 min-h-[44px] rounded-lg text-sm font-medium text-gray-700 active:bg-gray-100 px-3"
+            >
+              <LogOut className="w-4 h-4 shrink-0" aria-hidden />
+              Salir
+            </button>
+          </div>
         </div>
       </header>
 

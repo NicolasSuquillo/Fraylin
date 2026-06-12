@@ -7,7 +7,6 @@ export interface Product {
   id: string;
   category: string;
   name: string;
-  price?: string;
   priceCents?: number | null;
   stock?: number | null;
   description?: string;

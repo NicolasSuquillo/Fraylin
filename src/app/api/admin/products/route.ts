@@ -40,7 +40,6 @@ export async function POST(req: NextRequest) {
       categorySlug: product.category,
       name: product.name,
       description: product.description ?? null,
-      displayPrice: product.price ?? null,
       priceCents: product.priceCents ?? null,
       stock: product.stock ?? null,
       featured: product.featured ?? false,

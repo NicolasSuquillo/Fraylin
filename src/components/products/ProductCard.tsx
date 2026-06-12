@@ -34,9 +34,9 @@ export default function ProductCard({ product, onSelect }: ProductCardProps) {
             Destacado
           </span>
         )}
-        {(buyable || product.price) && (
+        {buyable && (
           <span className="absolute top-2 right-2 bg-brand-primary/20 text-brand-primary text-xs font-semibold px-2.5 py-1 rounded-full backdrop-blur-sm border border-brand-primary/30">
-            {buyable ? formatUSD(product.priceCents!) : product.price}
+            {formatUSD(product.priceCents!)}
           </span>
         )}
         {product.images.length > 1 && (

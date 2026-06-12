@@ -37,7 +37,6 @@ function emptyProduct(): Product {
     id: "",
     category: "",
     name: "",
-    price: "",
     priceCents: null,
     stock: null,
     description: "",
@@ -342,19 +341,6 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
           placeholder="Ej: Cerámica Mármol Blanco 60x60"
           className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
           required
-        />
-      </div>
-
-      {/* Precio referencial */}
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Precio referencial / texto (cotización)
-        </label>
-        <input
-          value={product.price ?? ""}
-          onChange={(e) => setField("price", e.target.value)}
-          placeholder="Ej: desde $18/m²"
-          className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
         />
       </div>
 

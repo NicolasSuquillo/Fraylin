@@ -39,7 +39,6 @@ export async function PUT(
         categorySlug: updated.category,
         name: updated.name,
         description: updated.description ?? null,
-        displayPrice: updated.price ?? null,
         priceCents: updated.priceCents ?? null,
         stock: updated.stock ?? null,
         featured: updated.featured ?? false,

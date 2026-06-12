@@ -30,7 +30,6 @@ export const products = pgTable(
       .references(() => categories.slug, { onUpdate: "cascade" }),
     name: text("name").notNull(),
     description: text("description"),
-    displayPrice: text("display_price"),
     priceCents: integer("price_cents"),
     stock: integer("stock"),
     featured: boolean("featured").notNull().default(false),

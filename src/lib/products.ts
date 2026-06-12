@@ -12,7 +12,6 @@ function mapProduct(row: ProductWithRelations): Product {
     id: row.id,
     category: row.categorySlug,
     name: row.name,
-    price: row.displayPrice ?? undefined,
     priceCents: row.priceCents,
     stock: row.stock,
     description: row.description ?? undefined,
