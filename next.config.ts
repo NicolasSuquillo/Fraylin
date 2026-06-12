@@ -7,7 +7,9 @@ const nextConfig: NextConfig = {
   ...(externalHost ? { allowedDevOrigins: [externalHost] } : {}),
   experimental: {
     staleTimes: {
-      static: 0,
+      // Mínimo permitido por Next 16; mantiene corto el caché del router
+      // cliente para que los cambios del admin se reflejen pronto en "/".
+      static: 30,
     },
   },
   images: {

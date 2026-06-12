@@ -1,5 +1,6 @@
-import { getAllProducts, getCategories, getFeaturedProducts } from "@/lib/products";
+import { getAllProducts, getCategories } from "@/lib/products";
 import { getGalleryItems } from "@/lib/gallery";
+import CartSync from "@/components/cart/CartSync";
 import HeroSection from "@/components/sections/HeroSection";
 import ServiciosSection from "@/components/sections/ServiciosSection";
 import ProductsCatalog from "@/components/products/ProductsCatalog";
@@ -14,12 +15,12 @@ import ScrollToTop from "@/components/ui/ScrollToTop";
 export const revalidate = 3600;
 
 export default async function Home() {
-  const [products, categories, featuredProducts, galleryItems] = await Promise.all([
+  const [products, categories, galleryItems] = await Promise.all([
     getAllProducts(),
     getCategories(),
-    getFeaturedProducts(),
     getGalleryItems(),
   ]);
+  const featuredProducts = products.filter((p) => p.featured);
 
   return (
     <>
@@ -38,6 +39,7 @@ export default async function Home() {
         media="(min-width: 768px)"
       />
       <ScrollToTop />
+      <CartSync products={products} />
       <Header />
       <main>
         <HeroSection />

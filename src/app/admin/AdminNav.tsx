@@ -34,6 +34,7 @@ export default function AdminNav() {
             <Link
               key={href}
               href={href}
+              prefetch={false}
               className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition ${
                 pathname.startsWith(href)
                   ? "bg-amber-100 text-amber-900"
@@ -47,6 +48,8 @@ export default function AdminNav() {
         </nav>
         <a
           href="/"
+          target="_blank"
+          rel="noopener noreferrer"
           className="flex items-center gap-2 text-sm text-gray-500 hover:text-amber-700 text-left px-3 py-2.5 rounded-xl hover:bg-gray-100 transition mb-1"
         >
           <ExternalLink className="w-4 h-4 shrink-0" aria-hidden />
@@ -69,6 +72,8 @@ export default function AdminNav() {
           <div className="flex items-center -mr-2">
             <a
               href="/"
+              target="_blank"
+              rel="noopener noreferrer"
               className="flex items-center gap-1.5 min-h-[44px] rounded-lg text-sm font-medium text-gray-700 active:bg-gray-100 px-3"
             >
               <ExternalLink className="w-4 h-4 shrink-0" aria-hidden />
@@ -98,6 +103,7 @@ export default function AdminNav() {
               <Link
                 key={href}
                 href={href}
+                prefetch={false}
                 className={`flex flex-1 flex-col items-center justify-center gap-0.5 min-h-[52px] py-2 px-1 transition ${
                   active ? "text-amber-800 bg-amber-50/90" : "text-gray-500 active:bg-gray-50"
                 }`}
