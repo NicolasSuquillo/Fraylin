@@ -110,6 +110,20 @@ export default async function OrderDetailPage({
               <dt className="text-gray-500">Subtotal</dt>
               <dd className="text-gray-800">{formatUSD(order.subtotalCents)}</dd>
             </div>
+            {order.shippingCents > 0 && (
+              <div className="flex justify-between">
+                <dt className="text-gray-500">
+                  Envío{order.shippingZoneLabel ? ` (${order.shippingZoneLabel})` : ""}
+                </dt>
+                <dd className="text-gray-800">{formatUSD(order.shippingCents)}</dd>
+              </div>
+            )}
+            {order.installationCents > 0 && (
+              <div className="flex justify-between">
+                <dt className="text-gray-500">Instalación</dt>
+                <dd className="text-gray-800">{formatUSD(order.installationCents)}</dd>
+              </div>
+            )}
             <div className="flex justify-between">
               <dt className="text-gray-500">IVA</dt>
               <dd className="text-gray-800">{formatUSD(order.taxCents)}</dd>

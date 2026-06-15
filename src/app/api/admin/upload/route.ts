@@ -49,14 +49,14 @@ export async function POST(req: NextRequest) {
     );
   }
 
-  if (destination === "gallery") {
+  if (destination === "gallery" || destination === "payments") {
     if (!ALLOWED_TYPES.includes(file.type)) {
       return NextResponse.json({ error: "Tipo de archivo no permitido" }, { status: 400 });
     }
     const ext = normalizeExt(extname(file.name) || ".jpg");
     const base = sanitize(file.name.slice(0, file.name.lastIndexOf(".")) || file.name);
     const filename = `${Date.now()}-${base}${ext}`;
-    const blob = await put(`gallery/${filename}`, file, {
+    const blob = await put(`${destination}/${filename}`, file, {
       access: "public",
       addRandomSuffix: false,
     });

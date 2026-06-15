@@ -21,7 +21,11 @@ export default function ProductsCatalog({
 
   return (
     <>
-      <DestacadosSection products={featuredProducts} onSelect={setSelectedProduct} />
+      <DestacadosSection
+        products={featuredProducts}
+        categories={categories}
+        onSelect={setSelectedProduct}
+      />
       <ProductosSection
         products={products}
         categories={categories}
@@ -31,6 +35,7 @@ export default function ProductsCatalog({
         <ProductModal
           product={selectedProduct}
           onClose={() => setSelectedProduct(null)}
+          categories={categories}
         />
       )}
     </>

@@ -62,6 +62,9 @@ export interface Order {
   customerAddress: string;
   subtotalCents: number;
   taxCents: number;
+  shippingCents: number;
+  installationCents: number;
+  shippingZoneLabel: string | null;
   totalCents: number;
   payphoneTransactionId?: string | null;
   payphoneStatusCode?: number | null;

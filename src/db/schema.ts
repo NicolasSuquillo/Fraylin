@@ -20,6 +20,27 @@ export const cacheMeta = pgTable("cache_meta", {
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 
+// Fila única (id=1): precios configurables de envío e instalación.
+export const pricingSettings = pgTable("pricing_settings", {
+  id: integer("id").primaryKey().default(1),
+  shippingZoneCents: jsonb("shipping_zone_cents").notNull().default({}),
+  shippingZoneLabels: jsonb("shipping_zone_labels").notNull().default({}),
+  installationCents: integer("installation_cents").notNull().default(0),
+  shippingEnabled: boolean("shipping_enabled").notNull().default(true),
+  installationEnabled: boolean("installation_enabled").notNull().default(true),
+  shippingDescription: text("shipping_description"),
+  installationDescription: text("installation_description"),
+  transferEnabled: boolean("transfer_enabled").notNull().default(true),
+  transferQrImageUrl: text("transfer_qr_image_url"),
+  transferBankName: text("transfer_bank_name"),
+  transferAccountType: text("transfer_account_type"),
+  transferAccountNumber: text("transfer_account_number"),
+  transferAccountHolder: text("transfer_account_holder"),
+  transferAccountId: text("transfer_account_id"),
+  transferInstructions: text("transfer_instructions"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 export const categories = pgTable("categories", {
   slug: text("slug").primaryKey(),
   label: text("label").notNull(),
@@ -95,6 +116,9 @@ export const orders = pgTable(
     customerAddress: text("customer_address").notNull(),
     subtotalCents: integer("subtotal_cents").notNull(),
     taxCents: integer("tax_cents").notNull(),
+    shippingCents: integer("shipping_cents").notNull().default(0),
+    installationCents: integer("installation_cents").notNull().default(0),
+    shippingZoneLabel: text("shipping_zone_label"),
     totalCents: integer("total_cents").notNull(),
     payphoneTransactionId: text("payphone_transaction_id"),
     payphoneStatusCode: integer("payphone_status_code"),

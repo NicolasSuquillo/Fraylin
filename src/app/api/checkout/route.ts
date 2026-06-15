@@ -5,6 +5,7 @@ import { orders, orderItems, products } from "@/db/schema";
 import { firstCheckoutError, validateCheckoutCustomer } from "@/lib/checkout-validation";
 import { computeTaxBreakdown } from "@/lib/money";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
+import { getPricingSettings } from "@/lib/pricing";
 import { PAYMENT_METHODS, type CheckoutCustomer, type PaymentMethod } from "@/types";
 
 interface CheckoutRequestItem {
@@ -16,6 +17,8 @@ interface CheckoutRequestBody {
   customer: CheckoutCustomer;
   items: CheckoutRequestItem[];
   paymentMethod?: PaymentMethod;
+  shippingZoneId?: string;
+  installationRequested?: boolean;
 }
 
 function generateClientTransactionId(): string {
@@ -52,6 +55,19 @@ export async function POST(req: NextRequest) {
     if (!PAYMENT_METHODS.includes(paymentMethod)) {
       return NextResponse.json({ error: "Método de pago inválido" }, { status: 400 });
     }
+
+    const pricing = await getPricingSettings();
+
+    let shippingZone = pricing.zones.find((z) => z.id === body.shippingZoneId);
+    if (pricing.shippingEnabled) {
+      if (!shippingZone) {
+        return NextResponse.json({ error: "Zona de envío inválida" }, { status: 400 });
+      }
+    } else {
+      shippingZone = { id: "none", label: "", cents: 0 };
+    }
+
+    const installationRequested = pricing.installationEnabled && body.installationRequested === true;
 
     const customerValidation = validateCheckoutCustomer(customer ?? {});
     if (!customerValidation.valid) {
@@ -107,12 +123,15 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const totalCents = items.reduce((sum, item) => {
+    const productSubtotalCents = items.reduce((sum, item) => {
       const product = productMap.get(item.productId)!;
       return sum + product.priceCents! * item.quantity;
     }, 0);
 
-    const { subtotalCents, taxCents } = computeTaxBreakdown(totalCents);
+    const { subtotalCents, taxCents } = computeTaxBreakdown(productSubtotalCents);
+    const shippingCents = shippingZone.cents;
+    const installationCents = installationRequested ? pricing.installationCents : 0;
+    const totalCents = productSubtotalCents + shippingCents + installationCents;
     const clientTransactionId = generateClientTransactionId();
 
     const order = await db.transaction(async (tx) => {
@@ -127,6 +146,9 @@ export async function POST(req: NextRequest) {
           customerAddress: normalizedCustomer.address,
           subtotalCents,
           taxCents,
+          shippingCents,
+          installationCents,
+          shippingZoneLabel: shippingZone.label || null,
           totalCents,
         })
         .returning();
@@ -155,6 +177,9 @@ export async function POST(req: NextRequest) {
       totalCents: order.totalCents,
       subtotalCents: order.subtotalCents,
       taxCents: order.taxCents,
+      shippingCents: order.shippingCents,
+      installationCents: order.installationCents,
+      shippingZoneLabel: order.shippingZoneLabel,
     });
   } catch (error) {
     console.error("Error en checkout:", error);

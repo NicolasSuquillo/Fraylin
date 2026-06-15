@@ -1,0 +1,1 @@
+ALTER TABLE "pricing_settings" ADD COLUMN "shipping_zone_labels" jsonb DEFAULT '{}'::jsonb NOT NULL;

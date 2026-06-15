@@ -97,7 +97,7 @@ export default function ProductosSection({
           <div className="grid grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6 items-stretch">
             {sortedProducts.map((product, i) => (
               <Reveal key={product.id} delay={i * 0.05}>
-                <ProductCard product={product} onSelect={onProductSelect} />
+                <ProductCard product={product} onSelect={onProductSelect} categories={categories} />
               </Reveal>
             ))}
           </div>

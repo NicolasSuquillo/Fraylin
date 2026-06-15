@@ -5,15 +5,17 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 import SectionHeading from "@/components/ui/SectionHeading";
 import Reveal from "@/components/ui/Reveal";
 import ProductCard from "@/components/products/ProductCard";
-import type { Product } from "@/types";
+import type { Product, Category } from "@/types";
 
 interface DestacadosSectionProps {
   products: Product[];
+  categories: Category[];
   onSelect: (product: Product) => void;
 }
 
 export default function DestacadosSection({
   products,
+  categories,
   onSelect,
 }: DestacadosSectionProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -67,7 +69,7 @@ export default function DestacadosSection({
                 key={p.id}
                 className="snap-start shrink-0 w-[86%] min-w-0 sm:w-[38%] md:w-[31%] lg:w-[24%]"
               >
-                <ProductCard product={p} onSelect={onSelect} />
+                <ProductCard product={p} onSelect={onSelect} categories={categories} />
               </div>
             ))}
           </div>

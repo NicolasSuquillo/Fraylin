@@ -10,43 +10,7 @@ interface ImageGalleryProps {
   productName: string;
 }
 
-const PLACEHOLDER_DIMS = { w: 800, h: 600 };
-
-function GallerySlideImage({ image }: { image: ProductImage }) {
-  const [dims, setDims] = useState(PLACEHOLDER_DIMS);
-  return (
-    <SafeImage
-      src={image.src}
-      alt={image.alt}
-      width={dims.w}
-      height={dims.h}
-      className="object-contain max-h-full max-w-full w-auto h-auto p-2 sm:p-3"
-      sizes="(max-width: 1024px) 92vw, min(860px, 65vw)"
-      priority
-      onLoadingComplete={(img) =>
-        setDims({ w: img.naturalWidth, h: img.naturalHeight })
-      }
-    />
-  );
-}
-
-function LightboxSlideImage({ image }: { image: ProductImage }) {
-  const [dims, setDims] = useState(PLACEHOLDER_DIMS);
-  return (
-    <SafeImage
-      src={image.src}
-      alt={image.alt}
-      width={dims.w}
-      height={dims.h}
-      className="object-contain max-w-full max-h-full w-auto h-auto"
-      sizes="100vw"
-      priority
-      onLoadingComplete={(img) =>
-        setDims({ w: img.naturalWidth, h: img.naturalHeight })
-      }
-    />
-  );
-}
+const SLIDE_TRANSITION = "transform 0.35s cubic-bezier(0.22, 1, 0.36, 1)";
 
 export default function ImageGallery({
   images,
@@ -56,23 +20,32 @@ export default function ImageGallery({
   const [lightbox, setLightbox] = useState(false);
   const dialogRef = useRef<HTMLDialogElement>(null);
 
-  const prev = useCallback(() => {
-    setCurrent((c) => (c === 0 ? images.length - 1 : c - 1));
-  }, [images.length]);
+  const isMulti = images.length > 1;
+  const activeIndex =
+    images.length === 0 ? 0 : Math.min(current, images.length - 1);
+  const activeImage = images[activeIndex];
 
-  const next = useCallback(() => {
-    setCurrent((c) => (c === images.length - 1 ? 0 : c + 1));
-  }, [images.length]);
+  const goTo = useCallback(
+    (index: number) => {
+      if (images.length === 0) return;
+      setCurrent(((index % images.length) + images.length) % images.length);
+    },
+    [images.length]
+  );
+
+  const prev = useCallback(() => goTo(activeIndex - 1), [activeIndex, goTo]);
+  const next = useCallback(() => goTo(activeIndex + 1), [activeIndex, goTo]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
+      if (!lightbox) return;
       if (e.key === "ArrowLeft") prev();
       if (e.key === "ArrowRight") next();
       if (e.key === "Escape") setLightbox(false);
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [prev, next]);
+  }, [prev, next, lightbox]);
 
   useEffect(() => {
     const dialog = dialogRef.current;
@@ -86,32 +59,62 @@ export default function ImageGallery({
     }
   }, [lightbox]);
 
+  const lightboxStyle = {
+    transform: `translateX(-${activeIndex * 100}%)`,
+    transition: SLIDE_TRANSITION,
+  };
+
+  if (!activeImage) return null;
+
   return (
     <>
-      <div className="flex min-h-0 w-full flex-1 flex-col gap-3">
-        <div
-          className="relative flex min-h-[min(260px,42vh)] flex-1 w-full min-w-0 items-center justify-center overflow-hidden rounded-2xl bg-gradient-to-b from-stone-100 to-stone-200/80 shadow-inner cursor-zoom-in group lg:min-h-[min(480px,calc(92vh-11rem))] lg:max-h-[min(78vh,calc(92vh-11rem))]"
-          onClick={() => setLightbox(true)}
-        >
-          <GallerySlideImage
-            key={images[current].src}
-            image={images[current]}
-          />
-          <span className="absolute top-2 right-2 bg-black/40 text-white rounded-full p-1.5 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none">
-            <ZoomIn size={16} />
-          </span>
-          {images.length > 1 && (
+      <div className="flex w-full flex-col gap-3 px-4 sm:px-5 lg:px-0">
+        <div className="relative">
+          <button
+            type="button"
+            onClick={() => setLightbox(true)}
+            className="group relative block aspect-[4/3] w-full overflow-hidden rounded-2xl bg-neutral-light"
+            aria-label={`Ampliar imagen de ${productName}`}
+          >
+            <SafeImage
+              key={activeImage.src}
+              src={activeImage.src}
+              alt={activeImage.alt}
+              fill
+              className="object-contain transition-transform duration-500 group-active:scale-[0.99]"
+              sizes="(max-width: 640px) 92vw, (max-width: 1024px) 55vw, 480px"
+              priority
+            />
+
+            <span className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full bg-black/55 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm">
+              <ZoomIn size={14} aria-hidden />
+              Ampliar
+            </span>
+
+            {isMulti && (
+              <span
+                className="absolute top-3 left-3 rounded-full bg-black/55 px-2.5 py-1 text-xs font-medium text-white backdrop-blur-sm"
+                aria-live="polite"
+              >
+                {activeIndex + 1} / {images.length}
+              </span>
+            )}
+          </button>
+
+          {isMulti && (
             <>
               <button
-                onClick={(e) => { e.stopPropagation(); prev(); }}
-                className="absolute left-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full p-1.5 transition-colors"
+                type="button"
+                onClick={prev}
+                className="absolute left-2 top-1/2 -translate-y-1/2 rounded-full bg-white/95 p-2 text-brand-dark shadow-md transition-colors hover:bg-white"
                 aria-label="Imagen anterior"
               >
                 <ChevronLeft size={20} />
               </button>
               <button
-                onClick={(e) => { e.stopPropagation(); next(); }}
-                className="absolute right-2 top-1/2 -translate-y-1/2 bg-black/40 hover:bg-black/60 text-white rounded-full p-1.5 transition-colors"
+                type="button"
+                onClick={next}
+                className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full bg-white/95 p-2 text-brand-dark shadow-md transition-colors hover:bg-white"
                 aria-label="Imagen siguiente"
               >
                 <ChevronRight size={20} />
@@ -120,25 +123,32 @@ export default function ImageGallery({
           )}
         </div>
 
-        {images.length > 1 && (
-          <div className="flex gap-2 overflow-x-auto pb-1">
+        {isMulti && (
+          <div
+            className="grid grid-cols-4 gap-2 sm:grid-cols-5"
+            role="tablist"
+            aria-label={`Miniaturas de ${productName}`}
+          >
             {images.map((img, i) => (
               <button
-                key={i}
-                onClick={() => setCurrent(i)}
-                className={`relative flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
-                  i === current
-                    ? "border-brand-primary"
-                    : "border-transparent opacity-60 hover:opacity-100"
+                key={img.src}
+                type="button"
+                role="tab"
+                onClick={() => goTo(i)}
+                className={`relative aspect-square overflow-hidden rounded-xl transition-all ${
+                  i === activeIndex
+                    ? "ring-2 ring-brand-primary ring-offset-2 ring-offset-surface-primary"
+                    : "opacity-60 hover:opacity-100"
                 }`}
-                aria-label={`Ver ${productName} imagen ${i + 1}`}
+                aria-label={`Ver imagen ${i + 1} de ${images.length}`}
+                aria-selected={i === activeIndex}
               >
                 <SafeImage
                   src={img.src}
                   alt={img.alt}
                   fill
-                  className="object-cover"
-                  sizes="64px"
+                  className="object-contain bg-neutral-light"
+                  sizes="80px"
                 />
               </button>
             ))}
@@ -148,39 +158,66 @@ export default function ImageGallery({
 
       <dialog
         ref={dialogRef}
-        className="fixed inset-0 m-auto p-0 bg-transparent max-w-none max-h-none w-screen h-screen backdrop:bg-black/90"
+        className="fixed inset-0 m-auto max-h-none max-w-none h-screen w-screen bg-transparent p-0 backdrop:bg-black/95"
         onClick={() => setLightbox(false)}
       >
-        <div className="flex items-center justify-center w-full h-full p-4" onClick={(e) => e.stopPropagation()}>
+        <div
+          className="relative flex h-full w-full items-center justify-center overflow-hidden p-4"
+          onClick={(e) => e.stopPropagation()}
+        >
           <button
+            type="button"
             onClick={() => setLightbox(false)}
-            className="absolute top-4 right-4 z-10 bg-white/20 hover:bg-white/40 text-white rounded-full p-2 transition-colors"
+            className="absolute top-4 right-4 z-10 rounded-full bg-white/15 p-2 text-white transition-colors hover:bg-white/30"
             aria-label="Cerrar"
           >
             <X size={24} />
           </button>
-          {images.length > 1 && (
+
+          {isMulti && (
             <>
               <button
+                type="button"
                 onClick={prev}
-                className="absolute left-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white rounded-full p-2 transition-colors"
+                className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/15 p-2 text-white transition-colors hover:bg-white/30"
                 aria-label="Imagen anterior"
               >
                 <ChevronLeft size={24} />
               </button>
               <button
+                type="button"
                 onClick={next}
-                className="absolute right-4 top-1/2 -translate-y-1/2 bg-white/20 hover:bg-white/40 text-white rounded-full p-2 transition-colors"
+                className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/15 p-2 text-white transition-colors hover:bg-white/30"
                 aria-label="Imagen siguiente"
               >
                 <ChevronRight size={24} />
               </button>
+              <span className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2 rounded-full bg-black/50 px-3 py-1 text-sm text-white backdrop-blur-sm">
+                {activeIndex + 1} / {images.length}
+              </span>
             </>
           )}
-          <LightboxSlideImage
-            key={images[current].src}
-            image={images[current]}
-          />
+
+          <div className="relative h-full w-full max-w-5xl overflow-hidden">
+            <div className="flex h-full w-full" style={lightboxStyle}>
+              {images.map((image, i) => (
+                <div
+                  key={image.src}
+                  className="relative h-full min-w-full w-full shrink-0"
+                  aria-hidden={i !== activeIndex}
+                >
+                  <SafeImage
+                    src={image.src}
+                    alt={image.alt}
+                    fill
+                    className="object-contain"
+                    sizes="100vw"
+                    priority={i === activeIndex}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </dialog>
     </>

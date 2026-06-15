@@ -9,6 +9,7 @@ import Footer from "@/components/layout/Footer";
 import SafeImage from "@/components/ui/SafeImage";
 import { useCart } from "@/components/cart/CartProvider";
 import { BUSINESS, buildWhatsAppUrl } from "@/lib/constants";
+import type { ShippingZonePrice, TransferSettings } from "@/lib/pricing";
 import { validateCheckoutCustomer, type CheckoutFieldErrors } from "@/lib/checkout-validation";
 import { formatUSD } from "@/lib/money";
 import type { CartItem, CheckoutCustomer, PaymentMethod } from "@/types";
@@ -29,6 +30,13 @@ declare global {
 interface CheckoutClientProps {
   payphoneToken: string;
   payphoneStoreId: string;
+  shippingZones: ShippingZonePrice[];
+  installationCents: number;
+  shippingEnabled: boolean;
+  installationEnabled: boolean;
+  shippingDescription: string;
+  installationDescription: string;
+  transfer: TransferSettings;
 }
 
 interface OrderResult {
@@ -38,24 +46,84 @@ interface OrderResult {
   totalCents: number;
   subtotalCents: number;
   taxCents: number;
+  shippingCents: number;
+  installationCents: number;
+  shippingZoneLabel: string | null;
 }
 
 function buildTransferMessage(order: OrderResult, items: CartItem[], customer: CheckoutCustomer): string {
   const lines = items.map(
     (item) => `• ${item.quantity} × ${item.name} — ${formatUSD(item.priceCents * item.quantity)}`
   );
+  const extraLines: string[] = [];
+  if (order.shippingCents > 0) {
+    extraLines.push(`Envío (${order.shippingZoneLabel}): ${formatUSD(order.shippingCents)}`);
+  } else if (order.shippingZoneLabel) {
+    extraLines.push(`Envío (${order.shippingZoneLabel}): Gratis`);
+  }
+  if (order.installationCents > 0) {
+    extraLines.push(`Instalación: ${formatUSD(order.installationCents)}`);
+  }
   return [
     `Hola, quiero pagar mi pedido ${order.clientTransactionId} por transferencia o Deuna.`,
     "",
     ...lines,
     "",
+    ...extraLines,
     `Total: ${formatUSD(order.totalCents)}`,
     `Nombre: ${customer.name}`,
     `Entrega: ${customer.address}`,
+    "",
+    "Adjunto el comprobante de pago a continuación.",
   ].join("\n");
 }
 
-export default function CheckoutClient({ payphoneToken, payphoneStoreId }: CheckoutClientProps) {
+function TransferInfo({ transfer }: { transfer: TransferSettings }) {
+  const rows: [string, string][] = [
+    ["Banco", transfer.bankName],
+    ["Tipo de cuenta", transfer.accountType],
+    ["Número de cuenta", transfer.accountNumber],
+    ["Titular", transfer.accountHolder],
+    ["Cédula / RUC", transfer.accountId],
+  ].filter(([, value]) => value.trim().length > 0) as [string, string][];
+
+  return (
+    <div className="flex flex-col gap-3 border border-stone-200 rounded-xl p-3 bg-stone-50">
+      {transfer.qrImageUrl && (
+        <div className="relative w-40 h-40 mx-auto rounded-lg overflow-hidden bg-white border border-stone-200">
+          <SafeImage src={transfer.qrImageUrl} alt="QR de Deuna" fill className="object-contain" sizes="160px" />
+        </div>
+      )}
+      {rows.length > 0 && (
+        <dl className="flex flex-col gap-1 text-sm">
+          {rows.map(([label, value]) => (
+            <div key={label} className="flex items-center justify-between gap-3">
+              <dt className="text-text-secondary">{label}</dt>
+              <dd className="font-semibold text-text-primary text-right">{value}</dd>
+            </div>
+          ))}
+        </dl>
+      )}
+      {transfer.instructions && <p className="text-xs text-text-secondary">{transfer.instructions}</p>}
+      <p className="text-xs font-medium text-amber-700 bg-amber-50 border border-amber-200 rounded-lg p-2">
+        Usa únicamente los datos mostrados aquí. Tu pedido se confirma manualmente luego de
+        verificar el comprobante; no se realizan cobros automáticos.
+      </p>
+    </div>
+  );
+}
+
+export default function CheckoutClient({
+  payphoneToken,
+  payphoneStoreId,
+  shippingZones,
+  installationCents: INSTALLATION_CENTS,
+  shippingEnabled,
+  installationEnabled,
+  shippingDescription,
+  installationDescription,
+  transfer,
+}: CheckoutClientProps) {
   const { items, totalCents, clear } = useCart();
   const [customer, setCustomer] = useState<CheckoutCustomer>({
     name: "",
@@ -64,6 +132,8 @@ export default function CheckoutClient({ payphoneToken, payphoneStoreId }: Check
     address: "",
   });
   const [method, setMethod] = useState<PaymentMethod>(payphoneToken ? "payphone" : "transferencia");
+  const [shippingZoneId, setShippingZoneId] = useState<string>(shippingZones[0].id);
+  const [installationRequested, setInstallationRequested] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<CheckoutFieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
@@ -87,7 +157,7 @@ export default function CheckoutClient({ payphoneToken, payphoneStoreId }: Check
       clientTransactionId: order.clientTransactionId,
       amount: order.totalCents,
       amountWithTax: order.subtotalCents,
-      amountWithoutTax: 0,
+      amountWithoutTax: order.shippingCents + order.installationCents,
       tax: order.taxCents,
       service: 0,
       tip: 0,
@@ -149,6 +219,8 @@ export default function CheckoutClient({ payphoneToken, payphoneStoreId }: Check
           customer: validation.normalized,
           items: items.map((item) => ({ productId: item.productId, quantity: item.quantity })),
           paymentMethod: method,
+          shippingZoneId,
+          installationRequested,
         }),
       });
       const data = await res.json();
@@ -183,6 +255,10 @@ export default function CheckoutClient({ payphoneToken, payphoneStoreId }: Check
   };
 
   const summaryItems = order ? orderItems : items;
+  const selectedZone = shippingZones.find((z) => z.id === shippingZoneId) ?? shippingZones[0];
+  const effectiveShippingCents = shippingEnabled ? selectedZone.cents : 0;
+  const effectiveInstallationCents = installationEnabled && installationRequested ? INSTALLATION_CENTS : 0;
+  const grandTotalCents = totalCents + effectiveShippingCents + effectiveInstallationCents;
 
   return (
     <>
@@ -207,11 +283,34 @@ export default function CheckoutClient({ payphoneToken, payphoneStoreId }: Check
               <p className="text-sm font-bold text-brand-primary">{formatUSD(item.priceCents * item.quantity)}</p>
             </div>
           ))}
+          <div className="flex items-center justify-between text-sm text-text-secondary border-t border-stone-100 pt-3">
+            <span>Subtotal productos</span>
+            <span>{formatUSD(order?.subtotalCents != null ? order.subtotalCents + order.taxCents : totalCents)}</span>
+          </div>
+          {(order ? order.shippingCents > 0 || order.shippingZoneLabel : shippingEnabled) && (
+            <div className="flex items-center justify-between text-sm text-text-secondary">
+              <span>
+                Envío
+                {order
+                  ? order.shippingZoneLabel && ` (${order.shippingZoneLabel})`
+                  : ` (${selectedZone.label})`}
+              </span>
+              <span>{(order?.shippingCents ?? effectiveShippingCents) > 0 ? formatUSD(order?.shippingCents ?? effectiveShippingCents) : "Gratis"}</span>
+            </div>
+          )}
+          {((order?.installationCents ?? effectiveInstallationCents) > 0) && (
+            <div className="flex items-center justify-between text-sm text-text-secondary">
+              <span>Instalación</span>
+              <span>{formatUSD(order?.installationCents ?? effectiveInstallationCents)}</span>
+            </div>
+          )}
           <div className="flex items-center justify-between text-lg font-bold text-text-primary border-t border-stone-100 pt-3">
             <span>Total</span>
-            <span className="text-brand-primary">{formatUSD(order?.totalCents ?? totalCents)}</span>
+            <span className="text-brand-primary">{formatUSD(order?.totalCents ?? grandTotalCents)}</span>
           </div>
-          <p className="text-xs text-text-secondary">El envío se coordina por WhatsApp luego del pago.</p>
+          <p className="text-xs text-text-secondary">
+            Precios de envío referenciales; coordinamos los detalles de entrega por WhatsApp.
+          </p>
         </section>
 
         {!order && (
@@ -276,6 +375,59 @@ export default function CheckoutClient({ payphoneToken, payphoneStoreId }: Check
               </label>
             </div>
 
+            {shippingEnabled && (
+              <div className="flex flex-col gap-2">
+                <p className="text-sm font-medium text-text-primary">Envío</p>
+                <p className="text-xs text-text-secondary">{shippingDescription}</p>
+                <div className="grid sm:grid-cols-2 gap-3">
+                  {shippingZones.map((zone) => (
+                    <label
+                      key={zone.id}
+                      className={`flex items-center justify-between gap-3 border rounded-xl p-3 cursor-pointer transition-colors ${
+                        shippingZoneId === zone.id
+                          ? "border-brand-primary bg-brand-primary/5"
+                          : "border-stone-200 hover:border-stone-300"
+                      }`}
+                    >
+                      <span className="flex items-center gap-3">
+                        <input
+                          type="radio"
+                          name="shippingZone"
+                          value={zone.id}
+                          checked={shippingZoneId === zone.id}
+                          onChange={() => setShippingZoneId(zone.id)}
+                          className="accent-brand-primary"
+                        />
+                        <span className="text-sm font-medium text-text-primary">{zone.label}</span>
+                      </span>
+                      <span className="text-sm font-semibold text-brand-primary">
+                        {zone.cents > 0 ? formatUSD(zone.cents) : "Gratis"}
+                      </span>
+                    </label>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {installationEnabled && (
+              <div className="flex flex-col gap-2">
+                <label className="flex items-start gap-3 border border-stone-200 rounded-xl p-3 cursor-pointer transition-colors hover:border-stone-300">
+                  <input
+                    type="checkbox"
+                    checked={installationRequested}
+                    onChange={(e) => setInstallationRequested(e.target.checked)}
+                    className="mt-1 accent-brand-primary"
+                  />
+                  <span className="flex flex-col gap-0.5">
+                    <span className="text-sm font-semibold text-text-primary">
+                      Agregar instalación (+{formatUSD(INSTALLATION_CENTS)})
+                    </span>
+                    <span className="text-xs text-text-secondary">{installationDescription}</span>
+                  </span>
+                </label>
+              </div>
+            )}
+
             <div className="flex flex-col gap-2">
               <p className="text-sm font-medium text-text-primary">Método de pago</p>
               <div className="grid sm:grid-cols-2 gap-3">
@@ -332,6 +484,8 @@ export default function CheckoutClient({ payphoneToken, payphoneStoreId }: Check
               </div>
             </div>
 
+            {method === "transferencia" && transfer.enabled && <TransferInfo transfer={transfer} />}
+
             {error && <p className="text-sm text-red-600">{error}</p>}
 
             <button
@@ -356,6 +510,7 @@ export default function CheckoutClient({ payphoneToken, payphoneStoreId }: Check
               Te abrimos WhatsApp para coordinar el pago por transferencia o Deuna. Si no se abrió
               automáticamente, usa el botón:
             </p>
+            {transfer.enabled && <TransferInfo transfer={transfer} />}
             <a
               href={whatsappUrl ?? buildWhatsAppUrl(BUSINESS.whatsapp[0].number, `Hola, quiero pagar mi pedido ${order.clientTransactionId} por transferencia o Deuna.`)}
               target="_blank"
