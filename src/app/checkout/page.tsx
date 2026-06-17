@@ -21,6 +21,7 @@ export default async function CheckoutPage() {
         payphoneStoreId={process.env.PAYPHONE_STORE_ID ?? ""}
         shippingZones={pricing.zones}
         installationCents={pricing.installationCents}
+        installationTransferCents={pricing.installationTransferCents}
         shippingEnabled={pricing.shippingEnabled}
         installationEnabled={pricing.installationEnabled}
         shippingDescription={pricing.shippingDescription}

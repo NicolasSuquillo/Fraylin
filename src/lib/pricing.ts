@@ -8,16 +8,27 @@ import {
   INSTALLATION_DESCRIPTION_DEFAULT,
   TRANSFER_INSTRUCTIONS_DEFAULT,
 } from "@/lib/constants";
+import { PAYPHONE_FEE_BPS_DEFAULT } from "@/lib/money";
+
+// Inverso de transferToCardCents: deriva el precio transferencia desde el de
+// tarjeta cuando no hay valor transferencia guardado (datos legacy).
+function cardToTransferCents(cardCents: number, feeBps: number): number {
+  if (cardCents <= 0) return cardCents;
+  return Math.round(cardCents * (1 - feeBps / 10000));
+}
 
 export interface ShippingZonePrice {
   id: string;
   label: string;
-  cents: number;
+  cents: number;          // precio con tarjeta (incluye comisión Payphone)
+  transferCents: number;  // precio con transferencia/Deuna (base)
 }
 
 export interface PricingSettings {
   zones: ShippingZonePrice[];
-  installationCents: number;
+  installationCents: number;         // instalación con tarjeta
+  installationTransferCents: number; // instalación con transferencia
+  payphoneFeeBps: number;
   shippingEnabled: boolean;
   installationEnabled: boolean;
   shippingDescription: string;
@@ -29,15 +40,27 @@ export async function getPricingSettings(): Promise<PricingSettings> {
     where: eq(pricingSettings.id, 1),
   });
   const centsOverrides = (row?.shippingZoneCents as Record<string, number> | null) ?? {};
+  const transferOverrides =
+    (row?.shippingZoneTransferCents as Record<string, number> | null) ?? {};
   const labelOverrides = (row?.shippingZoneLabels as Record<string, string> | null) ?? {};
+  const feeBps = row?.payphoneFeeBps ?? PAYPHONE_FEE_BPS_DEFAULT;
 
   return {
-    zones: SHIPPING_ZONES.map((zone) => ({
-      id: zone.id,
-      label: labelOverrides[zone.id] ?? zone.label,
-      cents: centsOverrides[zone.id] ?? zone.cents,
-    })),
+    zones: SHIPPING_ZONES.map((zone) => {
+      const cents = centsOverrides[zone.id] ?? zone.cents;
+      return {
+        id: zone.id,
+        label: labelOverrides[zone.id] ?? zone.label,
+        cents,
+        // Si no hay precio transferencia guardado, derivar inverso desde el de tarjeta.
+        transferCents: transferOverrides[zone.id] ?? cardToTransferCents(cents, feeBps),
+      };
+    }),
     installationCents: row?.installationCents ?? INSTALLATION_CENTS,
+    installationTransferCents:
+      row?.installationTransferCents ??
+      cardToTransferCents(row?.installationCents ?? INSTALLATION_CENTS, feeBps),
+    payphoneFeeBps: feeBps,
     shippingEnabled: row?.shippingEnabled ?? true,
     installationEnabled: row?.installationEnabled ?? true,
     shippingDescription: row?.shippingDescription ?? SHIPPING_DESCRIPTION_DEFAULT,
@@ -106,37 +129,31 @@ export async function updateTransferSettings(input: TransferSettings): Promise<v
 
 export async function updatePricingSettings(input: {
   shippingZoneCents: Record<string, number>;
+  shippingZoneTransferCents: Record<string, number>;
   shippingZoneLabels: Record<string, string>;
   installationCents: number;
+  installationTransferCents: number;
+  payphoneFeeBps: number;
   shippingEnabled: boolean;
   installationEnabled: boolean;
   shippingDescription: string;
   installationDescription: string;
 }): Promise<void> {
+  const values = {
+    shippingZoneCents: input.shippingZoneCents,
+    shippingZoneTransferCents: input.shippingZoneTransferCents,
+    shippingZoneLabels: input.shippingZoneLabels,
+    installationCents: input.installationCents,
+    installationTransferCents: input.installationTransferCents,
+    payphoneFeeBps: input.payphoneFeeBps,
+    shippingEnabled: input.shippingEnabled,
+    installationEnabled: input.installationEnabled,
+    shippingDescription: input.shippingDescription,
+    installationDescription: input.installationDescription,
+    updatedAt: new Date(),
+  };
   await db
     .insert(pricingSettings)
-    .values({
-      id: 1,
-      shippingZoneCents: input.shippingZoneCents,
-      shippingZoneLabels: input.shippingZoneLabels,
-      installationCents: input.installationCents,
-      shippingEnabled: input.shippingEnabled,
-      installationEnabled: input.installationEnabled,
-      shippingDescription: input.shippingDescription,
-      installationDescription: input.installationDescription,
-      updatedAt: new Date(),
-    })
-    .onConflictDoUpdate({
-      target: pricingSettings.id,
-      set: {
-        shippingZoneCents: input.shippingZoneCents,
-        shippingZoneLabels: input.shippingZoneLabels,
-        installationCents: input.installationCents,
-        shippingEnabled: input.shippingEnabled,
-        installationEnabled: input.installationEnabled,
-        shippingDescription: input.shippingDescription,
-        installationDescription: input.installationDescription,
-        updatedAt: new Date(),
-      },
-    });
+    .values({ id: 1, ...values })
+    .onConflictDoUpdate({ target: pricingSettings.id, set: values });
 }

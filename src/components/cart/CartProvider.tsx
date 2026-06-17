@@ -20,6 +20,7 @@ interface CartContextValue {
   syncProducts(products: Product[]): void;
   clear(): void;
   totalCents: number;
+  transferTotalCents: number;
   count: number;
   isOpen: boolean;
   open(): void;
@@ -52,22 +53,26 @@ function reconcileItems(items: CartItem[], catalog: Map<string, Product>): CartI
       ...item,
       name: product.name,
       priceCents: product.priceCents,
+      transferPriceCents: product.transferPriceCents ?? product.priceCents,
       image: product.images[0]?.src ?? item.image,
       stock: product.stock,
       quantity: clampQuantity(item.quantity, product.stock),
       freeShipping: product.freeShipping,
       freeInstallation: product.freeInstallation,
       installationCents: product.installationCents,
+      installationTransferCents: product.installationTransferCents,
     };
     if (
       synced.name !== item.name ||
       synced.priceCents !== item.priceCents ||
+      synced.transferPriceCents !== item.transferPriceCents ||
       synced.image !== item.image ||
       synced.stock !== item.stock ||
       synced.quantity !== item.quantity ||
       synced.freeShipping !== item.freeShipping ||
       synced.freeInstallation !== item.freeInstallation ||
-      synced.installationCents !== item.installationCents
+      synced.installationCents !== item.installationCents ||
+      synced.installationTransferCents !== item.installationTransferCents
     ) {
       changed = true;
     }
@@ -149,6 +154,15 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [items]
   );
 
+  const transferTotalCents = useMemo(
+    () =>
+      items.reduce(
+        (sum, i) => sum + (i.transferPriceCents ?? i.priceCents) * i.quantity,
+        0
+      ),
+    [items]
+  );
+
   const count = useMemo(
     () => items.reduce((sum, i) => sum + i.quantity, 0),
     [items]
@@ -182,6 +196,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     syncProducts,
     clear,
     totalCents,
+    transferTotalCents,
     count,
     isOpen,
     open: () => setIsOpen(true),

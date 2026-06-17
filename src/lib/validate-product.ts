@@ -25,6 +25,19 @@ export function validateProductPayload(
     return "Precio online inválido";
   }
   if (
+    product.transferPriceCents != null &&
+    (!Number.isInteger(product.transferPriceCents) || product.transferPriceCents < 0)
+  ) {
+    return "Precio por transferencia inválido";
+  }
+  if (
+    product.installationTransferCents != null &&
+    (!Number.isInteger(product.installationTransferCents) ||
+      product.installationTransferCents < 0)
+  ) {
+    return "Precio de instalación por transferencia inválido";
+  }
+  if (
     product.stock != null &&
     (!Number.isInteger(product.stock) || product.stock < 0)
   ) {

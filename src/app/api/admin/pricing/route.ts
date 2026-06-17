@@ -23,16 +23,22 @@ export async function PUT(req: NextRequest) {
 
   const {
     zones,
+    zonesTransfer,
     zoneLabels,
     installationCents,
+    installationTransferCents,
+    payphoneFeeBps,
     shippingEnabled,
     installationEnabled,
     shippingDescription,
     installationDescription,
   } = body as {
     zones?: Record<string, number>;
+    zonesTransfer?: Record<string, number>;
     zoneLabels?: Record<string, string>;
     installationCents?: number;
+    installationTransferCents?: number;
+    payphoneFeeBps?: number;
     shippingEnabled?: boolean;
     installationEnabled?: boolean;
     shippingDescription?: string;
@@ -41,6 +47,10 @@ export async function PUT(req: NextRequest) {
 
   if (!zones || typeof zones !== "object") {
     return NextResponse.json({ error: "Faltan los precios de envío" }, { status: 400 });
+  }
+
+  if (!zonesTransfer || typeof zonesTransfer !== "object") {
+    return NextResponse.json({ error: "Faltan los precios de envío por transferencia" }, { status: 400 });
   }
 
   if (typeof shippingDescription !== "string" || !shippingDescription.trim()) {
@@ -56,6 +66,7 @@ export async function PUT(req: NextRequest) {
   }
 
   const shippingZoneCents: Record<string, number> = {};
+  const shippingZoneTransferCents: Record<string, number> = {};
   const shippingZoneLabels: Record<string, string> = {};
   for (const zone of SHIPPING_ZONES) {
     const cents = zones[zone.id];
@@ -63,6 +74,12 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json({ error: `Precio inválido para ${zone.label}` }, { status: 400 });
     }
     shippingZoneCents[zone.id] = cents;
+
+    const transferCents = zonesTransfer[zone.id];
+    if (!Number.isInteger(transferCents) || transferCents < 0) {
+      return NextResponse.json({ error: `Precio transferencia inválido para ${zone.label}` }, { status: 400 });
+    }
+    shippingZoneTransferCents[zone.id] = transferCents;
 
     const label = zoneLabels[zone.id];
     if (typeof label !== "string" || !label.trim()) {
@@ -75,10 +92,21 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ error: "Precio de instalación inválido" }, { status: 400 });
   }
 
+  if (!Number.isInteger(installationTransferCents) || installationTransferCents! < 0) {
+    return NextResponse.json({ error: "Precio de instalación por transferencia inválido" }, { status: 400 });
+  }
+
+  if (!Number.isInteger(payphoneFeeBps) || payphoneFeeBps! < 0 || payphoneFeeBps! > 10000) {
+    return NextResponse.json({ error: "Comisión Payphone inválida" }, { status: 400 });
+  }
+
   await updatePricingSettings({
     shippingZoneCents,
+    shippingZoneTransferCents,
     shippingZoneLabels,
     installationCents: installationCents!,
+    installationTransferCents: installationTransferCents!,
+    payphoneFeeBps: payphoneFeeBps!,
     shippingEnabled: shippingEnabled !== false,
     installationEnabled: installationEnabled !== false,
     shippingDescription: shippingDescription.trim(),

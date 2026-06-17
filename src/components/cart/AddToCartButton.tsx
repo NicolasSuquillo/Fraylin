@@ -32,11 +32,13 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
         productId: product.id,
         name: product.name,
         priceCents: product.priceCents!,
+        transferPriceCents: product.transferPriceCents ?? product.priceCents!,
         image: product.images[0]?.src ?? "",
         stock: product.stock,
         freeShipping: product.freeShipping,
         freeInstallation: product.freeInstallation,
         installationCents: product.installationCents,
+        installationTransferCents: product.installationTransferCents,
       },
       qty
     );

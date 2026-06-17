@@ -42,11 +42,13 @@ export async function POST(req: NextRequest) {
       name: product.name,
       description: product.description ?? null,
       priceCents: product.priceCents ?? null,
+      transferPriceCents: product.transferPriceCents ?? null,
       stock: product.stock ?? null,
       featured: product.featured ?? false,
       freeShipping: product.freeShipping ?? false,
       freeInstallation: product.freeInstallation ?? false,
       installationCents: product.installationCents ?? null,
+      installationTransferCents: product.installationTransferCents ?? null,
     });
 
     if (product.images.length > 0) {

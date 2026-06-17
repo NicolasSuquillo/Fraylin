@@ -13,12 +13,14 @@ function mapProduct(row: ProductWithRelations): Product {
     category: row.categorySlug,
     name: row.name,
     priceCents: row.priceCents,
+    transferPriceCents: row.transferPriceCents,
     stock: row.stock,
     description: row.description ?? undefined,
     featured: row.featured,
     freeShipping: row.freeShipping,
     freeInstallation: row.freeInstallation,
     installationCents: row.installationCents,
+    installationTransferCents: row.installationTransferCents,
     images: row.images.map((image) => ({ src: image.src, alt: image.alt })),
   };
 }

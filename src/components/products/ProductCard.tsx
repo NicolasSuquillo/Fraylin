@@ -17,6 +17,10 @@ export default function ProductCard({ product, onSelect, categories = [] }: Prod
   const soldOut = buyable && product.stock === 0;
   const lowStock = buyable && product.stock != null && product.stock > 0 && product.stock <= 3;
   const categoryLabel = categories.length > 0 ? labelForSlug(categories, product.category) : null;
+  const transferCents = product.transferPriceCents ?? null;
+  const cardCents = product.priceCents ?? null;
+  const hasDual = transferCents != null && cardCents != null && cardCents > transferCents;
+  const discountPct = hasDual ? Math.round((1 - transferCents! / cardCents!) * 100) : 0;
 
   return (
     <button
@@ -41,8 +45,20 @@ export default function ProductCard({ product, onSelect, categories = [] }: Prod
 
       <div className="absolute top-2 right-2 z-[1] flex flex-col items-end gap-1.5">
         {buyable && (
-          <span className="inline-flex items-center rounded-full bg-white/95 px-3 py-1 text-sm font-bold text-text-primary shadow-[0_2px_10px_rgba(0,0,0,0.22)] ring-1 ring-black/10 backdrop-blur-sm">
-            {formatUSD(product.priceCents!)}
+          <span className="inline-flex flex-col items-end rounded-xl bg-white/95 px-3 py-1 shadow-[0_2px_10px_rgba(0,0,0,0.22)] ring-1 ring-black/10 backdrop-blur-sm">
+            <span className="text-sm font-bold text-text-primary leading-tight">
+              {formatUSD(transferCents ?? cardCents!)}
+            </span>
+            {hasDual && (
+              <span className="text-[10px] font-medium text-text-secondary leading-tight">
+                tarjeta <span className="line-through">{formatUSD(cardCents!)}</span>
+              </span>
+            )}
+          </span>
+        )}
+        {hasDual && discountPct > 0 && (
+          <span className="inline-flex items-center rounded-full bg-emerald-500/95 text-white text-[10px] font-bold uppercase tracking-wide px-2 py-0.5 shadow-md">
+            −{discountPct}% transf.
           </span>
         )}
         {product.images.length > 1 && (

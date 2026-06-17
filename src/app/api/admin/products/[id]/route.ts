@@ -41,11 +41,13 @@ export async function PUT(
         name: updated.name,
         description: updated.description ?? null,
         priceCents: updated.priceCents ?? null,
+        transferPriceCents: updated.transferPriceCents ?? null,
         stock: updated.stock ?? null,
         featured: updated.featured ?? false,
         freeShipping: updated.freeShipping ?? false,
         freeInstallation: updated.freeInstallation ?? false,
         installationCents: updated.installationCents ?? null,
+        installationTransferCents: updated.installationTransferCents ?? null,
         updatedAt: new Date(),
       })
       .where(eq(products.id, id));

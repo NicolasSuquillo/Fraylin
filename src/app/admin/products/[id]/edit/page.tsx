@@ -3,6 +3,7 @@ import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { getAllProducts, getCategories } from "@/lib/products";
+import { getPricingSettings } from "@/lib/pricing";
 import ProductForm from "../../ProductForm";
 
 export const dynamic = "force-dynamic";
@@ -16,7 +17,11 @@ export default async function EditProductPage({
   if (!session) redirect("/admin-login");
 
   const { id } = await params;
-  const [products, categories] = await Promise.all([getAllProducts(), getCategories()]);
+  const [products, categories, pricing] = await Promise.all([
+    getAllProducts(),
+    getCategories(),
+    getPricingSettings(),
+  ]);
   const product = products.find((p) => p.id === id);
 
   if (!product) notFound();
@@ -33,7 +38,7 @@ export default async function EditProductPage({
       <h1 className="text-xl sm:text-2xl font-bold text-gray-800 mb-6 leading-snug">
         Editar: <span className="break-words">{product.name}</span>
       </h1>
-      <ProductForm categories={categories} products={products} initial={product} mode="edit" />
+      <ProductForm categories={categories} products={products} initial={product} mode="edit" feeBps={pricing.payphoneFeeBps} />
     </div>
   );
 }

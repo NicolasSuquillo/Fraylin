@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { ChevronLeft } from "lucide-react";
 import { getAllProducts, getCategories } from "@/lib/products";
+import { getPricingSettings } from "@/lib/pricing";
 import ProductForm from "../ProductForm";
 
 export const dynamic = "force-dynamic";
@@ -11,7 +12,11 @@ export default async function NewProductPage() {
   const session = await getSession();
   if (!session) redirect("/admin-login");
 
-  const [categories, products] = await Promise.all([getCategories(), getAllProducts()]);
+  const [categories, products, pricing] = await Promise.all([
+    getCategories(),
+    getAllProducts(),
+    getPricingSettings(),
+  ]);
 
   return (
     <div className="max-w-6xl mx-auto">
@@ -23,7 +28,7 @@ export default async function NewProductPage() {
         Productos
       </Link>
       <h1 className="text-2xl font-bold text-gray-800 mb-6">Agregar producto</h1>
-      <ProductForm categories={categories} products={products} mode="new" />
+      <ProductForm categories={categories} products={products} mode="new" feeBps={pricing.payphoneFeeBps} />
     </div>
   );
 }

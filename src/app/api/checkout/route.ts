@@ -56,6 +56,7 @@ export async function POST(req: NextRequest) {
     }
 
     const pricing = await getPricingSettings();
+    const isTransfer = paymentMethod === "transferencia";
 
     // Necesitamos los productos antes de validar envío (para los flags de gratis)
     // Validación preliminar de items
@@ -70,11 +71,17 @@ export async function POST(req: NextRequest) {
     const allFreeShipping = dbProductsEarly.length > 0 && dbProductsEarly.every((p) => p.freeShipping);
     const allFreeInstallation = dbProductsEarly.length > 0 && dbProductsEarly.every((p) => p.freeInstallation);
 
+    // Precio de instalación por producto según método (transferencia vs tarjeta).
+    const installationForProduct = (p: typeof dbProductsEarly[number]): number =>
+      isTransfer
+        ? p.installationTransferCents ?? pricing.installationTransferCents
+        : p.installationCents ?? pricing.installationCents;
+
     const uniqueProductIds = [...new Set(body.items.map((i: CheckoutRequestItem) => i.productId))];
     const totalInstallationIfRequested = uniqueProductIds.reduce((sum: number, pid: string) => {
       const p = dbProductsEarly.find((dp) => dp.id === pid);
       if (!p || p.freeInstallation) return sum;
-      return sum + (p.installationCents ?? pricing.installationCents);
+      return sum + installationForProduct(p);
     }, 0);
 
     let shippingZone: { id: string; label: string; cents: number };
@@ -86,7 +93,12 @@ export async function POST(req: NextRequest) {
         if (!found) {
           return NextResponse.json({ error: "Zona de envío inválida" }, { status: 400 });
         }
-        shippingZone = found;
+        // Cobro de envío según método de pago.
+        shippingZone = {
+          id: found.id,
+          label: found.label,
+          cents: isTransfer ? found.transferCents : found.cents,
+        };
       } else {
         shippingZone = { id: "none", label: "", cents: 0 };
       }
@@ -138,9 +150,14 @@ export async function POST(req: NextRequest) {
       }
     }
 
+    // Precio unitario del producto según método: transferencia (base) o tarjeta
+    // (incluye comisión Payphone). Fallback a precio tarjeta si falta el de transferencia.
+    const unitPriceFor = (product: typeof dbProductsEarly[number]): number =>
+      isTransfer ? product.transferPriceCents ?? product.priceCents! : product.priceCents!;
+
     const productSubtotalCents = items.reduce((sum, item) => {
       const product = productMap.get(item.productId)!;
-      return sum + product.priceCents! * item.quantity;
+      return sum + unitPriceFor(product) * item.quantity;
     }, 0);
 
     const { subtotalCents, taxCents } = computeTaxBreakdown(productSubtotalCents);
@@ -171,13 +188,14 @@ export async function POST(req: NextRequest) {
       await tx.insert(orderItems).values(
         items.map((item) => {
           const product = productMap.get(item.productId)!;
+          const unit = unitPriceFor(product);
           return {
             orderId: created.id,
             productId: product.id,
             productName: product.name,
-            unitPriceCents: product.priceCents!,
+            unitPriceCents: unit,
             quantity: item.quantity,
-            lineTotalCents: product.priceCents! * item.quantity,
+            lineTotalCents: unit * item.quantity,
           };
         })
       );

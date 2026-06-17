@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import * as LucideIcons from "lucide-react";
-import { parsePriceInput } from "@/lib/money";
+import { parsePriceInput, formatUSD, transferToCardCents } from "@/lib/money";
 import type { Product, Category, ProductImage } from "@/types";
 
 function CategoryIcon({ name, size = 14 }: { name: string; size?: number }) {
@@ -19,6 +19,11 @@ interface Props {
   products: Product[];
   initial?: Product;
   mode: "new" | "edit";
+  feeBps: number;
+}
+
+function centsToInput(cents: number | null | undefined): string {
+  return cents != null ? (cents / 100).toFixed(2) : "";
 }
 
 function generateId(categorySlug: string, existingProducts: Product[]): string {
@@ -38,6 +43,7 @@ function emptyProduct(): Product {
     category: "",
     name: "",
     priceCents: null,
+    transferPriceCents: null,
     stock: null,
     description: "",
     featured: false,
@@ -162,15 +168,16 @@ function CategoryCombobox({ categories, products, value, onChange, disabled }: C
 
 // ── Formulario principal ─────────────────────────────────────────────────────
 
-export default function ProductForm({ categories, products, initial, mode }: Props) {
+export default function ProductForm({ categories, products, initial, mode, feeBps }: Props) {
   const router = useRouter();
   const [product, setProduct] = useState<Product>(initial ?? emptyProduct());
-  const [priceInput, setPriceInput] = useState(
-    initial?.priceCents != null ? (initial.priceCents / 100).toFixed(2) : ""
+  // Precio transferencia (base que ingresa el admin) y precio tarjeta (auto = transfer + comisión Payphone, editable).
+  const [transferInput, setTransferInput] = useState(centsToInput(initial?.transferPriceCents));
+  const [cardInput, setCardInput] = useState(centsToInput(initial?.priceCents));
+  const [installTransferInput, setInstallTransferInput] = useState(
+    centsToInput(initial?.installationTransferCents)
   );
-  const [installationInput, setInstallationInput] = useState(
-    initial?.installationCents != null ? (initial.installationCents / 100).toFixed(2) : ""
-  );
+  const [installCardInput, setInstallCardInput] = useState(centsToInput(initial?.installationCents));
   const [idTouched, setIdTouched] = useState(false);
   const [idFlash, setIdFlash] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -183,10 +190,63 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
     product.id !== "" &&
     products.some((p) => p.id === product.id);
 
-  const priceInvalid = priceInput.trim() !== "" && parsePriceInput(priceInput) == null;
+  const priceInvalid =
+    (transferInput.trim() !== "" && parsePriceInput(transferInput) == null) ||
+    (cardInput.trim() !== "" && parsePriceInput(cardInput) == null);
+
+  const feePct = (feeBps / 100).toLocaleString("es-EC", { maximumFractionDigits: 2 });
+  // Monto que la comisión Payphone añade al precio tarjeta (card - transfer).
+  const surchargeCents =
+    product.transferPriceCents != null && product.priceCents != null
+      ? product.priceCents - product.transferPriceCents
+      : null;
+  const installSurchargeCents =
+    product.installationTransferCents != null && product.installationCents != null
+      ? product.installationCents - product.installationTransferCents
+      : null;
 
   function setField<K extends keyof Product>(key: K, value: Product[K]) {
     setProduct((p) => ({ ...p, [key]: value }));
+  }
+
+  // Al cambiar el precio transferencia: recalcula automáticamente el de tarjeta.
+  function handleTransferChange(value: string) {
+    setTransferInput(value);
+    const transferCents = parsePriceInput(value);
+    setField("transferPriceCents", transferCents);
+    if (transferCents == null) {
+      setCardInput("");
+      setField("priceCents", null);
+    } else {
+      const cardCents = transferToCardCents(transferCents, feeBps);
+      setCardInput((cardCents / 100).toFixed(2));
+      setField("priceCents", cardCents);
+    }
+  }
+
+  // El precio tarjeta es editable manualmente (override del cálculo automático).
+  function handleCardChange(value: string) {
+    setCardInput(value);
+    setField("priceCents", parsePriceInput(value));
+  }
+
+  function handleInstallTransferChange(value: string) {
+    setInstallTransferInput(value);
+    const transferCents = parsePriceInput(value);
+    setField("installationTransferCents", transferCents);
+    if (transferCents == null) {
+      setInstallCardInput("");
+      setField("installationCents", null);
+    } else {
+      const cardCents = transferToCardCents(transferCents, feeBps);
+      setInstallCardInput((cardCents / 100).toFixed(2));
+      setField("installationCents", cardCents);
+    }
+  }
+
+  function handleInstallCardChange(value: string) {
+    setInstallCardInput(value);
+    setField("installationCents", parsePriceInput(value));
   }
 
   function handleCategoryChange(slug: string) {
@@ -349,40 +409,68 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
         />
       </div>
 
-      {/* Precio online y stock */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Precio online (USD)
-            <span className="ml-2 text-xs text-gray-400 font-normal">
-              (vacío = no comprable online)
-            </span>
-          </label>
-          <input
-            type="text"
-            inputMode="decimal"
-            value={priceInput}
-            onChange={(e) => {
-              setPriceInput(e.target.value);
-              setField("priceCents", parsePriceInput(e.target.value));
-            }}
-            placeholder="Ej: 12.50"
-            className={`w-full min-h-[44px] border rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 ${
-              priceInvalid
-                ? "border-red-400 bg-red-50 focus:ring-red-400"
-                : "border-gray-300 focus:ring-amber-500"
-            }`}
-          />
-          {priceInvalid && (
-            <p className="text-red-600 text-xs mt-1">
-              Precio inválido — usa solo números, ej: 12.50
-            </p>
-          )}
+      {/* Precios online: transferencia (base) + tarjeta (auto) */}
+      <div className="border border-gray-200 rounded-xl p-4 bg-gray-50">
+        <p className="text-sm font-medium text-gray-700 mb-1">
+          Precio online (USD)
+          <span className="ml-2 text-xs text-gray-400 font-normal">
+            (vacío = no comprable online)
+          </span>
+        </p>
+        <p className="text-xs text-gray-500 mb-3">
+          Ingresa el precio por transferencia/Deuna; el precio con tarjeta se calcula
+          automáticamente sumando la comisión Payphone ({feePct}%) y puedes editarlo.
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Precio transferencia/Deuna
+            </label>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={transferInput}
+              onChange={(e) => handleTransferChange(e.target.value)}
+              placeholder="Ej: 13.00"
+              className={`w-full min-h-[44px] border rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 ${
+                priceInvalid
+                  ? "border-red-400 bg-red-50 focus:ring-red-400"
+                  : "border-gray-300 focus:ring-amber-500"
+              }`}
+            />
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-600 mb-1">
+              Precio con tarjeta (Payphone)
+            </label>
+            <input
+              type="text"
+              inputMode="decimal"
+              value={cardInput}
+              onChange={(e) => handleCardChange(e.target.value)}
+              placeholder="Auto"
+              className={`w-full min-h-[44px] border rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 ${
+                priceInvalid
+                  ? "border-red-400 bg-red-50 focus:ring-red-400"
+                  : "border-gray-300 focus:ring-amber-500"
+              }`}
+            />
+            {surchargeCents != null && surchargeCents >= 0 && (
+              <p className="text-xs text-gray-500 mt-1">
+                Incluye comisión Payphone: +{formatUSD(surchargeCents)} ({feePct}%)
+              </p>
+            )}
+          </div>
         </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+        {priceInvalid && (
+          <p className="text-red-600 text-xs mt-2">
+            Precio inválido — usa solo números, ej: 12.50
+          </p>
+        )}
+        <div className="mt-4">
+          <label className="block text-xs font-medium text-gray-600 mb-1">
             Stock
-            <span className="ml-2 text-xs text-gray-400 font-normal">(vacío = sin control)</span>
+            <span className="ml-2 text-gray-400 font-normal">(vacío = sin control)</span>
           </label>
           <input
             type="number"
@@ -394,7 +482,7 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
               setField("stock", raw === "" ? null : Math.max(0, parseInt(raw, 10)));
             }}
             placeholder="Ej: 20"
-            className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+            className="w-full sm:w-1/2 min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
           />
         </div>
       </div>
@@ -425,7 +513,7 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
       </label>
 
       {/* Envío e instalación gratis (solo para productos con precio online) */}
-      {product.priceCents != null && (
+      {product.transferPriceCents != null && (
         <div className="flex flex-col gap-3 border border-gray-200 rounded-xl p-4 bg-gray-50">
           <p className="text-sm font-medium text-gray-700">Beneficios incluidos en el precio</p>
           <label className="flex items-center gap-3 cursor-pointer select-none">
@@ -444,7 +532,12 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
               onClick={() => {
                 const newVal = !product.freeInstallation;
                 setField("freeInstallation", newVal);
-                if (newVal) { setField("installationCents", null); setInstallationInput(""); }
+                if (newVal) {
+                  setField("installationCents", null);
+                  setField("installationTransferCents", null);
+                  setInstallTransferInput("");
+                  setInstallCardInput("");
+                }
               }}
               className={`w-10 h-6 rounded-full transition-colors ${product.freeInstallation ? "bg-emerald-500" : "bg-gray-300"} relative shrink-0`}
             >
@@ -460,17 +553,35 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
                 Precio de instalación (USD)
                 <span className="ml-1 text-gray-400 font-normal">(vacío = usa precio global de ajustes)</span>
               </label>
-              <input
-                type="text"
-                inputMode="decimal"
-                value={installationInput}
-                onChange={(e) => {
-                  setInstallationInput(e.target.value);
-                  setField("installationCents", parsePriceInput(e.target.value));
-                }}
-                placeholder="Ej: 15.00"
-                className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
-              />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-[11px] text-gray-500 mb-1">Transferencia/Deuna</label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={installTransferInput}
+                    onChange={(e) => handleInstallTransferChange(e.target.value)}
+                    placeholder="Ej: 15.00"
+                    className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] text-gray-500 mb-1">Con tarjeta (Payphone)</label>
+                  <input
+                    type="text"
+                    inputMode="decimal"
+                    value={installCardInput}
+                    onChange={(e) => handleInstallCardChange(e.target.value)}
+                    placeholder="Auto"
+                    className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+                  />
+                  {installSurchargeCents != null && installSurchargeCents >= 0 && (
+                    <p className="text-[11px] text-gray-500 mt-1">
+                      +{formatUSD(installSurchargeCents)} ({feePct}%)
+                    </p>
+                  )}
+                </div>
+              </div>
             </div>
           )}
         </div>

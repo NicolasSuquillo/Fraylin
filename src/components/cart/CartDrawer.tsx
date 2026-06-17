@@ -8,7 +8,7 @@ import { formatUSD } from "@/lib/money";
 import { useCart } from "./CartProvider";
 
 export default function CartDrawer() {
-  const { items, isOpen, close, removeItem, setQuantity, totalCents, allFreeShipping, allFreeInstallation, freeShippingCount, freeInstallationCount } = useCart();
+  const { items, isOpen, close, removeItem, setQuantity, totalCents, transferTotalCents, allFreeShipping, allFreeInstallation, freeShippingCount, freeInstallationCount } = useCart();
 
   useEffect(() => {
     if (!isOpen) return;
@@ -76,7 +76,12 @@ export default function CartDrawer() {
                   {item.name}
                 </p>
                 <p className="text-sm text-brand-primary font-bold">
-                  {formatUSD(item.priceCents)}
+                  {formatUSD(item.transferPriceCents ?? item.priceCents)}
+                  {item.transferPriceCents != null && item.priceCents > item.transferPriceCents && (
+                    <span className="ml-1.5 text-[11px] font-medium text-text-secondary">
+                      tarjeta {formatUSD(item.priceCents)}
+                    </span>
+                  )}
                 </p>
                 {(item.freeShipping || item.freeInstallation) && (
                   <div className="flex flex-wrap gap-1 mt-0.5">
@@ -130,9 +135,15 @@ export default function CartDrawer() {
         {items.length > 0 && (
           <div className="border-t border-stone-100 p-4 flex flex-col gap-3">
             <div className="flex items-center justify-between text-base font-bold text-text-primary">
-              <span>Total</span>
-              <span className="text-brand-primary">{formatUSD(totalCents)}</span>
+              <span>Total transferencia</span>
+              <span className="text-brand-primary">{formatUSD(transferTotalCents)}</span>
             </div>
+            {totalCents > transferTotalCents && (
+              <div className="flex items-center justify-between text-xs text-text-secondary -mt-1.5">
+                <span>Con tarjeta</span>
+                <span>{formatUSD(totalCents)}</span>
+              </div>
+            )}
             {(freeShippingCount > 0 || freeInstallationCount > 0) && (
               <div className="flex flex-col gap-1">
                 {allFreeShipping && (

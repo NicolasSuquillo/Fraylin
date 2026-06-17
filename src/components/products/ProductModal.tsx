@@ -34,6 +34,10 @@ export default function ProductModal({ product, onClose, categories = [] }: Prod
   const soldOut = buyable && product.stock === 0;
   const lowStock = buyable && product.stock != null && product.stock > 0 && product.stock <= 3;
   const categoryLabel = categories.length > 0 ? labelForSlug(categories, product.category) : null;
+  const transferCents = product.transferPriceCents ?? null;
+  const cardCents = product.priceCents ?? null;
+  const hasDual = transferCents != null && cardCents != null && cardCents > transferCents;
+  const discountPct = hasDual ? Math.round((1 - transferCents! / cardCents!) * 100) : 0;
 
   return (
     <div
@@ -84,11 +88,21 @@ export default function ProductModal({ product, onClose, categories = [] }: Prod
           <div className="flex flex-col gap-4 min-w-0 w-full p-4 pb-8 sm:p-5 lg:w-[min(100%,22rem)] lg:shrink-0 lg:max-w-sm lg:pt-5">
             {buyable && (
               <div className="flex items-center justify-between gap-2 flex-wrap">
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 flex-wrap">
                   <Tag size={18} className="text-brand-primary shrink-0" />
                   <span className="text-2xl font-bold text-brand-primary">
-                    {formatUSD(product.priceCents!)}
+                    {formatUSD(transferCents ?? cardCents!)}
                   </span>
+                  {hasDual ? (
+                    <span className="flex flex-col leading-tight">
+                      <span className="inline-flex items-center rounded-full bg-emerald-100 text-emerald-700 text-[11px] font-bold uppercase tracking-wide px-2 py-0.5">
+                        −{discountPct}% por transferencia/Deuna
+                      </span>
+                      <span className="text-xs text-text-secondary mt-0.5">
+                        con tarjeta <span className="line-through">{formatUSD(cardCents!)}</span>
+                      </span>
+                    </span>
+                  ) : null}
                 </div>
                 {soldOut && (
                   <span className="inline-flex items-center rounded-full bg-stone-200 text-text-secondary text-[11px] font-bold uppercase tracking-wide px-2.5 py-1">

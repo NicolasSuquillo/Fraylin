@@ -8,6 +8,7 @@ export interface Product {
   category: string;
   name: string;
   priceCents?: number | null;
+  transferPriceCents?: number | null;
   stock?: number | null;
   description?: string;
   images: ProductImage[];
@@ -15,6 +16,7 @@ export interface Product {
   freeShipping?: boolean;
   freeInstallation?: boolean;
   installationCents?: number | null;
+  installationTransferCents?: number | null;
 }
 
 export interface Category {
@@ -80,12 +82,14 @@ export interface CartItem {
   productId: string;
   name: string;
   priceCents: number;
+  transferPriceCents: number;
   image: string;
   quantity: number;
   stock?: number | null;
   freeShipping?: boolean;
   freeInstallation?: boolean;
   installationCents?: number | null;
+  installationTransferCents?: number | null;
 }
 
 export interface Review {

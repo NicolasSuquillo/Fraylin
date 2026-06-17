@@ -33,6 +33,7 @@ interface CheckoutClientProps {
   payphoneStoreId: string;
   shippingZones: ShippingZonePrice[];
   installationCents: number;
+  installationTransferCents: number;
   shippingEnabled: boolean;
   installationEnabled: boolean;
   shippingDescription: string;
@@ -129,14 +130,17 @@ interface SummaryPanelProps {
   freeShippingCount: number;
   order: { shippingZoneLabel: string | null } | null;
   selectedZoneLabel: string;
+  isTransfer: boolean;
 }
 
 function SummaryPanel({
   summaryItems, count, displayTotal, displaySubtotal,
   displayShippingCents, displayInstallationCents,
   allFreeShipping, allFreeInstallation, shippingEnabled,
-  freeShippingCount, order, selectedZoneLabel,
+  freeShippingCount, order, selectedZoneLabel, isTransfer,
 }: SummaryPanelProps) {
+  const lineCents = (item: CartItem) =>
+    isTransfer ? item.transferPriceCents ?? item.priceCents : item.priceCents;
   return (
     <div className="rounded-2xl border border-stone-200 shadow-sm overflow-hidden">
       <div className="bg-stone-900 px-5 py-5">
@@ -156,11 +160,11 @@ function SummaryPanel({
             <div className="flex-1 min-w-0">
               <p className="text-xs font-semibold text-text-primary line-clamp-1">{item.name}</p>
               <p className="text-xs text-text-secondary mt-0.5">
-                {item.quantity} × {formatUSD(item.priceCents)}
+                {item.quantity} × {formatUSD(lineCents(item))}
               </p>
             </div>
             <p className="text-xs font-bold text-text-primary shrink-0">
-              {formatUSD(item.priceCents * item.quantity)}
+              {formatUSD(lineCents(item) * item.quantity)}
             </p>
           </div>
         ))}
@@ -386,13 +390,14 @@ export default function CheckoutClient({
   payphoneStoreId,
   shippingZones,
   installationCents: INSTALLATION_CENTS,
+  installationTransferCents: INSTALLATION_TRANSFER_CENTS,
   shippingEnabled,
   installationEnabled,
   shippingDescription,
   installationDescription,
   transfer,
 }: CheckoutClientProps) {
-  const { items, totalCents, count, clear, allFreeShipping, allFreeInstallation, freeShippingCount, freeInstallationCount } = useCart();
+  const { items, totalCents, transferTotalCents, count, clear, allFreeShipping, allFreeInstallation, freeShippingCount, freeInstallationCount } = useCart();
   const [customer, setCustomer] = useState<CheckoutCustomer>({
     name: "",
     phone: "",
@@ -537,21 +542,33 @@ export default function CheckoutClient({
   };
 
   const summaryItems = order ? orderItems : items;
+  // Precio según método: transferencia (base, con descuento) vs tarjeta (incluye comisión Payphone).
+  // Tras crear la orden, el método queda fijado por order.paymentMethod.
+  const isTransfer = order ? order.paymentMethod === "transferencia" : method === "transferencia";
   const selectedZone = shippingZones.find((z) => z.id === shippingZoneId) ?? shippingZones[0];
-  const effectiveShippingCents = allFreeShipping ? 0 : (shippingEnabled ? selectedZone.cents : 0);
+  const effectiveShippingCents = allFreeShipping
+    ? 0
+    : shippingEnabled
+    ? isTransfer
+      ? selectedZone.transferCents
+      : selectedZone.cents
+    : 0;
 
   const uniqueCartItems = [...new Map(items.map((i) => [i.productId, i])).values()];
   const cartInstallationSum = uniqueCartItems.reduce((sum, item) => {
     if (item.freeInstallation) return sum;
-    return sum + (item.installationCents ?? INSTALLATION_CENTS);
+    const cardCents = item.installationCents ?? INSTALLATION_CENTS;
+    const transferCents = item.installationTransferCents ?? INSTALLATION_TRANSFER_CENTS;
+    return sum + (isTransfer ? transferCents : cardCents);
   }, 0);
   const effectiveInstallationCents = allFreeInstallation ? 0 : (installationEnabled && installationRequested ? cartInstallationSum : 0);
-  const grandTotalCents = totalCents + effectiveShippingCents + effectiveInstallationCents;
+  const productSubtotalCents = isTransfer ? transferTotalCents : totalCents;
+  const grandTotalCents = productSubtotalCents + effectiveShippingCents + effectiveInstallationCents;
 
   const displayShippingCents = order?.shippingCents ?? effectiveShippingCents;
   const displayInstallationCents = order?.installationCents ?? effectiveInstallationCents;
   const displayTotal = order?.totalCents ?? grandTotalCents;
-  const displaySubtotal = order != null ? order.subtotalCents + order.taxCents : totalCents;
+  const displaySubtotal = order != null ? order.subtotalCents + order.taxCents : productSubtotalCents;
 
   const summaryPanelProps: SummaryPanelProps = {
     summaryItems,
@@ -566,6 +583,7 @@ export default function CheckoutClient({
     freeShippingCount,
     order,
     selectedZoneLabel: selectedZone.label,
+    isTransfer,
   };
 
   return (
@@ -749,8 +767,8 @@ export default function CheckoutClient({
                             />
                             <span className="text-sm font-medium text-text-primary">{zone.label}</span>
                           </span>
-                          <span className={`text-sm font-bold ${zone.cents === 0 ? "text-emerald-600" : "text-text-primary"}`}>
-                            {zone.cents > 0 ? formatUSD(zone.cents) : "Gratis"}
+                          <span className={`text-sm font-bold ${(isTransfer ? zone.transferCents : zone.cents) === 0 ? "text-emerald-600" : "text-text-primary"}`}>
+                            {(isTransfer ? zone.transferCents : zone.cents) > 0 ? formatUSD(isTransfer ? zone.transferCents : zone.cents) : "Gratis"}
                           </span>
                         </label>
                       ))}
