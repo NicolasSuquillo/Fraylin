@@ -44,6 +44,9 @@ export async function POST(req: NextRequest) {
       priceCents: product.priceCents ?? null,
       stock: product.stock ?? null,
       featured: product.featured ?? false,
+      freeShipping: product.freeShipping ?? false,
+      freeInstallation: product.freeInstallation ?? false,
+      installationCents: product.installationCents ?? null,
     });
 
     if (product.images.length > 0) {

@@ -2,13 +2,13 @@
 
 import { useEffect } from "react";
 import Link from "next/link";
-import { X, Minus, Plus, Trash2, ShoppingCart } from "lucide-react";
+import { X, Minus, Plus, Trash2, ShoppingCart, Truck, Wrench } from "lucide-react";
 import SafeImage from "@/components/ui/SafeImage";
 import { formatUSD } from "@/lib/money";
 import { useCart } from "./CartProvider";
 
 export default function CartDrawer() {
-  const { items, isOpen, close, removeItem, setQuantity, totalCents } = useCart();
+  const { items, isOpen, close, removeItem, setQuantity, totalCents, allFreeShipping, allFreeInstallation, freeShippingCount, freeInstallationCount } = useCart();
 
   useEffect(() => {
     if (!isOpen) return;
@@ -78,6 +78,22 @@ export default function CartDrawer() {
                 <p className="text-sm text-brand-primary font-bold">
                   {formatUSD(item.priceCents)}
                 </p>
+                {(item.freeShipping || item.freeInstallation) && (
+                  <div className="flex flex-wrap gap-1 mt-0.5">
+                    {item.freeShipping && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 rounded-full px-1.5 py-0.5">
+                        <Truck size={10} aria-hidden />
+                        Envío gratis
+                      </span>
+                    )}
+                    {item.freeInstallation && (
+                      <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-emerald-700 bg-emerald-50 rounded-full px-1.5 py-0.5">
+                        <Wrench size={10} aria-hidden />
+                        Instalación gratis
+                      </span>
+                    )}
+                  </div>
+                )}
                 <div className="flex items-center gap-2 mt-1">
                   <button
                     onClick={() => setQuantity(item.productId, item.quantity - 1)}
@@ -117,6 +133,34 @@ export default function CartDrawer() {
               <span>Total</span>
               <span className="text-brand-primary">{formatUSD(totalCents)}</span>
             </div>
+            {(freeShippingCount > 0 || freeInstallationCount > 0) && (
+              <div className="flex flex-col gap-1">
+                {allFreeShipping && (
+                  <p className="text-xs text-emerald-700 font-medium flex items-center gap-1">
+                    <Truck size={11} aria-hidden />
+                    Todos los productos incluyen envío gratis
+                  </p>
+                )}
+                {!allFreeShipping && freeShippingCount > 0 && (
+                  <p className="text-xs text-emerald-700 font-medium flex items-center gap-1">
+                    <Truck size={11} aria-hidden />
+                    {freeShippingCount} de {items.length} producto{items.length !== 1 ? "s" : ""} con envío gratis
+                  </p>
+                )}
+                {allFreeInstallation && (
+                  <p className="text-xs text-emerald-700 font-medium flex items-center gap-1">
+                    <Wrench size={11} aria-hidden />
+                    Todos los productos incluyen instalación gratis
+                  </p>
+                )}
+                {!allFreeInstallation && freeInstallationCount > 0 && (
+                  <p className="text-xs text-emerald-700 font-medium flex items-center gap-1">
+                    <Wrench size={11} aria-hidden />
+                    {freeInstallationCount} de {items.length} producto{items.length !== 1 ? "s" : ""} con instalación gratis
+                  </p>
+                )}
+              </div>
+            )}
             <p className="text-xs text-text-secondary text-center">
               El envío se coordina por WhatsApp luego del pago.
             </p>

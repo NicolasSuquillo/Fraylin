@@ -1,6 +1,6 @@
 "use client";
 
-import { Sparkles, Images } from "lucide-react";
+import { Sparkles, Images, Truck, Wrench } from "lucide-react";
 import SafeImage from "@/components/ui/SafeImage";
 import { formatUSD } from "@/lib/money";
 import { labelForSlug } from "@/components/products/ProductSearch";
@@ -63,6 +63,18 @@ export default function ProductCard({ product, onSelect, categories = [] }: Prod
           {lowStock && (
             <span className="inline-flex items-center rounded-full bg-brand-primary/90 text-brand-dark text-[10px] font-bold uppercase tracking-wide px-2 py-0.5">
               ¡Últimas {product.stock}!
+            </span>
+          )}
+          {buyable && product.freeShipping && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/90 text-white text-[10px] font-bold uppercase tracking-wide px-2 py-0.5">
+              <Truck className="w-2.5 h-2.5 shrink-0" aria-hidden />
+              Envío gratis
+            </span>
+          )}
+          {buyable && product.freeInstallation && (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/90 text-white text-[10px] font-bold uppercase tracking-wide px-2 py-0.5">
+              <Wrench className="w-2.5 h-2.5 shrink-0" aria-hidden />
+              Instalación gratis
             </span>
           )}
         </div>

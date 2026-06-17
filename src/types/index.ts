@@ -12,6 +12,9 @@ export interface Product {
   description?: string;
   images: ProductImage[];
   featured?: boolean;
+  freeShipping?: boolean;
+  freeInstallation?: boolean;
+  installationCents?: number | null;
 }
 
 export interface Category {
@@ -80,6 +83,19 @@ export interface CartItem {
   image: string;
   quantity: number;
   stock?: number | null;
+  freeShipping?: boolean;
+  freeInstallation?: boolean;
+  installationCents?: number | null;
+}
+
+export interface Review {
+  id: number;
+  authorName: string;
+  rating: number;
+  body: string;
+  avatarUrl?: string | null;
+  approved: boolean;
+  createdAt: string;
 }
 
 export interface CheckoutCustomer {

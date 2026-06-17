@@ -61,6 +61,9 @@ export const products = pgTable(
     priceCents: integer("price_cents"),
     stock: integer("stock"),
     featured: boolean("featured").notNull().default(false),
+    freeShipping: boolean("free_shipping").notNull().default(false),
+    freeInstallation: boolean("free_installation").notNull().default(false),
+    installationCents: integer("installation_cents"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
@@ -178,3 +181,17 @@ export const orderItemsRelations = relations(orderItems, ({ one }) => ({
     references: [orders.id],
   }),
 }));
+
+export const reviews = pgTable(
+  "reviews",
+  {
+    id: serial("id").primaryKey(),
+    authorName: text("author_name").notNull(),
+    rating: integer("rating").notNull(),
+    body: text("body").notNull(),
+    avatarUrl: text("avatar_url"),
+    approved: boolean("approved").notNull().default(false),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("reviews_approved_idx").on(t.approved)]
+);

@@ -43,6 +43,9 @@ export async function PUT(
         priceCents: updated.priceCents ?? null,
         stock: updated.stock ?? null,
         featured: updated.featured ?? false,
+        freeShipping: updated.freeShipping ?? false,
+        freeInstallation: updated.freeInstallation ?? false,
+        installationCents: updated.installationCents ?? null,
         updatedAt: new Date(),
       })
       .where(eq(products.id, id));

@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Package, Tags, Images, ShoppingCart, Truck, Landmark, LogOut, ExternalLink } from "lucide-react";
+import { Package, Tags, Images, ShoppingCart, Truck, Landmark, MessageSquare, LogOut, ExternalLink } from "lucide-react";
 
 const links = [
   { href: "/admin/products", label: "Productos", Icon: Package },
   { href: "/admin/categories", label: "Categorías", Icon: Tags },
   { href: "/admin/orders", label: "Pedidos", Icon: ShoppingCart },
   { href: "/admin/gallery", label: "Galería", Icon: Images },
+  { href: "/admin/reviews", label: "Reseñas", Icon: MessageSquare },
   { href: "/admin/shipping", label: "Envío", Icon: Truck },
   { href: "/admin/payment", label: "Pagos", Icon: Landmark },
 ] as const;

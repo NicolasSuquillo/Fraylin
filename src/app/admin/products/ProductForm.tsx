@@ -41,6 +41,8 @@ function emptyProduct(): Product {
     stock: null,
     description: "",
     featured: false,
+    freeShipping: false,
+    freeInstallation: false,
     images: [{ src: "", alt: "" }],
   };
 }
@@ -165,6 +167,9 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
   const [product, setProduct] = useState<Product>(initial ?? emptyProduct());
   const [priceInput, setPriceInput] = useState(
     initial?.priceCents != null ? (initial.priceCents / 100).toFixed(2) : ""
+  );
+  const [installationInput, setInstallationInput] = useState(
+    initial?.installationCents != null ? (initial.installationCents / 100).toFixed(2) : ""
   );
   const [idTouched, setIdTouched] = useState(false);
   const [idFlash, setIdFlash] = useState(false);
@@ -418,6 +423,58 @@ export default function ProductForm({ categories, products, initial, mode }: Pro
           Destacado <span className="text-gray-400 font-normal">(aparece en inicio)</span>
         </span>
       </label>
+
+      {/* Envío e instalación gratis (solo para productos con precio online) */}
+      {product.priceCents != null && (
+        <div className="flex flex-col gap-3 border border-gray-200 rounded-xl p-4 bg-gray-50">
+          <p className="text-sm font-medium text-gray-700">Beneficios incluidos en el precio</p>
+          <label className="flex items-center gap-3 cursor-pointer select-none">
+            <div
+              onClick={() => setField("freeShipping", !product.freeShipping)}
+              className={`w-10 h-6 rounded-full transition-colors ${product.freeShipping ? "bg-emerald-500" : "bg-gray-300"} relative shrink-0`}
+            >
+              <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${product.freeShipping ? "translate-x-5" : "translate-x-1"}`} />
+            </div>
+            <span className="text-sm text-gray-700">
+              Envío gratis <span className="text-gray-400 font-normal">(no se cobra envío al cliente)</span>
+            </span>
+          </label>
+          <label className="flex items-center gap-3 cursor-pointer select-none">
+            <div
+              onClick={() => {
+                const newVal = !product.freeInstallation;
+                setField("freeInstallation", newVal);
+                if (newVal) { setField("installationCents", null); setInstallationInput(""); }
+              }}
+              className={`w-10 h-6 rounded-full transition-colors ${product.freeInstallation ? "bg-emerald-500" : "bg-gray-300"} relative shrink-0`}
+            >
+              <span className={`absolute top-1 w-4 h-4 bg-white rounded-full shadow transition-transform ${product.freeInstallation ? "translate-x-5" : "translate-x-1"}`} />
+            </div>
+            <span className="text-sm text-gray-700">
+              Instalación gratis <span className="text-gray-400 font-normal">(no se cobra instalación al cliente)</span>
+            </span>
+          </label>
+          {!product.freeInstallation && (
+            <div>
+              <label className="block text-xs font-medium text-gray-600 mb-1">
+                Precio de instalación (USD)
+                <span className="ml-1 text-gray-400 font-normal">(vacío = usa precio global de ajustes)</span>
+              </label>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={installationInput}
+                onChange={(e) => {
+                  setInstallationInput(e.target.value);
+                  setField("installationCents", parsePriceInput(e.target.value));
+                }}
+                placeholder="Ej: 15.00"
+                className="w-full min-h-[44px] border border-gray-300 rounded-lg px-3 py-2 text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              />
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Imágenes */}
       <div>

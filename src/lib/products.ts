@@ -16,6 +16,9 @@ function mapProduct(row: ProductWithRelations): Product {
     stock: row.stock,
     description: row.description ?? undefined,
     featured: row.featured,
+    freeShipping: row.freeShipping,
+    freeInstallation: row.freeInstallation,
+    installationCents: row.installationCents,
     images: row.images.map((image) => ({ src: image.src, alt: image.alt })),
   };
 }

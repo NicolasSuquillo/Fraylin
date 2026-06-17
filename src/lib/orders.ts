@@ -89,10 +89,18 @@ async function decrementStock(tx: Tx, orderId: string) {
   });
   for (const item of items) {
     if (!item.productId) continue;
-    await tx
+    const updated = await tx
       .update(products)
-      .set({ stock: sql`GREATEST(${products.stock} - ${item.quantity}, 0)` })
-      .where(sql`${products.id} = ${item.productId} AND ${products.stock} IS NOT NULL`);
+      .set({ stock: sql`${products.stock} - ${item.quantity}` })
+      .where(
+        sql`${products.id} = ${item.productId}
+            AND ${products.stock} IS NOT NULL
+            AND ${products.stock} >= ${item.quantity}`
+      )
+      .returning({ id: products.id });
+    if (updated.length === 0) {
+      throw new Error(`Stock agotado: ${item.productName ?? item.productId}`);
+    }
   }
 }
 
@@ -133,28 +141,39 @@ export async function finalizeOrder(orderId: string, payphoneId: number): Promis
   }
   const approved = confirmation.statusCode === 3;
 
-  const result = await db.transaction(async (tx) => {
-    const [updated] = await tx
-      .update(orders)
-      .set({
-        status: approved ? "paid" : "failed",
-        payphoneTransactionId: String(confirmation.transactionId),
-        payphoneStatusCode: confirmation.statusCode,
-        payphoneRaw: confirmation,
-        confirmedAt: new Date(),
-      })
-      .where(eq(orders.id, orderId))
-      .returning();
+  let result: Order;
+  try {
+    result = await db.transaction(async (tx) => {
+      const [updated] = await tx
+        .update(orders)
+        .set({
+          status: approved ? "paid" : "failed",
+          payphoneTransactionId: String(confirmation.transactionId),
+          payphoneStatusCode: confirmation.statusCode,
+          payphoneRaw: confirmation,
+          confirmedAt: new Date(),
+        })
+        .where(eq(orders.id, orderId))
+        .returning();
 
-    if (approved) {
-      await decrementStock(tx, orderId);
-    }
+      if (approved) {
+        await decrementStock(tx, orderId);
+      }
 
-    const fullItems = await tx.query.orderItems.findMany({
-      where: eq(orderItems.orderId, orderId),
+      const fullItems = await tx.query.orderItems.findMany({
+        where: eq(orderItems.orderId, orderId),
+      });
+      return toOrder(updated, fullItems);
     });
-    return toOrder(updated, fullItems);
-  });
+  } catch (txError) {
+    // Payphone aprobó pero la transacción DB falló (ej: stock agotado por orden concurrente).
+    // Marcar como failed para que no quede atascada en "processing".
+    await db
+      .update(orders)
+      .set({ status: "failed", payphoneStatusCode: confirmation.statusCode, confirmedAt: new Date() })
+      .where(sql`${orders.id} = ${orderId} AND ${orders.status} = 'processing'`);
+    throw txError;
+  }
 
   return result;
 }

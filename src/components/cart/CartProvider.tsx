@@ -24,6 +24,10 @@ interface CartContextValue {
   isOpen: boolean;
   open(): void;
   close(): void;
+  allFreeShipping: boolean;
+  allFreeInstallation: boolean;
+  freeShippingCount: number;
+  freeInstallationCount: number;
 }
 
 const CartContext = createContext<CartContextValue | null>(null);
@@ -51,13 +55,19 @@ function reconcileItems(items: CartItem[], catalog: Map<string, Product>): CartI
       image: product.images[0]?.src ?? item.image,
       stock: product.stock,
       quantity: clampQuantity(item.quantity, product.stock),
+      freeShipping: product.freeShipping,
+      freeInstallation: product.freeInstallation,
+      installationCents: product.installationCents,
     };
     if (
       synced.name !== item.name ||
       synced.priceCents !== item.priceCents ||
       synced.image !== item.image ||
       synced.stock !== item.stock ||
-      synced.quantity !== item.quantity
+      synced.quantity !== item.quantity ||
+      synced.freeShipping !== item.freeShipping ||
+      synced.freeInstallation !== item.freeInstallation ||
+      synced.installationCents !== item.installationCents
     ) {
       changed = true;
     }
@@ -144,6 +154,26 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     [items]
   );
 
+  const allFreeShipping = useMemo(
+    () => items.length > 0 && items.every((i) => i.freeShipping === true),
+    [items]
+  );
+
+  const allFreeInstallation = useMemo(
+    () => items.length > 0 && items.every((i) => i.freeInstallation === true),
+    [items]
+  );
+
+  const freeShippingCount = useMemo(
+    () => items.filter((i) => i.freeShipping === true).length,
+    [items]
+  );
+
+  const freeInstallationCount = useMemo(
+    () => items.filter((i) => i.freeInstallation === true).length,
+    [items]
+  );
+
   const value: CartContextValue = {
     items,
     addItem,
@@ -156,6 +186,10 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     isOpen,
     open: () => setIsOpen(true),
     close: () => setIsOpen(false),
+    allFreeShipping,
+    allFreeInstallation,
+    freeShippingCount,
+    freeInstallationCount,
   };
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;

@@ -1,3 +1,4 @@
+import { randomBytes } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
 import { inArray } from "drizzle-orm";
 import { db } from "@/db";
@@ -22,9 +23,7 @@ interface CheckoutRequestBody {
 }
 
 function generateClientTransactionId(): string {
-  const timestamp = Date.now().toString(36);
-  const random = Math.random().toString(36).slice(2, 8);
-  return `FR${timestamp}${random}`.toUpperCase();
+  return `FR${randomBytes(8).toString("hex").toUpperCase()}`;
 }
 
 const MAX_ITEMS = 50;
@@ -58,16 +57,42 @@ export async function POST(req: NextRequest) {
 
     const pricing = await getPricingSettings();
 
-    let shippingZone = pricing.zones.find((z) => z.id === body.shippingZoneId);
-    if (pricing.shippingEnabled) {
-      if (!shippingZone) {
-        return NextResponse.json({ error: "Zona de envío inválida" }, { status: 400 });
-      }
-    } else {
-      shippingZone = { id: "none", label: "", cents: 0 };
+    // Necesitamos los productos antes de validar envío (para los flags de gratis)
+    // Validación preliminar de items
+    if (!Array.isArray(body.items) || body.items.length === 0) {
+      return NextResponse.json({ error: "El carrito está vacío" }, { status: 400 });
     }
 
-    const installationRequested = pricing.installationEnabled && body.installationRequested === true;
+    const dbProductsEarly = await db.query.products.findMany({
+      where: inArray(products.id, body.items.map((i: CheckoutRequestItem) => i.productId)),
+    });
+
+    const allFreeShipping = dbProductsEarly.length > 0 && dbProductsEarly.every((p) => p.freeShipping);
+    const allFreeInstallation = dbProductsEarly.length > 0 && dbProductsEarly.every((p) => p.freeInstallation);
+
+    const uniqueProductIds = [...new Set(body.items.map((i: CheckoutRequestItem) => i.productId))];
+    const totalInstallationIfRequested = uniqueProductIds.reduce((sum: number, pid: string) => {
+      const p = dbProductsEarly.find((dp) => dp.id === pid);
+      if (!p || p.freeInstallation) return sum;
+      return sum + (p.installationCents ?? pricing.installationCents);
+    }, 0);
+
+    let shippingZone: { id: string; label: string; cents: number };
+    if (allFreeShipping) {
+      shippingZone = { id: "free", label: "Envío gratis", cents: 0 };
+    } else {
+      const found = pricing.zones.find((z) => z.id === body.shippingZoneId);
+      if (pricing.shippingEnabled) {
+        if (!found) {
+          return NextResponse.json({ error: "Zona de envío inválida" }, { status: 400 });
+        }
+        shippingZone = found;
+      } else {
+        shippingZone = { id: "none", label: "", cents: 0 };
+      }
+    }
+
+    const installationRequested = allFreeInstallation || (pricing.installationEnabled && body.installationRequested === true);
 
     const customerValidation = validateCheckoutCustomer(customer ?? {});
     if (!customerValidation.valid) {
@@ -75,9 +100,6 @@ export async function POST(req: NextRequest) {
     }
     const normalizedCustomer = customerValidation.normalized;
 
-    if (!Array.isArray(items) || items.length === 0) {
-      return NextResponse.json({ error: "El carrito está vacío" }, { status: 400 });
-    }
     if (items.length > MAX_ITEMS) {
       return NextResponse.json({ error: "El carrito tiene demasiados productos" }, { status: 400 });
     }
@@ -95,14 +117,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    const dbProducts = await db.query.products.findMany({
-      where: inArray(
-        products.id,
-        items.map((i) => i.productId)
-      ),
-    });
-
-    const productMap = new Map(dbProducts.map((p) => [p.id, p]));
+    const productMap = new Map(dbProductsEarly.map((p) => [p.id, p]));
 
     for (const item of items) {
       const product = productMap.get(item.productId);
@@ -130,7 +145,7 @@ export async function POST(req: NextRequest) {
 
     const { subtotalCents, taxCents } = computeTaxBreakdown(productSubtotalCents);
     const shippingCents = shippingZone.cents;
-    const installationCents = installationRequested ? pricing.installationCents : 0;
+    const installationCents = installationRequested ? totalInstallationIfRequested : 0;
     const totalCents = productSubtotalCents + shippingCents + installationCents;
     const clientTransactionId = generateClientTransactionId();
 

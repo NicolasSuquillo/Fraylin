@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
-import { X, Tag, Sparkles } from "lucide-react";
+import { X, Tag, Sparkles, Truck, Wrench } from "lucide-react";
 import ImageGallery from "@/components/ui/ImageGallery";
 import AddToCartButton from "@/components/cart/AddToCartButton";
 import WhatsAppButton from "@/components/ui/WhatsAppButton";
@@ -110,6 +110,22 @@ export default function ProductModal({ product, onClose, categories = [] }: Prod
                   <p className="mt-1.5 text-xs text-text-secondary">
                     Stock disponible: {product.stock}
                   </p>
+                )}
+                {(product.freeShipping || product.freeInstallation) && (
+                  <div className="mt-2 flex flex-col gap-1">
+                    {product.freeShipping && (
+                      <p className="text-xs text-emerald-700 font-medium inline-flex items-center gap-1.5">
+                        <Truck size={13} aria-hidden />
+                        Envío gratis incluido
+                      </p>
+                    )}
+                    {product.freeInstallation && (
+                      <p className="text-xs text-emerald-700 font-medium inline-flex items-center gap-1.5">
+                        <Wrench size={13} aria-hidden />
+                        Instalación gratis incluida
+                      </p>
+                    )}
+                  </div>
                 )}
               </div>
             )}

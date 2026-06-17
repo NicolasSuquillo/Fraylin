@@ -22,6 +22,18 @@ export default async function RespuestaPage({ searchParams }: RespuestaPageProps
   } catch (error) {
     console.error("Error al buscar pedido:", error);
   }
+
+  // Si la orden ya fue procesada por Payphone, verificar que el payphoneId del URL coincida.
+  // Previene que un clientTransactionId robado/filtrado muestre datos ajenos.
+  const numericId = id && /^\d+$/.test(id) ? id : null;
+  if (
+    order &&
+    numericId &&
+    order.payphoneTransactionId &&
+    order.payphoneTransactionId !== numericId
+  ) {
+    order = null;
+  }
   let confirmError = false;
 
   if (order && order.status === "pending") {

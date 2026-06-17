@@ -34,6 +34,9 @@ export default function AddToCartButton({ product }: AddToCartButtonProps) {
         priceCents: product.priceCents!,
         image: product.images[0]?.src ?? "",
         stock: product.stock,
+        freeShipping: product.freeShipping,
+        freeInstallation: product.freeInstallation,
+        installationCents: product.installationCents,
       },
       qty
     );
