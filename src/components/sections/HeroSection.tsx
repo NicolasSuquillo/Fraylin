@@ -38,9 +38,9 @@ export default function HeroSection() {  const waMessage = "Hola Fraylin, me gus
             className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold text-neutral-dark mb-4 leading-tight tracking-wider drop-shadow-sm"
             style={{ fontFamily: "var(--font-heading)" }}
           >
-            Acabados de
-            <span className="block text-brand-dark">alta calidad</span>
-            para embellecer tu hogar
+            <span className="block text-brand-dark">Fraylin</span>
+            Acabados de alta calidad
+            <span className="block">para embellecer tu hogar</span>
           </h1>
         </Reveal>
 

@@ -5,6 +5,7 @@ import { db } from "@/db";
 import { orders, orderItems, products } from "@/db/schema";
 import { firstCheckoutError, validateCheckoutCustomer } from "@/lib/checkout-validation";
 import { computeTaxBreakdown } from "@/lib/money";
+import { reserveOrderStock, StockUnavailableError } from "@/lib/orders";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { getPricingSettings } from "@/lib/pricing";
 import { PAYMENT_METHODS, type CheckoutCustomer, type PaymentMethod } from "@/types";
@@ -142,10 +143,9 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
-      // Chequeo temprano de stock (mejor UX: falla antes de ir a pagar). NO es la
-      // barrera real contra sobreventa: la reserva atómica ocurre en
-      // `finalizeOrder` → `tryDecrementStock` (UPDATE ... WHERE stock >= qty),
-      // que es lo que garantiza que no se venda de más bajo concurrencia.
+      // Chequeo temprano de stock (mejor UX). La barrera real contra sobreventa
+      // es la reserva atómica en la transacción de creación del pedido
+      // (`tryDecrementStock` en Payphone → finalizeOrder; transferencia → checkout).
       if (product.stock != null && product.stock < item.quantity) {
         return NextResponse.json(
           { error: `Stock insuficiente para ${product.name} (disponible: ${product.stock})` },
@@ -207,6 +207,11 @@ export async function POST(req: NextRequest) {
         })
       );
 
+      // Transferencia: reservar stock al crear (igual que Payphone en finalizeOrder).
+      if (isTransfer) {
+        await reserveOrderStock(tx, created.id);
+      }
+
       return created;
     });
 
@@ -222,6 +227,12 @@ export async function POST(req: NextRequest) {
       shippingZoneLabel: order.shippingZoneLabel,
     });
   } catch (error) {
+    if (error instanceof StockUnavailableError) {
+      return NextResponse.json(
+        { error: "Stock insuficiente para uno o más productos. Intenta con menos unidades." },
+        { status: 400 }
+      );
+    }
     console.error("Error en checkout:", error);
     return NextResponse.json(
       { error: "No se pudo crear el pedido. Intenta de nuevo." },

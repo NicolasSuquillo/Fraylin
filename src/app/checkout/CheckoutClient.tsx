@@ -57,9 +57,10 @@ interface OrderResult {
 const delay = (ms: number) => new Promise<void>((r) => setTimeout(r, ms));
 
 function buildTransferMessage(order: OrderResult, items: CartItem[], customer: CheckoutCustomer): string {
-  const lines = items.map(
-    (item) => `• ${item.quantity} × ${item.name} — ${formatUSD(item.priceCents * item.quantity)}`
-  );
+  const lines = items.map((item) => {
+    const unitCents = item.transferPriceCents ?? item.priceCents;
+    return `• ${item.quantity} × ${item.name} — ${formatUSD(unitCents * item.quantity)}`;
+  });
   const extraLines: string[] = [];
   if (order.shippingCents > 0) {
     extraLines.push(`Envío (${order.shippingZoneLabel}): ${formatUSD(order.shippingCents)}`);

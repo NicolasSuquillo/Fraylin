@@ -6,6 +6,13 @@ import "./globals.css";
 import { CartProvider } from "@/components/cart/CartProvider";
 import CartDrawer from "@/components/cart/CartDrawer";
 import CatalogVersionWatcher from "@/components/ui/CatalogVersionWatcher";
+import LocalBusinessJsonLd from "@/components/seo/LocalBusinessJsonLd";
+import {
+  SITE_DESCRIPTION,
+  SITE_NAME,
+  SITE_TITLE,
+  SITE_URL,
+} from "@/lib/site";
 
 const playfairDisplay = Playfair_Display({
   subsets: ["latin"],
@@ -21,21 +28,49 @@ export const viewport = {
 };
 
 export const metadata: Metadata = {
-  title: "Fraylin — Acabados para la Construcción | Quito, Ecuador",
-  description:
-    "Tienda de acabados para la construcción en Quito. Cerámica, porcelanato, grifería, muebles de baño, piedra decorativa. Asesoría e instalación a domicilio.",
-  keywords:
-    "acabados construcción Quito, cerámica, porcelanato, grifería, sanitarios, muebles baño, piedra decorativa, Fraylin",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: SITE_TITLE,
+    template: `%s | ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  applicationName: SITE_NAME,
+  alternates: {
+    canonical: "/",
+  },
   icons: {
     icon: "/logotipo.png",
     apple: "/logotipo.png",
   },
   openGraph: {
-    title: "Fraylin — Acabados para la Construcción",
-    description:
-      "Materiales de alta calidad para el acabado de obras civiles y remodelaciones en Quito, Ecuador.",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    url: "/",
+    siteName: SITE_NAME,
     locale: "es_EC",
     type: "website",
+    images: [
+      {
+        url: "/logotipo.png",
+        width: 512,
+        height: 512,
+        alt: "Fraylin Acabados para la Construcción",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary",
+    title: SITE_TITLE,
+    description: SITE_DESCRIPTION,
+    images: ["/logotipo.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+    },
   },
 };
 
@@ -47,6 +82,7 @@ export default function RootLayout({
   return (
     <html lang="es" className={playfairDisplay.variable} data-scroll-behavior="smooth">
       <body>
+        <LocalBusinessJsonLd />
         <CartProvider>
           {children}
           <CartDrawer />

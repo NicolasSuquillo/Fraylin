@@ -27,7 +27,7 @@ export default function NosotrosSection() {
               className="text-2xl font-bold text-text-primary mb-4"
               style={{ fontFamily: "var(--font-heading)" }}
             >
-              Tu aliado en acabados de construcción
+              Fraylin: tu aliado en acabados de construcción
             </h3>
             <p className="text-text-secondary leading-relaxed mb-4">
               {BUSINESS.description} Ofrecemos una amplia variedad de productos —

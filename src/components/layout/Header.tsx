@@ -39,15 +39,23 @@ export default function Header() {
           >
             <Image
               src="/logotipo.png"
-              alt="Fraylin"
+              alt="Fraylin Acabados para la Construcción"
               width={48}
               height={48}
               className="rounded-lg"
               priority
             />
-            <p className="text-[11px] sm:text-xs leading-snug max-w-[13rem] sm:max-w-[11rem] text-text-secondary group-hover:text-brand-dark transition-colors">
-              Acabados para la construcción
-            </p>
+            <div className="min-w-0">
+              <p
+                className="text-sm sm:text-base font-bold text-brand-dark leading-tight group-hover:text-neutral-dark transition-colors"
+                style={{ fontFamily: "var(--font-heading)" }}
+              >
+                Fraylin
+              </p>
+              <p className="text-[11px] sm:text-xs leading-snug text-text-secondary group-hover:text-brand-dark transition-colors">
+                Acabados para la construcción
+              </p>
+            </div>
           </Link>
 
           <nav className="hidden md:flex items-center gap-1">

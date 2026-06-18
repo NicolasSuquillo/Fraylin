@@ -1,4 +1,4 @@
-import { desc, eq, sql } from "drizzle-orm";
+import { and, desc, eq, isNotNull, isNull, lt, sql } from "drizzle-orm";
 import { db } from "@/db";
 import { orders, orderItems, products } from "@/db/schema";
 import {
@@ -10,6 +10,16 @@ import { FULFILLMENT_STATUSES, type FulfillmentStatus, type Order, type OrderIte
 
 export { FULFILLMENT_STATUSES };
 export type { FulfillmentStatus };
+
+export class OrderActionError extends Error {
+  constructor(
+    message: string,
+    readonly code: "not_found" | "invalid_state" | "stock_unavailable"
+  ) {
+    super(message);
+    this.name = "OrderActionError";
+  }
+}
 
 function toOrder(row: typeof orders.$inferSelect, items?: (typeof orderItems.$inferSelect)[]): Order {
   return {
@@ -285,8 +295,19 @@ async function settleConfirmedOrder(
   return toOrder(updated, fullItems);
 }
 
-// Sentinela para abortar (rollback) la transacción de reclamo cuando no hay stock.
-class StockUnavailableError extends Error {}
+// Sentinela para abortar (rollback) la transacción cuando no hay stock.
+export class StockUnavailableError extends Error {
+  constructor() {
+    super("Stock insuficiente");
+    this.name = "StockUnavailableError";
+  }
+}
+
+/** Reserva stock dentro de `tx`; lanza StockUnavailableError si no alcanza. */
+export async function reserveOrderStock(tx: Tx, orderId: string): Promise<void> {
+  const ok = await tryDecrementStock(tx, orderId);
+  if (!ok) throw new StockUnavailableError();
+}
 
 /**
  * Confirma una orden con Payphone de forma idempotente.
@@ -379,28 +400,25 @@ export async function finalizeOrder(orderId: string, payphoneId: number): Promis
 
 /**
  * Marca como pagada una orden de transferencia/Deuna confirmada manualmente por el admin.
- * Idempotente: solo transiciona desde "pending"; descuenta stock una sola vez.
+ * Idempotente: solo transiciona desde "pending". El stock ya se reservó al crear
+ * el pedido en checkout (POST /api/checkout).
  */
 export async function markOrderPaidManually(orderId: string): Promise<Order> {
-  const claimed = await db.transaction(async (tx) => {
-    const [row] = await tx
-      .update(orders)
-      .set({ status: "paid", confirmedAt: new Date() })
-      // CRÍTICO (anti-estafa): solo transferencia. Una orden Payphone NUNCA se
-      // marca pagada manualmente — debe pasar por el Confirm server-side. Sin
-      // este filtro, el endpoint admin markPaid (o un CSRF) podría dar por pagada
-      // una orden Payphone sin cobro real.
-      .where(
-        sql`${orders.id} = ${orderId}
-            AND ${orders.status} = 'pending'
-            AND ${orders.paymentMethod} = 'transferencia'`
+  const [claimed] = await db
+    .update(orders)
+    .set({ status: "paid", confirmedAt: new Date() })
+    // CRÍTICO (anti-estafa): solo transferencia. Una orden Payphone NUNCA se
+    // marca pagada manualmente — debe pasar por el Confirm server-side. Sin
+    // este filtro, el endpoint admin markPaid (o un CSRF) podría dar por pagada
+    // una orden Payphone sin cobro real.
+    .where(
+      and(
+        eq(orders.id, orderId),
+        eq(orders.status, "pending"),
+        eq(orders.paymentMethod, "transferencia")
       )
-      .returning();
-    if (row) {
-      await decrementStock(tx, orderId);
-    }
-    return row ?? null;
-  });
+    )
+    .returning();
 
   if (claimed) {
     const items = await db.query.orderItems.findMany({ where: eq(orderItems.orderId, orderId) });
@@ -411,11 +429,17 @@ export async function markOrderPaidManually(orderId: string): Promise<Order> {
   // devolver sin error. En cualquier otro caso (Payphone, inexistente, cancelada)
   // lanzar: la ruta responde error y nunca se confunde con un pago aplicado.
   const existing = await db.query.orders.findFirst({ where: eq(orders.id, orderId) });
-  if (existing && existing.status === "paid" && existing.paymentMethod === "transferencia") {
+  if (!existing) {
+    throw new OrderActionError("Pedido no encontrado", "not_found");
+  }
+  if (existing.status === "paid" && existing.paymentMethod === "transferencia") {
     const items = await db.query.orderItems.findMany({ where: eq(orderItems.orderId, orderId) });
     return toOrder(existing, items);
   }
-  throw new Error("La orden no puede marcarse pagada manualmente (solo transferencia pendiente)");
+  throw new OrderActionError(
+    "Solo se pueden marcar pedidos pendientes de transferencia o Deuna.",
+    "invalid_state"
+  );
 }
 
 /**
@@ -436,10 +460,12 @@ export async function cancelStalePendingPayphoneOrders(olderThanMinutes = 30): P
     .update(orders)
     .set({ status: "cancelled" })
     .where(
-      sql`${orders.status} = 'pending'
-          AND ${orders.paymentMethod} = 'payphone'
-          AND ${orders.payphoneTransactionId} IS NULL
-          AND ${orders.createdAt} < ${cutoff}`
+      and(
+        eq(orders.status, "pending"),
+        eq(orders.paymentMethod, "payphone"),
+        isNull(orders.payphoneTransactionId),
+        lt(orders.createdAt, cutoff)
+      )
     )
     .returning({ id: orders.id });
   if (updated.length > 0) {
@@ -448,6 +474,81 @@ export async function cancelStalePendingPayphoneOrders(olderThanMinutes = 30): P
     );
   }
   return updated.length;
+}
+
+/**
+ * Cancela pedidos de transferencia/Deuna `pending` vencidos (sin pago confirmado)
+ * y devuelve el stock reservado al inventario. Devuelve el número canceladas.
+ */
+export async function cancelStalePendingTransferOrders(olderThanHours = 48): Promise<number> {
+  const cutoff = new Date(Date.now() - olderThanHours * 60 * 60 * 1000);
+  const stale = await db.query.orders.findMany({
+    where: and(
+      eq(orders.status, "pending"),
+      eq(orders.paymentMethod, "transferencia"),
+      lt(orders.createdAt, cutoff)
+    ),
+    columns: { id: true },
+  });
+
+  let cancelled = 0;
+  for (const row of stale) {
+    const [updated] = await db
+      .update(orders)
+      .set({ status: "cancelled" })
+      .where(sql`${orders.id} = ${row.id} AND ${orders.status} = 'pending'`)
+      .returning({ id: orders.id });
+    if (updated) {
+      await restoreStock(row.id);
+      cancelled++;
+    }
+  }
+
+  if (cancelled > 0) {
+    console.warn(
+      `[Reconciliación] ${cancelled} orden(es) transferencia pending vencida(s) canceladas (stock restaurado).`
+    );
+  }
+  return cancelled;
+}
+
+/**
+ * Cancela manualmente un pedido transferencia/Deuna `pending` y restaura stock.
+ * Idempotente si ya estaba cancelado.
+ */
+export async function cancelTransferOrderManually(orderId: string): Promise<Order> {
+  const [claimed] = await db
+    .update(orders)
+    .set({ status: "cancelled" })
+    .where(
+      and(
+        eq(orders.id, orderId),
+        eq(orders.status, "pending"),
+        eq(orders.paymentMethod, "transferencia")
+      )
+    )
+    .returning();
+
+  if (claimed) {
+    await restoreStock(orderId);
+    const items = await db.query.orderItems.findMany({ where: eq(orderItems.orderId, orderId) });
+    return toOrder(claimed, items);
+  }
+
+  const existing = await db.query.orders.findFirst({
+    where: eq(orders.id, orderId),
+    with: { items: true },
+  });
+  if (!existing) {
+    throw new OrderActionError("Pedido no encontrado", "not_found");
+  }
+  if (existing.status === "cancelled" && existing.paymentMethod === "transferencia") {
+    return toOrder(existing, existing.items);
+  }
+  throw new OrderActionError(
+    "Solo se pueden cancelar pedidos pendientes de transferencia o Deuna.",
+    "invalid_state"
+  );
 }
 
 /**
@@ -469,10 +570,12 @@ export async function reconcileStaleProcessingOrders(
 ): Promise<{ settled: number; failed: number; skipped: number }> {
   const cutoff = new Date(Date.now() - olderThanMinutes * 60 * 1000);
   const stale = await db.query.orders.findMany({
-    where: sql`${orders.status} = 'processing'
-        AND ${orders.paymentMethod} = 'payphone'
-        AND ${orders.payphoneTransactionId} IS NOT NULL
-        AND ${orders.createdAt} < ${cutoff}`,
+    where: and(
+      eq(orders.status, "processing"),
+      eq(orders.paymentMethod, "payphone"),
+      isNotNull(orders.payphoneTransactionId),
+      lt(orders.createdAt, cutoff)
+    ),
   });
 
   let settled = 0;

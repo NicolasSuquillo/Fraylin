@@ -3,6 +3,8 @@ import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/admin-auth";
 import {
   FULFILLMENT_STATUSES,
+  OrderActionError,
+  cancelTransferOrderManually,
   getOrderById,
   markOrderPaidManually,
   updateFulfillmentStatus,
@@ -39,15 +41,39 @@ export async function PATCH(
   const { fulfillmentStatus, action } = body;
 
   if (action === "markPaid") {
-    const order = await markOrderPaidManually(id).catch(() => null);
-    if (!order) {
-      return NextResponse.json({ error: "Pedido no encontrado" }, { status: 404 });
+    try {
+      const order = await markOrderPaidManually(id);
+      await touchCatalogVersion();
+      revalidatePath("/admin/orders");
+      revalidatePath(`/admin/orders/${id}`);
+      revalidatePath("/");
+      return NextResponse.json({ order });
+    } catch (err) {
+      if (err instanceof OrderActionError) {
+        const status = err.code === "not_found" ? 404 : 400;
+        return NextResponse.json({ error: err.message }, { status });
+      }
+      console.error("[admin/orders] markPaid:", err);
+      return NextResponse.json({ error: "No se pudo marcar como pagado" }, { status: 500 });
     }
-    await touchCatalogVersion();
-    revalidatePath("/admin/orders");
-    revalidatePath(`/admin/orders/${id}`);
-    revalidatePath("/");
-    return NextResponse.json({ order });
+  }
+
+  if (action === "cancel") {
+    try {
+      const order = await cancelTransferOrderManually(id);
+      await touchCatalogVersion();
+      revalidatePath("/admin/orders");
+      revalidatePath(`/admin/orders/${id}`);
+      revalidatePath("/");
+      return NextResponse.json({ order });
+    } catch (err) {
+      if (err instanceof OrderActionError) {
+        const status = err.code === "not_found" ? 404 : 400;
+        return NextResponse.json({ error: err.message }, { status });
+      }
+      console.error("[admin/orders] cancel:", err);
+      return NextResponse.json({ error: "No se pudo cancelar el pedido" }, { status: 500 });
+    }
   }
 
   if (!FULFILLMENT_STATUSES.includes(fulfillmentStatus)) {
