@@ -1,0 +1,2 @@
+ALTER TABLE "pricing_settings" ADD COLUMN "shipping_enabled" boolean DEFAULT true NOT NULL;--> statement-breakpoint
+ALTER TABLE "pricing_settings" ADD COLUMN "installation_enabled" boolean DEFAULT true NOT NULL;

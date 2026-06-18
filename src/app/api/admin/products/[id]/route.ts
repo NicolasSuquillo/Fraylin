@@ -1,19 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
+import { eq } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/admin-auth";
 import { tryDeletePublicUploads } from "@/lib/delete-public-upload";
-import { readFileSync, writeFileSync } from "fs";
-import { join } from "path";
+import { touchCatalogVersion } from "@/lib/cache-version";
+import { db } from "@/db";
+import { products, productImages } from "@/db/schema";
+import { validateProductPayload } from "@/lib/validate-product";
 import type { Product } from "@/types";
-
-const DATA_PATH = join(process.cwd(), "src/data/products.json");
-
-function readData() {
-  return JSON.parse(readFileSync(DATA_PATH, "utf-8"));
-}
-
-function writeData(data: unknown) {
-  writeFileSync(DATA_PATH, JSON.stringify(data, null, 2), "utf-8");
-}
 
 export async function PUT(
   req: NextRequest,
@@ -24,23 +18,61 @@ export async function PUT(
   }
 
   const { id } = await params;
-  const updated: Product = await req.json();
-  const data = readData();
-  const idx = data.products.findIndex((p: Product) => p.id === id);
+  const updated: Product = await req.json().catch(() => null);
+  const invalid = validateProductPayload(updated);
+  if (invalid) {
+    return NextResponse.json({ error: invalid }, { status: 400 });
+  }
 
-  if (idx === -1) {
+  const previous = await db.query.products.findFirst({
+    where: eq(products.id, id),
+    with: { images: true },
+  });
+
+  if (!previous) {
     return NextResponse.json({ error: "Producto no encontrado" }, { status: 404 });
   }
 
-  const previous = data.products[idx] as Product;
-  data.products[idx] = updated;
-  writeData(data);
+  await db.transaction(async (tx) => {
+    await tx
+      .update(products)
+      .set({
+        categorySlug: updated.category,
+        name: updated.name,
+        description: updated.description ?? null,
+        priceCents: updated.priceCents ?? null,
+        transferPriceCents: updated.transferPriceCents ?? null,
+        stock: updated.stock ?? null,
+        featured: updated.featured ?? false,
+        freeShipping: updated.freeShipping ?? false,
+        freeInstallation: updated.freeInstallation ?? false,
+        installationCents: updated.installationCents ?? null,
+        installationTransferCents: updated.installationTransferCents ?? null,
+        updatedAt: new Date(),
+      })
+      .where(eq(products.id, id));
 
-  const prevSrcs = new Set((previous.images ?? []).map((i) => i.src.trim()));
-  const nextSrcs = new Set((updated.images ?? []).map((i) => i.src.trim()));
+    await tx.delete(productImages).where(eq(productImages.productId, id));
+
+    if (updated.images.length > 0) {
+      await tx.insert(productImages).values(
+        updated.images.map((image, index) => ({
+          productId: id,
+          src: image.src,
+          alt: image.alt,
+          position: index,
+        }))
+      );
+    }
+  });
+
+  const prevSrcs = new Set(previous.images.map((i) => i.src.trim()));
+  const nextSrcs = new Set(updated.images.map((i) => i.src.trim()));
   const orphaned = [...prevSrcs].filter((s) => s && !nextSrcs.has(s));
-  tryDeletePublicUploads(orphaned);
+  await tryDeletePublicUploads(orphaned);
 
+  await touchCatalogVersion();
+  revalidatePath("/");
   return NextResponse.json({ ok: true });
 }
 
@@ -53,18 +85,21 @@ export async function DELETE(
   }
 
   const { id } = await params;
-  const data = readData();
-  const idx = data.products.findIndex((p: Product) => p.id === id);
 
-  if (idx === -1) {
+  const removed = await db.query.products.findFirst({
+    where: eq(products.id, id),
+    with: { images: true },
+  });
+
+  if (!removed) {
     return NextResponse.json({ error: "Producto no encontrado" }, { status: 404 });
   }
 
-  const removed = data.products[idx] as Product;
-  data.products.splice(idx, 1);
-  writeData(data);
+  await db.delete(products).where(eq(products.id, id));
 
-  tryDeletePublicUploads((removed.images ?? []).map((i) => i.src.trim()));
+  await tryDeletePublicUploads(removed.images.map((i) => i.src.trim()));
 
+  await touchCatalogVersion();
+  revalidatePath("/");
   return NextResponse.json({ ok: true });
 }

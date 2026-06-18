@@ -20,7 +20,7 @@ interface ProductSearchProps {
   onPickProduct: (p: Product) => void;
 }
 
-function labelForSlug(categories: Category[], slug: string): string {
+export function labelForSlug(categories: Category[], slug: string): string {
   return categories.find((c) => c.slug === slug)?.label ?? slug;
 }
 

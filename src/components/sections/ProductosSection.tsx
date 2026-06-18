@@ -47,7 +47,7 @@ export default function ProductosSection({
           />
         </Reveal>
 
-        <div className="mb-10 flex flex-col gap-5 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
+        <div className="mb-10 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
           <Reveal delay={0.05}>
             <div className="w-full lg:max-w-md lg:shrink-0">
               <ProductSearch
@@ -97,7 +97,7 @@ export default function ProductosSection({
           <div className="grid grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6 items-stretch">
             {sortedProducts.map((product, i) => (
               <Reveal key={product.id} delay={i * 0.05}>
-                <ProductCard product={product} onSelect={onProductSelect} />
+                <ProductCard product={product} onSelect={onProductSelect} categories={categories} />
               </Reveal>
             ))}
           </div>

@@ -28,7 +28,7 @@ export default function GaleriaSection({ items: galleryItems }: GaleriaSectionPr
     );
 
   return (
-    <section id="galeria" className="py-20 bg-neutral-light">
+    <section id="galeria" className="py-5 md:py-5 bg-neutral-light">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal delay={0}>
           <SectionHeading

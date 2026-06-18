@@ -5,12 +5,17 @@ import Image, { ImageProps } from "next/image";
 
 type SafeImageProps = ImageProps;
 
+function isValidSrc(src: ImageProps["src"]): boolean {
+  if (typeof src !== "string") return true;
+  return src.startsWith("/") || src.startsWith("http://") || src.startsWith("https://");
+}
+
 export default function SafeImage({ src, alt, ...props }: SafeImageProps) {
   const [error, setError] = useState(false);
 
   return (
     <Image
-      src={error ? "/placeholder.svg" : src}
+      src={error || !isValidSrc(src) ? "/placeholder.svg" : src}
       alt={alt}
       onError={() => setError(true)}
       {...props}

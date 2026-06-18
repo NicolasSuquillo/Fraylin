@@ -1,18 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
+import { eq, count } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/admin-auth";
-import { readFileSync, writeFileSync } from "fs";
-import { join } from "path";
-import type { Category, Product } from "@/types";
-
-const DATA_PATH = join(process.cwd(), "src/data/products.json");
-
-function readData() {
-  return JSON.parse(readFileSync(DATA_PATH, "utf-8"));
-}
-
-function writeData(data: unknown) {
-  writeFileSync(DATA_PATH, JSON.stringify(data, null, 2), "utf-8");
-}
+import { db } from "@/db";
+import { categories, products } from "@/db/schema";
+import { touchCatalogVersion } from "@/lib/cache-version";
+import type { Category } from "@/types";
 
 export async function PUT(
   req: NextRequest,
@@ -23,16 +16,31 @@ export async function PUT(
   }
 
   const { slug } = await params;
-  const updated: Category = await req.json();
-  const data = readData();
-  const idx = data.categories.findIndex((c: Category) => c.slug === slug);
+  const updated: Category = await req.json().catch(() => null);
 
-  if (idx === -1) {
+  if (!updated || typeof updated !== "object" || !updated.label?.trim()) {
+    return NextResponse.json({ error: "Falta el nombre de la categoría" }, { status: 400 });
+  }
+
+  const existing = await db.query.categories.findFirst({
+    where: eq(categories.slug, slug),
+  });
+  if (!existing) {
     return NextResponse.json({ error: "Categoría no encontrada" }, { status: 404 });
   }
 
-  data.categories[idx] = updated;
-  writeData(data);
+  // El slug es la clave que referencian los productos: no se renombra desde aquí
+  await db
+    .update(categories)
+    .set({
+      label: updated.label.trim(),
+      icon: updated.icon,
+      description: updated.description ?? null,
+    })
+    .where(eq(categories.slug, slug));
+
+  await touchCatalogVersion();
+  revalidatePath("/");
   return NextResponse.json({ ok: true });
 }
 
@@ -45,17 +53,22 @@ export async function DELETE(
   }
 
   const { slug } = await params;
-  const data = readData();
-  const hasProducts = data.products.some((p: Product) => p.category === slug);
 
-  if (hasProducts) {
+  const [{ value: productCount }] = await db
+    .select({ value: count() })
+    .from(products)
+    .where(eq(products.categorySlug, slug));
+
+  if (productCount > 0) {
     return NextResponse.json(
       { error: "No se puede eliminar: hay productos en esta categoría" },
       { status: 409 }
     );
   }
 
-  data.categories = data.categories.filter((c: Category) => c.slug !== slug);
-  writeData(data);
+  await db.delete(categories).where(eq(categories.slug, slug));
+
+  await touchCatalogVersion();
+  revalidatePath("/");
   return NextResponse.json({ ok: true });
 }

@@ -1,19 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
+import { put } from "@vercel/blob";
 import { getSession } from "@/lib/admin-auth";
-import { mkdirSync, writeFileSync } from "fs";
-import { join, extname } from "path";
+import { detectImageType, extensionForImageType } from "@/lib/image-sniff";
 
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
-
-const EXT_ALIASES: Record<string, string> = {
-  ".jpeg": ".jpg",
-  ".tiff": ".tif",
-};
-
-function normalizeExt(raw: string): string {
-  const lower = raw.toLowerCase();
-  return EXT_ALIASES[lower] ?? lower;
-}
+// Vercel limita el body de funciones serverless a 4.5 MB
+const MAX_FILE_BYTES = 4 * 1024 * 1024;
 
 function sanitize(name: string) {
   return name
@@ -39,37 +30,50 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Falta el archivo" }, { status: 400 });
   }
 
-  if (destination === "gallery") {
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      return NextResponse.json({ error: "Tipo de archivo no permitido" }, { status: 400 });
-    }
-    const ext = normalizeExt(extname(file.name) || ".jpg");
-    const base = sanitize(file.name.slice(0, file.name.lastIndexOf(".")) || file.name);
-    const filename = `${Date.now()}-${base}${ext}`;
-    const dir = join(process.cwd(), "public", "gallery");
-    mkdirSync(dir, { recursive: true });
-    const buffer = Buffer.from(await file.arrayBuffer());
-    writeFileSync(join(dir, filename), buffer);
-    return NextResponse.json({ src: `/gallery/${filename}` }, { status: 201 });
+  if (file.size > MAX_FILE_BYTES) {
+    return NextResponse.json(
+      { error: "La imagen supera los 4 MB. Redúcela antes de subirla." },
+      { status: 413 }
+    );
   }
 
-  if (!category) {
+  // Verificar el tipo real por firma de bytes (no por el Content-Type declarado,
+  // que es falsificable). Cierra la subida de contenido arbitrario con MIME falso.
+  const detectedType = await detectImageType(file);
+  if (!detectedType) {
+    return NextResponse.json(
+      { error: "El archivo no es una imagen válida (JPG, PNG, WEBP o GIF)" },
+      { status: 400 }
+    );
+  }
+
+  // La extensión se deriva del tipo REAL detectado por bytes, no del nombre
+  // original (controlado por el cliente): evita polyglots con extensión engañosa.
+  const ext = extensionForImageType(detectedType);
+
+  if (destination === "gallery" || destination === "payments") {
+    const base = sanitize(file.name.slice(0, file.name.lastIndexOf(".")) || file.name);
+    const filename = `${Date.now()}-${base}${ext}`;
+    const blob = await put(`${destination}/${filename}`, file, {
+      access: "public",
+      addRandomSuffix: false,
+    });
+    return NextResponse.json({ src: blob.url }, { status: 201 });
+  }
+
+  // Sanitizar evita que un slug malicioso (p. ej. "../x") escape el prefijo products/.
+  const safeCategory = category ? sanitize(category) : "";
+  if (!safeCategory) {
     return NextResponse.json({ error: "Faltan campos: file, category" }, { status: 400 });
   }
 
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    return NextResponse.json({ error: "Tipo de archivo no permitido" }, { status: 400 });
-  }
-
-  const ext = normalizeExt(extname(file.name) || ".jpg");
   const base = sanitize(file.name.slice(0, file.name.lastIndexOf(".")) || file.name);
   const filename = `${Date.now()}-${base}${ext}`;
 
-  const dir = join(process.cwd(), "public", "products", category);
-  mkdirSync(dir, { recursive: true });
+  const blob = await put(`products/${safeCategory}/${filename}`, file, {
+    access: "public",
+    addRandomSuffix: false,
+  });
 
-  const buffer = Buffer.from(await file.arrayBuffer());
-  writeFileSync(join(dir, filename), buffer);
-
-  return NextResponse.json({ src: `/products/${category}/${filename}` }, { status: 201 });
+  return NextResponse.json({ src: blob.url }, { status: 201 });
 }

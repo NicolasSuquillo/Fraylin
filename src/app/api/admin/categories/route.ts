@@ -1,25 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { eq, count } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/admin-auth";
-import { readFileSync, writeFileSync } from "fs";
-import { join } from "path";
+import { db } from "@/db";
+import { categories } from "@/db/schema";
+import { getCategories } from "@/lib/products";
+import { touchCatalogVersion } from "@/lib/cache-version";
 import type { Category } from "@/types";
-
-const DATA_PATH = join(process.cwd(), "src/data/products.json");
-
-function readData() {
-  return JSON.parse(readFileSync(DATA_PATH, "utf-8"));
-}
-
-function writeData(data: unknown) {
-  writeFileSync(DATA_PATH, JSON.stringify(data, null, 2), "utf-8");
-}
 
 export async function GET() {
   if (!(await getSession())) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
-  const data = readData();
-  return NextResponse.json(data.categories);
+  return NextResponse.json(await getCategories());
 }
 
 export async function POST(req: NextRequest) {
@@ -27,14 +20,38 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
 
-  const category: Category = await req.json();
-  const data = readData();
+  const category: Category = await req.json().catch(() => null);
+  if (!category || typeof category !== "object") {
+    return NextResponse.json({ error: "Cuerpo de la petición inválido" }, { status: 400 });
+  }
+  if (!category.label?.trim()) {
+    return NextResponse.json({ error: "Falta el nombre de la categoría" }, { status: 400 });
+  }
+  if (!category.slug?.trim() || !/^[a-z0-9]+(-[a-z0-9]+)*$/.test(category.slug)) {
+    return NextResponse.json(
+      { error: "Slug inválido: usa solo minúsculas, números y guiones (ej: pisos-exteriores)" },
+      { status: 400 }
+    );
+  }
 
-  if (data.categories.find((c: Category) => c.slug === category.slug)) {
+  const existing = await db.query.categories.findFirst({
+    where: eq(categories.slug, category.slug),
+  });
+  if (existing) {
     return NextResponse.json({ error: "Slug ya existe" }, { status: 409 });
   }
 
-  data.categories.push(category);
-  writeData(data);
+  const [{ value: total }] = await db.select({ value: count() }).from(categories);
+
+  await db.insert(categories).values({
+    slug: category.slug,
+    label: category.label,
+    icon: category.icon,
+    description: category.description ?? null,
+    position: total,
+  });
+
+  await touchCatalogVersion();
+  revalidatePath("/");
   return NextResponse.json({ ok: true }, { status: 201 });
 }

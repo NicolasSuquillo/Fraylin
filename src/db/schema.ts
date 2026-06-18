@@ -13,6 +13,39 @@ import {
   uniqueIndex,
 } from "drizzle-orm/pg-core";
 
+// Fila única por `key`; se actualiza junto a cada revalidatePath("/") para
+// que el cliente detecte cambios de catálogo vía polling (CatalogVersionWatcher).
+export const cacheMeta = pgTable("cache_meta", {
+  key: text("key").primaryKey(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+// Fila única (id=1): precios configurables de envío e instalación.
+export const pricingSettings = pgTable("pricing_settings", {
+  id: integer("id").primaryKey().default(1),
+  shippingZoneCents: jsonb("shipping_zone_cents").notNull().default({}),
+  shippingZoneTransferCents: jsonb("shipping_zone_transfer_cents").notNull().default({}),
+  shippingZoneLabels: jsonb("shipping_zone_labels").notNull().default({}),
+  installationCents: integer("installation_cents").notNull().default(0),
+  installationTransferCents: integer("installation_transfer_cents").notNull().default(0),
+  payphoneFeeBps: integer("payphone_fee_bps").notNull().default(575),
+  shippingEnabled: boolean("shipping_enabled").notNull().default(true),
+  installationEnabled: boolean("installation_enabled").notNull().default(true),
+  shippingDescription: text("shipping_description"),
+  installationDescription: text("installation_description"),
+  transferEnabled: boolean("transfer_enabled").notNull().default(true),
+  transferQrImageUrl: text("transfer_qr_image_url"),
+  transferBankName: text("transfer_bank_name"),
+  transferAccountType: text("transfer_account_type"),
+  transferAccountNumber: text("transfer_account_number"),
+  transferAccountHolder: text("transfer_account_holder"),
+  transferAccountId: text("transfer_account_id"),
+  transferInstructions: text("transfer_instructions"),
+  comprobanteEnabled: boolean("comprobante_enabled"),
+  comprobanteShowRuc: boolean("comprobante_show_ruc"),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
 export const categories = pgTable("categories", {
   slug: text("slug").primaryKey(),
   label: text("label").notNull(),
@@ -30,10 +63,14 @@ export const products = pgTable(
       .references(() => categories.slug, { onUpdate: "cascade" }),
     name: text("name").notNull(),
     description: text("description"),
-    displayPrice: text("display_price"),
     priceCents: integer("price_cents"),
+    transferPriceCents: integer("transfer_price_cents"),
     stock: integer("stock"),
     featured: boolean("featured").notNull().default(false),
+    freeShipping: boolean("free_shipping").notNull().default(false),
+    freeInstallation: boolean("free_installation").notNull().default(false),
+    installationCents: integer("installation_cents"),
+    installationTransferCents: integer("installation_transfer_cents"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
@@ -73,12 +110,15 @@ export const orderStatusEnum = pgEnum("order_status", [
   "cancelled",
 ]);
 
+export const paymentMethodEnum = pgEnum("payment_method", ["payphone", "transferencia"]);
+
 export const orders = pgTable(
   "orders",
   {
     id: uuid("id").primaryKey().defaultRandom(),
     clientTransactionId: text("client_transaction_id").notNull(),
     status: orderStatusEnum("status").notNull().default("pending"),
+    paymentMethod: paymentMethodEnum("payment_method").notNull().default("payphone"),
     fulfillmentStatus: text("fulfillment_status").notNull().default("nuevo"),
     customerName: text("customer_name").notNull(),
     customerPhone: text("customer_phone").notNull(),
@@ -86,6 +126,9 @@ export const orders = pgTable(
     customerAddress: text("customer_address").notNull(),
     subtotalCents: integer("subtotal_cents").notNull(),
     taxCents: integer("tax_cents").notNull(),
+    shippingCents: integer("shipping_cents").notNull().default(0),
+    installationCents: integer("installation_cents").notNull().default(0),
+    shippingZoneLabel: text("shipping_zone_label"),
     totalCents: integer("total_cents").notNull(),
     payphoneTransactionId: text("payphone_transaction_id"),
     payphoneStatusCode: integer("payphone_status_code"),
@@ -145,3 +188,17 @@ export const orderItemsRelations = relations(orderItems, ({ one }) => ({
     references: [orders.id],
   }),
 }));
+
+export const reviews = pgTable(
+  "reviews",
+  {
+    id: serial("id").primaryKey(),
+    authorName: text("author_name").notNull(),
+    rating: integer("rating").notNull(),
+    body: text("body").notNull(),
+    avatarUrl: text("avatar_url"),
+    approved: boolean("approved").notNull().default(false),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("reviews_approved_idx").on(t.approved)]
+);

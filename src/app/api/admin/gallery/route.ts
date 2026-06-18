@@ -1,25 +1,18 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { getSession } from "@/lib/admin-auth";
 import { tryDeletePublicUploads } from "@/lib/delete-public-upload";
-import { readFileSync, writeFileSync } from "fs";
-import { join } from "path";
+import { db } from "@/db";
+import { galleryItems } from "@/db/schema";
+import { getGalleryItems } from "@/lib/gallery";
+import { touchCatalogVersion } from "@/lib/cache-version";
 import type { GalleryItem } from "@/types";
-
-const DATA_PATH = join(process.cwd(), "src/data/gallery.json");
-
-function readData(): { items: GalleryItem[] } {
-  return JSON.parse(readFileSync(DATA_PATH, "utf-8"));
-}
-
-function writeData(data: { items: GalleryItem[] }) {
-  writeFileSync(DATA_PATH, JSON.stringify(data, null, 2), "utf-8");
-}
 
 export async function GET() {
   if (!(await getSession())) {
     return NextResponse.json({ error: "No autorizado" }, { status: 401 });
   }
-  return NextResponse.json(readData());
+  return NextResponse.json({ items: await getGalleryItems() });
 }
 
 export async function PUT(req: NextRequest) {
@@ -42,13 +35,28 @@ export async function PUT(req: NextRequest) {
     }
   }
 
-  const previous = readData();
-  writeData({ items });
+  const previous = await getGalleryItems();
 
-  const oldSrcs = new Set(previous.items.map((i) => i.src.trim()).filter(Boolean));
+  await db.transaction(async (tx) => {
+    await tx.delete(galleryItems);
+    if (items.length > 0) {
+      await tx.insert(galleryItems).values(
+        items.map((item, index) => ({
+          src: item.src.trim(),
+          alt: item.alt.trim(),
+          caption: item.caption?.trim() || null,
+          position: index,
+        }))
+      );
+    }
+  });
+
+  const oldSrcs = new Set(previous.map((i) => i.src.trim()).filter(Boolean));
   const newSrcs = new Set(items.map((i) => i.src.trim()));
   const removedSrcs = [...oldSrcs].filter((s) => !newSrcs.has(s));
-  tryDeletePublicUploads(removedSrcs);
+  await tryDeletePublicUploads(removedSrcs);
 
+  await touchCatalogVersion();
+  revalidatePath("/");
   return NextResponse.json({ ok: true });
 }

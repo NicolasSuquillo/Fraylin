@@ -11,7 +11,7 @@ const stats = [
 
 export default function NosotrosSection() {
   return (
-    <section id="nosotros" className="py-20 bg-accent-cream">
+    <section id="nosotros" className="py-16 md:py-20 bg-accent-cream">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <Reveal delay={0}>
           <SectionHeading
@@ -27,7 +27,7 @@ export default function NosotrosSection() {
               className="text-2xl font-bold text-text-primary mb-4"
               style={{ fontFamily: "var(--font-heading)" }}
             >
-              Tu aliado en acabados de construcción
+              Fraylin: tu aliado en acabados de construcción
             </h3>
             <p className="text-text-secondary leading-relaxed mb-4">
               {BUSINESS.description} Ofrecemos una amplia variedad de productos —

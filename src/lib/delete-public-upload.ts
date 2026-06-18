@@ -1,15 +1,35 @@
 import { existsSync, unlinkSync } from "fs";
 import { join, relative, resolve } from "path";
+import { del } from "@vercel/blob";
 
 const PUBLIC_ROOT = resolve(process.cwd(), "public");
+const BLOB_HOST_RE = /^[a-z0-9-]+\.public\.blob\.vercel-storage\.com$/i;
 
 /**
- * Elimina un archivo subido por el admin si la URL es segura y está bajo
- * `public/gallery/` o `public/products/` (evita borrar rutas arbitrarias).
+ * Elimina un archivo subido por el admin:
+ * - URLs de Vercel Blob -> `del()` del store.
+ * - Rutas legacy `/products/*` o `/gallery/*` (estáticas del repo): solo se
+ *   borran en dev local; en producción el filesystem es de solo lectura y
+ *   esos archivos siguen versionados en git, así que es no-op.
  */
-export function tryDeletePublicUpload(src: string | undefined): void {
+export async function tryDeletePublicUpload(src: string | undefined): Promise<void> {
   if (!src || typeof src !== "string") return;
   const trimmed = src.trim();
+  if (!trimmed) return;
+
+  if (/^https?:\/\//i.test(trimmed)) {
+    try {
+      const url = new URL(trimmed);
+      if (BLOB_HOST_RE.test(url.hostname)) {
+        await del(trimmed);
+      }
+    } catch {
+      /* URL inválida o error del store: no romper la petición */
+    }
+    return;
+  }
+
+  if (process.env.NODE_ENV === "production") return;
   if (!trimmed.startsWith("/")) return;
 
   const parts = trimmed
@@ -33,8 +53,6 @@ export function tryDeletePublicUpload(src: string | undefined): void {
   }
 }
 
-export function tryDeletePublicUploads(srcs: Iterable<string>): void {
-  for (const s of srcs) {
-    tryDeletePublicUpload(s);
-  }
+export async function tryDeletePublicUploads(srcs: Iterable<string>): Promise<void> {
+  await Promise.all([...srcs].map((s) => tryDeletePublicUpload(s)));
 }
