@@ -142,6 +142,10 @@ export async function POST(req: NextRequest) {
           { status: 400 }
         );
       }
+      // Chequeo temprano de stock (mejor UX: falla antes de ir a pagar). NO es la
+      // barrera real contra sobreventa: la reserva atómica ocurre en
+      // `finalizeOrder` → `tryDecrementStock` (UPDATE ... WHERE stock >= qty),
+      // que es lo que garantiza que no se venda de más bajo concurrencia.
       if (product.stock != null && product.stock < item.quantity) {
         return NextResponse.json(
           { error: `Stock insuficiente para ${product.name} (disponible: ${product.stock})` },
@@ -160,10 +164,13 @@ export async function POST(req: NextRequest) {
       return sum + unitPriceFor(product) * item.quantity;
     }, 0);
 
-    const { subtotalCents, taxCents } = computeTaxBreakdown(productSubtotalCents);
     const shippingCents = shippingZone.cents;
     const installationCents = installationRequested ? totalInstallationIfRequested : 0;
     const totalCents = productSubtotalCents + shippingCents + installationCents;
+    // El IVA (15%) aplica a todo el monto cobrado (productos + envío + instalación),
+    // que ya lo incluye. El desglose se calcula sobre el total para que
+    // subtotalCents + taxCents === totalCents (la Cajita exige ese invariante).
+    const { subtotalCents, taxCents } = computeTaxBreakdown(totalCents);
     const clientTransactionId = generateClientTransactionId();
 
     const order = await db.transaction(async (tx) => {

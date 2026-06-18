@@ -8,6 +8,7 @@ import { buildWhatsAppUrl } from "@/lib/constants";
 import StatusBadge from "../StatusBadge";
 import FulfillmentSelect from "../FulfillmentSelect";
 import MarkPaidButton from "../MarkPaidButton";
+import DownloadComprobanteButton from "./DownloadComprobanteButton";
 
 export const dynamic = "force-dynamic";
 
@@ -151,6 +152,9 @@ export default async function OrderDetailPage({
           </a>
           {order.paymentMethod === "transferencia" && order.status === "pending" && (
             <MarkPaidButton orderId={order.id} />
+          )}
+          {order.status === "paid" && (
+            <DownloadComprobanteButton orderId={order.id} clientTransactionId={order.clientTransactionId} />
           )}
         </div>
       </div>

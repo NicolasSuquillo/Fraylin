@@ -29,8 +29,8 @@ export default function ProductCard({ product, onSelect, categories = [] }: Prod
       className="group relative flex h-full min-h-0 w-full aspect-[3/4] flex-col rounded-2xl overflow-hidden border border-stone-200 hover:border-brand-primary/50 hover:shadow-[0_12px_40px_-8px_rgba(201,168,76,0.15)] transition-all duration-300 text-left hover:-translate-y-1 bg-neutral-light"
     >
       <SafeImage
-        src={product.images[0].src}
-        alt={product.images[0].alt}
+        src={product.images[0]?.src ?? "/placeholder.svg"}
+        alt={product.images[0]?.alt ?? product.name}
         fill
         className="object-cover z-0 group-hover:scale-105 transition-transform duration-500"
         sizes="(max-width: 419px) 100vw, (max-width: 767px) 50vw, (max-width: 1279px) 33vw, 25vw"

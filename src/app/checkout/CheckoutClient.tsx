@@ -8,6 +8,7 @@ import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import SafeImage from "@/components/ui/SafeImage";
 import { useCart } from "@/components/cart/CartProvider";
+import SuccessConfetti from "@/components/checkout/SuccessConfetti";
 import { BUSINESS, buildWhatsAppUrl } from "@/lib/constants";
 import type { ShippingZonePrice, TransferSettings } from "@/lib/pricing";
 import { validateCheckoutCustomer, type CheckoutFieldErrors } from "@/lib/checkout-validation";
@@ -430,8 +431,11 @@ export default function CheckoutClient({
       ...(payphoneStoreId ? { storeId: payphoneStoreId } : {}),
       clientTransactionId: order.clientTransactionId,
       amount: order.totalCents,
+      // IVA incluido en todo el total: la base gravada es subtotalCents y el
+      // impuesto taxCents. amountWithoutTax queda en 0 para cumplir el invariante
+      // amount === amountWithTax + tax + amountWithoutTax.
       amountWithTax: order.subtotalCents,
-      amountWithoutTax: order.shippingCents + order.installationCents,
+      amountWithoutTax: 0,
       tax: order.taxCents,
       service: 0,
       tip: 0,
@@ -947,6 +951,7 @@ export default function CheckoutClient({
                 className="flex flex-col gap-5"
                 style={{ animation: "ckSuccessIn 0.5s cubic-bezier(0.34,1.3,0.64,1) both" }}
               >
+                <SuccessConfetti count={90} />
                 <div className="flex items-center gap-4 bg-emerald-50 border border-emerald-200 rounded-2xl px-5 py-5">
                   <div className="w-14 h-14 rounded-full bg-emerald-100 flex items-center justify-center shrink-0">
                     <svg

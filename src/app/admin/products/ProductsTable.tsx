@@ -244,7 +244,7 @@ export default function ProductsTable({ products, categories }: Props) {
 
   const hasFilters = query || categoryFilter;
 
-  function ThCol({ label, col }: { label: string; col: SortKey }) {
+  function renderThCol(label: string, col: SortKey) {
     const active = sortKey === col;
     return (
       <th
@@ -455,10 +455,10 @@ export default function ProductsTable({ products, categories }: Props) {
           <table className="w-full min-w-[800px] text-sm">
             <thead className="border-b border-gray-100 bg-gray-50/80">
               <tr>
-                <ThCol label="Producto" col="name" />
-                <ThCol label="Categoría" col="category" />
-                <ThCol label="Precio" col="price" />
-                <ThCol label="Stock" col="stock" />
+                {renderThCol("Producto", "name")}
+                {renderThCol("Categoría", "category")}
+                {renderThCol("Precio", "price")}
+                {renderThCol("Stock", "stock")}
                 <th className="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wide text-gray-500">
                   Extras
                 </th>

@@ -13,8 +13,16 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   const numId = parseInt(id, 10);
   if (isNaN(numId)) return NextResponse.json({ error: "ID inválido" }, { status: 400 });
 
-  const { approved } = (await req.json()) as { approved: boolean };
-  await setReviewApproval(numId, approved);
+  let body: { approved?: unknown };
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Solicitud inválida" }, { status: 400 });
+  }
+  if (typeof body.approved !== "boolean") {
+    return NextResponse.json({ error: "Campo 'approved' inválido" }, { status: 400 });
+  }
+  await setReviewApproval(numId, body.approved);
   revalidatePath("/");
   return NextResponse.json({ ok: true });
 }

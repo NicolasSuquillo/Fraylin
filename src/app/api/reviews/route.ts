@@ -1,18 +1,26 @@
 import { NextRequest, NextResponse } from "next/server";
 import { put } from "@vercel/blob";
 import { createReview } from "@/lib/reviews";
-import { extname } from "path";
+import { detectImageType, extensionForImageType } from "@/lib/image-sniff";
+import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
 const MAX_FILE_BYTES = 2 * 1024 * 1024;
-
-const EXT_ALIASES: Record<string, string> = { ".jpeg": ".jpg" };
-function normalizeExt(raw: string) {
-  const lower = raw.toLowerCase();
-  return EXT_ALIASES[lower] ?? lower;
-}
+const RATE_LIMIT_MAX = 5;
+const RATE_LIMIT_WINDOW_MS = 15 * 60 * 1000; // 15 min
+// Topes de longitud: endpoint público sin autenticación; evita inflar la BD con
+// payloads gigantes de spam.
+const MAX_AUTHOR_NAME = 80;
+const MAX_BODY = 1000;
 
 export async function POST(req: NextRequest) {
+  // Endpoint público: frenar spam de reseñas e inflado del Blob storage.
+  if (!checkRateLimit(`reviews:${getClientIp(req)}`, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS)) {
+    return NextResponse.json(
+      { error: "Demasiadas reseñas seguidas. Intenta de nuevo en unos minutos." },
+      { status: 429 }
+    );
+  }
+
   const form = await req.formData();
   const authorName = (form.get("authorName") as string | null)?.trim();
   const ratingRaw = form.get("rating") as string | null;
@@ -21,6 +29,19 @@ export async function POST(req: NextRequest) {
 
   if (!authorName || !ratingRaw || !body) {
     return NextResponse.json({ error: "Faltan campos requeridos" }, { status: 400 });
+  }
+
+  if (authorName.length > MAX_AUTHOR_NAME) {
+    return NextResponse.json(
+      { error: `El nombre supera los ${MAX_AUTHOR_NAME} caracteres` },
+      { status: 400 }
+    );
+  }
+  if (body.length > MAX_BODY) {
+    return NextResponse.json(
+      { error: `La reseña supera los ${MAX_BODY} caracteres` },
+      { status: 400 }
+    );
   }
 
   const rating = parseInt(ratingRaw, 10);
@@ -33,10 +54,17 @@ export async function POST(req: NextRequest) {
     if (avatar.size > MAX_FILE_BYTES) {
       return NextResponse.json({ error: "La imagen supera los 2 MB" }, { status: 413 });
     }
-    if (!ALLOWED_TYPES.includes(avatar.type)) {
-      return NextResponse.json({ error: "Tipo de archivo no permitido" }, { status: 400 });
+    // Verificar el tipo real por firma de bytes, no por el Content-Type declarado
+    // (falsificable). Evita subir contenido arbitrario al Blob público.
+    const detectedType = await detectImageType(avatar);
+    if (!detectedType) {
+      return NextResponse.json(
+        { error: "El archivo no es una imagen válida (JPG, PNG, WEBP o GIF)" },
+        { status: 400 }
+      );
     }
-    const ext = normalizeExt(extname(avatar.name) || ".jpg");
+    // Extensión derivada del tipo real detectado, no del nombre original.
+    const ext = extensionForImageType(detectedType);
     const filename = `${Date.now()}-avatar${ext}`;
     const blob = await put(`reviews/${filename}`, avatar, {
       access: "public",

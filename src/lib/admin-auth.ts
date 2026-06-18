@@ -7,10 +7,14 @@ const SESSION_DURATION_MS = 24 * 60 * 60 * 1000; // 24h
 function getSecret(): string {
   const secret = process.env.SESSION_SECRET;
   if (!secret) {
-    if (process.env.NODE_ENV === "production") {
-      throw new Error("SESSION_SECRET es obligatorio en producción");
+    // El secreto de dev conocido SOLO se permite en desarrollo local o en tests
+    // (NODE_ENV "development"/"test"). Cualquier otro entorno sin SESSION_SECRET
+    // (producción, preview/staging https o http) falla cerrado para evitar
+    // sesiones forjables con el secreto público.
+    if (process.env.NODE_ENV === "development" || process.env.NODE_ENV === "test") {
+      return "fallback_dev_secret";
     }
-    return "fallback_dev_secret";
+    throw new Error("SESSION_SECRET es obligatorio fuera de desarrollo");
   }
   return secret;
 }

@@ -16,7 +16,20 @@ export default function CartSync({ products }: { products: Product[] }) {
 
   useEffect(() => {
     const signature = products
-      .map((p) => [p.id, p.priceCents, p.stock, p.name, p.images[0]].join(":"))
+      .map((p) =>
+        [
+          p.id,
+          p.priceCents,
+          p.transferPriceCents,
+          p.stock,
+          p.name,
+          p.freeShipping,
+          p.freeInstallation,
+          p.installationCents,
+          p.installationTransferCents,
+          p.images[0]?.src,
+        ].join(":")
+      )
       .join("|");
     if (signature === lastSignature.current) return;
     lastSignature.current = signature;

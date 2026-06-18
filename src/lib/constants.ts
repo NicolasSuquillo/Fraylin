@@ -1,6 +1,7 @@
 export const BUSINESS = {
   name: "Fraylin",
   tagline: "Acabados para la construcción",
+  ruc: "1709460248001",
   description:
     "Empresa dedicada a la comercialización de materiales de alta calidad para el acabado de obras civiles y remodelaciones en Quito.",
   address: "Avenida Juan de Molinares E14-155, Quito, Ecuador",

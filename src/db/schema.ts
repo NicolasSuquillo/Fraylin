@@ -41,6 +41,8 @@ export const pricingSettings = pgTable("pricing_settings", {
   transferAccountHolder: text("transfer_account_holder"),
   transferAccountId: text("transfer_account_id"),
   transferInstructions: text("transfer_instructions"),
+  comprobanteEnabled: boolean("comprobante_enabled"),
+  comprobanteShowRuc: boolean("comprobante_show_ruc"),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
 

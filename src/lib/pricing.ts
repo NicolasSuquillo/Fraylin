@@ -33,6 +33,8 @@ export interface PricingSettings {
   installationEnabled: boolean;
   shippingDescription: string;
   installationDescription: string;
+  comprobanteEnabled: boolean;
+  comprobanteShowRuc: boolean;
 }
 
 export async function getPricingSettings(): Promise<PricingSettings> {
@@ -65,6 +67,8 @@ export async function getPricingSettings(): Promise<PricingSettings> {
     installationEnabled: row?.installationEnabled ?? true,
     shippingDescription: row?.shippingDescription ?? SHIPPING_DESCRIPTION_DEFAULT,
     installationDescription: row?.installationDescription ?? INSTALLATION_DESCRIPTION_DEFAULT,
+    comprobanteEnabled: row?.comprobanteEnabled ?? true,
+    comprobanteShowRuc: row?.comprobanteShowRuc ?? true,
   };
 }
 
@@ -124,6 +128,19 @@ export async function updateTransferSettings(input: TransferSettings): Promise<v
         transferInstructions: input.instructions,
         updatedAt: new Date(),
       },
+    });
+}
+
+export async function updateComprobanteSettings(input: {
+  comprobanteEnabled: boolean;
+  comprobanteShowRuc: boolean;
+}): Promise<void> {
+  await db
+    .insert(pricingSettings)
+    .values({ id: 1, comprobanteEnabled: input.comprobanteEnabled, comprobanteShowRuc: input.comprobanteShowRuc, updatedAt: new Date() })
+    .onConflictDoUpdate({
+      target: pricingSettings.id,
+      set: { comprobanteEnabled: input.comprobanteEnabled, comprobanteShowRuc: input.comprobanteShowRuc, updatedAt: new Date() },
     });
 }
 

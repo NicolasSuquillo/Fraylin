@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { computeTaxBreakdown, formatUSD, parsePriceInput } from "@/lib/money";
+import { computeTaxBreakdown, formatUSD, parsePriceInput, MAX_PRICE_CENTS } from "@/lib/money";
 
 describe("formatUSD", () => {
   it("formatea centavos como dólares", () => {
@@ -22,11 +22,27 @@ describe("parsePriceInput", () => {
     expect(parsePriceInput("abc")).toBeNull();
     expect(parsePriceInput("-5")).toBeNull();
     expect(parsePriceInput("Infinity")).toBeNull();
+    expect(parsePriceInput("1e3")).toBeNull();
+    expect(parsePriceInput("12abc")).toBeNull();
   });
 
-  it("redondea a centavo", () => {
-    expect(parsePriceInput("0.005")).toBe(1);
-    expect(parsePriceInput("1.999")).toBe(200);
+  it("acepta como máximo 2 decimales y rechaza más", () => {
+    expect(parsePriceInput("0.5")).toBe(50);
+    expect(parsePriceInput("1.99")).toBe(199);
+    // Sub-centavo / 3+ decimales se rechazan en vez de redondear en silencio.
+    expect(parsePriceInput("0.005")).toBeNull();
+    expect(parsePriceInput("1.999")).toBeNull();
+  });
+
+  it("rechaza la agrupación de miles (antes '1,000' se leía como $1.00)", () => {
+    expect(parsePriceInput("1,000")).toBeNull();
+    expect(parsePriceInput("1.000.000")).toBeNull();
+    expect(parsePriceInput("1,000,000")).toBeNull();
+  });
+
+  it("aplica el tope superior", () => {
+    expect(parsePriceInput("1000000")).toBe(MAX_PRICE_CENTS);
+    expect(parsePriceInput("1000001")).toBeNull();
   });
 });
 

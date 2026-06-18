@@ -5,12 +5,23 @@ export function formatUSD(cents: number): string {
   });
 }
 
+// Tope superior compartido: evita que un error de tipeo (pegar un número enorme)
+// derive en precios absurdos. $1,000,000 = 100_000_000 cents.
+export const MAX_PRICE_CENTS = 100_000_000;
+
 export function parsePriceInput(input: string): number | null {
   const trimmed = input.trim();
   if (!trimmed) return null;
+  // Aceptar SOLO un número con separador decimal opcional (punto o coma) y 1-2
+  // decimales. Rechaza la agrupación de miles ("1,000") que antes se
+  // malinterpretaba silenciosamente como 1.00, además de texto no numérico,
+  // negativos y notación científica.
+  if (!/^\d+([.,]\d{1,2})?$/.test(trimmed)) return null;
   const value = Number(trimmed.replace(",", "."));
   if (!Number.isFinite(value) || value < 0) return null;
-  return Math.round(value * 100);
+  const cents = Math.round(value * 100);
+  if (cents > MAX_PRICE_CENTS) return null;
+  return cents;
 }
 
 // Comisión Cajita de Pagos de Payphone: 5% + IVA 15% de esa comisión = 5.75%

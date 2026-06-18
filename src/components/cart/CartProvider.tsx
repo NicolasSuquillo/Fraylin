@@ -90,8 +90,24 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
-      // eslint-disable-next-line react-hooks/set-state-in-effect -- hidratación única desde localStorage tras montar
-      if (raw) setItems(JSON.parse(raw));
+      if (raw) {
+        const parsed: unknown = JSON.parse(raw);
+        // Descartar ítems con forma inválida (precio/cantidad no numéricos) para
+        // no envenenar los totales con NaN o concatenación de strings.
+        const safe = Array.isArray(parsed)
+          ? (parsed as CartItem[]).filter(
+              (it) =>
+                it &&
+                typeof it.productId === "string" &&
+                typeof it.priceCents === "number" &&
+                Number.isFinite(it.priceCents) &&
+                typeof it.quantity === "number" &&
+                Number.isFinite(it.quantity)
+            )
+          : [];
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- hidratación única desde localStorage tras montar
+        setItems(safe);
+      }
     } catch {
       // ignorar storage corrupto
     }

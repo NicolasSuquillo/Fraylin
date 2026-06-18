@@ -1,22 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
 import { put } from "@vercel/blob";
 import { getSession } from "@/lib/admin-auth";
-import { extname } from "path";
-
-const ALLOWED_TYPES = ["image/jpeg", "image/png", "image/webp", "image/gif"];
+import { detectImageType, extensionForImageType } from "@/lib/image-sniff";
 
 // Vercel limita el body de funciones serverless a 4.5 MB
 const MAX_FILE_BYTES = 4 * 1024 * 1024;
-
-const EXT_ALIASES: Record<string, string> = {
-  ".jpeg": ".jpg",
-  ".tiff": ".tif",
-};
-
-function normalizeExt(raw: string): string {
-  const lower = raw.toLowerCase();
-  return EXT_ALIASES[lower] ?? lower;
-}
 
 function sanitize(name: string) {
   return name
@@ -49,11 +37,21 @@ export async function POST(req: NextRequest) {
     );
   }
 
+  // Verificar el tipo real por firma de bytes (no por el Content-Type declarado,
+  // que es falsificable). Cierra la subida de contenido arbitrario con MIME falso.
+  const detectedType = await detectImageType(file);
+  if (!detectedType) {
+    return NextResponse.json(
+      { error: "El archivo no es una imagen válida (JPG, PNG, WEBP o GIF)" },
+      { status: 400 }
+    );
+  }
+
+  // La extensión se deriva del tipo REAL detectado por bytes, no del nombre
+  // original (controlado por el cliente): evita polyglots con extensión engañosa.
+  const ext = extensionForImageType(detectedType);
+
   if (destination === "gallery" || destination === "payments") {
-    if (!ALLOWED_TYPES.includes(file.type)) {
-      return NextResponse.json({ error: "Tipo de archivo no permitido" }, { status: 400 });
-    }
-    const ext = normalizeExt(extname(file.name) || ".jpg");
     const base = sanitize(file.name.slice(0, file.name.lastIndexOf(".")) || file.name);
     const filename = `${Date.now()}-${base}${ext}`;
     const blob = await put(`${destination}/${filename}`, file, {
@@ -69,11 +67,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: "Faltan campos: file, category" }, { status: 400 });
   }
 
-  if (!ALLOWED_TYPES.includes(file.type)) {
-    return NextResponse.json({ error: "Tipo de archivo no permitido" }, { status: 400 });
-  }
-
-  const ext = normalizeExt(extname(file.name) || ".jpg");
   const base = sanitize(file.name.slice(0, file.name.lastIndexOf(".")) || file.name);
   const filename = `${Date.now()}-${base}${ext}`;
 
