@@ -161,13 +161,13 @@ export default function ImageGallery({
         className="fixed inset-0 m-auto max-h-none max-w-none h-screen w-screen bg-transparent p-0 backdrop:bg-black/95"
         onClick={() => setLightbox(false)}
       >
-        <div
-          className="relative flex h-full w-full items-center justify-center overflow-hidden p-4"
-          onClick={(e) => e.stopPropagation()}
-        >
+        <div className="relative flex h-full w-full items-center justify-center overflow-hidden p-4">
           <button
             type="button"
-            onClick={() => setLightbox(false)}
+            onClick={(e) => {
+              e.stopPropagation();
+              setLightbox(false);
+            }}
             className="absolute top-4 right-4 z-10 rounded-full bg-white/15 p-2 text-white transition-colors hover:bg-white/30"
             aria-label="Cerrar"
           >
@@ -178,7 +178,10 @@ export default function ImageGallery({
             <>
               <button
                 type="button"
-                onClick={prev}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  prev();
+                }}
                 className="absolute left-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/15 p-2 text-white transition-colors hover:bg-white/30"
                 aria-label="Imagen anterior"
               >
@@ -186,33 +189,38 @@ export default function ImageGallery({
               </button>
               <button
                 type="button"
-                onClick={next}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  next();
+                }}
                 className="absolute right-4 top-1/2 z-10 -translate-y-1/2 rounded-full bg-white/15 p-2 text-white transition-colors hover:bg-white/30"
                 aria-label="Imagen siguiente"
               >
                 <ChevronRight size={24} />
               </button>
-              <span className="absolute bottom-6 left-1/2 z-10 -translate-x-1/2 rounded-full bg-black/50 px-3 py-1 text-sm text-white backdrop-blur-sm">
+              <span className="pointer-events-none absolute bottom-6 left-1/2 z-10 -translate-x-1/2 rounded-full bg-black/50 px-3 py-1 text-sm text-white backdrop-blur-sm">
                 {activeIndex + 1} / {images.length}
               </span>
             </>
           )}
 
-          <div className="relative h-full w-full max-w-5xl overflow-hidden">
+          <div className="pointer-events-none relative h-full w-full max-w-5xl overflow-hidden">
             <div className="flex h-full w-full" style={lightboxStyle}>
               {images.map((image, i) => (
                 <div
                   key={image.src}
-                  className="relative h-full min-w-full w-full shrink-0"
+                  className="flex h-full min-w-full w-full shrink-0 items-center justify-center"
                   aria-hidden={i !== activeIndex}
                 >
                   <SafeImage
                     src={image.src}
                     alt={image.alt}
-                    fill
-                    className="object-contain"
+                    width={1600}
+                    height={1200}
+                    className="pointer-events-auto max-h-[calc(100dvh-2rem)] max-w-[min(100vw-2rem,64rem)] h-auto w-auto object-contain"
                     sizes="100vw"
                     priority={i === activeIndex}
+                    onClick={(e) => e.stopPropagation()}
                   />
                 </div>
               ))}
