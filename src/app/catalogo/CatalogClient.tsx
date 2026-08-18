@@ -8,6 +8,7 @@ import {
 import SafeImage from "@/components/ui/SafeImage";
 import { formatUSD } from "@/lib/money";
 import { BUSINESS } from "@/lib/constants";
+import CatalogProductModal from "./CatalogProductModal";
 import type { Product, Category } from "@/types";
 
 interface Props {
@@ -23,6 +24,7 @@ export default function CatalogClient({
 }: Props) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState(initialCategory);
+  const [selected, setSelected] = useState<Product | null>(null);
 
   const categoryLabel = (slug: string) =>
     categories.find((c) => c.slug === slug)?.label ?? slug;
@@ -130,77 +132,70 @@ export default function CatalogClient({
               const card = product.priceCents;
               const soldOut = product.stock === 0;
               return (
-                <li
-                  key={product.id}
-                  className="overflow-hidden rounded-2xl border border-stone-200 bg-white shadow-sm"
-                >
-                  <div className="relative aspect-[4/3] bg-stone-100">
-                    <SafeImage
-                      src={product.images[0]?.src ?? "/placeholder.svg"}
-                      alt={product.images[0]?.alt ?? product.name}
-                      fill
-                      className="object-cover"
-                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
-                    />
-                    {soldOut && (
-                      <span className="absolute left-2 top-2 rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
-                        Agotado
-                      </span>
-                    )}
-                  </div>
-                  <div className="space-y-2 p-4">
-                    <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--brand-dark)]">
-                      {categoryLabel(product.category)}
-                    </p>
-                    <h2 className="font-[family-name:var(--font-heading)] text-lg font-bold text-[var(--text-primary)]">
-                      {product.name}
-                    </h2>
-                    {product.description && (
-                      <p className="line-clamp-3 text-sm text-[var(--text-secondary)]">
-                        {product.description}
-                      </p>
-                    )}
-                    {product.specs && (
-                      <p className="rounded-lg bg-stone-50 px-2.5 py-2 text-xs text-stone-600 whitespace-pre-line">
-                        {product.specs}
-                      </p>
-                    )}
-                    <div className="flex flex-wrap gap-1.5 pt-1">
-                      {product.freeShipping && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-medium text-sky-700">
-                          <Truck className="h-3 w-3" /> Envío gratis
-                        </span>
-                      )}
-                      {product.freeInstallation && (
-                        <span className="inline-flex items-center gap-1 rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-medium text-violet-700">
-                          <Wrench className="h-3 w-3" /> Instalación gratis
-                        </span>
-                      )}
-                      {product.stock != null && product.stock > 0 && (
-                        <span className="rounded-full bg-emerald-50 px-2 py-0.5 text-[11px] font-medium text-emerald-700">
-                          Stock: {product.stock}
+                <li key={product.id}>
+                  <button
+                    type="button"
+                    onClick={() => setSelected(product)}
+                    className="group flex h-full w-full flex-col overflow-hidden rounded-2xl border border-stone-200 bg-white text-left shadow-sm transition-all hover:-translate-y-0.5 hover:border-[var(--brand-primary)]/50 hover:shadow-md focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--brand-primary)]"
+                  >
+                    <div className="relative aspect-[4/3] w-full bg-stone-100">
+                      <SafeImage
+                        src={product.images[0]?.src ?? "/placeholder.svg"}
+                        alt={product.images[0]?.alt ?? product.name}
+                        fill
+                        className="object-cover transition-transform duration-500 group-hover:scale-105"
+                        sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      />
+                      {soldOut && (
+                        <span className="absolute left-2 top-2 rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                          Agotado
                         </span>
                       )}
                     </div>
-                    <div className="border-t border-stone-100 pt-3">
-                      {transfer != null || card != null ? (
-                        <div className="space-y-1">
-                          {transfer != null && (
-                            <p className="text-base font-bold text-[var(--text-primary)]">
-                              Transferencia / Deuna: {formatUSD(transfer)}
-                            </p>
-                          )}
-                          {card != null && (
-                            <p className="text-sm text-[var(--text-secondary)]">
-                              Tarjeta: {formatUSD(card)}
-                            </p>
-                          )}
-                        </div>
-                      ) : (
-                        <p className="text-sm text-stone-400">Precio a consultar</p>
+                    <div className="flex flex-1 flex-col gap-2 p-4">
+                      <p className="text-[11px] font-semibold uppercase tracking-wide text-[var(--brand-dark)]">
+                        {categoryLabel(product.category)}
+                      </p>
+                      <h2 className="font-[family-name:var(--font-heading)] text-lg font-bold text-[var(--text-primary)]">
+                        {product.name}
+                      </h2>
+                      {product.description && (
+                        <p className="line-clamp-2 text-sm text-[var(--text-secondary)]">
+                          {product.description}
+                        </p>
                       )}
+                      <div className="flex flex-wrap gap-1.5">
+                        {product.freeShipping && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-sky-50 px-2 py-0.5 text-[11px] font-medium text-sky-700">
+                            <Truck className="h-3 w-3" /> Envío gratis
+                          </span>
+                        )}
+                        {product.freeInstallation && (
+                          <span className="inline-flex items-center gap-1 rounded-full bg-violet-50 px-2 py-0.5 text-[11px] font-medium text-violet-700">
+                            <Wrench className="h-3 w-3" /> Instalación gratis
+                          </span>
+                        )}
+                      </div>
+                      <div className="mt-auto border-t border-stone-100 pt-3">
+                        {transfer != null || card != null ? (
+                          <div className="space-y-1">
+                            {transfer != null && (
+                              <p className="text-base font-bold text-[var(--text-primary)]">
+                                Transferencia / Deuna: {formatUSD(transfer)}
+                              </p>
+                            )}
+                            {card != null && (
+                              <p className="text-sm text-[var(--text-secondary)]">
+                                Tarjeta: {formatUSD(card)}
+                              </p>
+                            )}
+                          </div>
+                        ) : (
+                          <p className="text-sm text-stone-400">Precio a consultar</p>
+                        )}
+                      </div>
                     </div>
-                  </div>
+                  </button>
                 </li>
               );
             })}
@@ -212,6 +207,14 @@ export default function CatalogClient({
         <p>{BUSINESS.name} · {BUSINESS.address}</p>
         <p className="mt-1">{BUSINESS.phones.join(" · ")}</p>
       </footer>
+
+      {selected && (
+        <CatalogProductModal
+          product={selected}
+          categoryLabel={categoryLabel(selected.category)}
+          onClose={() => setSelected(null)}
+        />
+      )}
     </div>
   );
 }
