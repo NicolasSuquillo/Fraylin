@@ -14,7 +14,7 @@ import {
   Tag, Hash, Type, AlignLeft, DollarSign, Package,
   ImageIcon, Truck, Wrench, Star, ShoppingCart,
   MessageCircle, ArrowRight, Upload, X, Plus,
-  ChevronLeft, AlertTriangle,
+  ChevronLeft, AlertTriangle, Eye, NotebookPen, Ruler,
 } from "lucide-react";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
@@ -448,6 +448,11 @@ function emptyProduct(): Product {
     featured: false,
     freeShipping: false,
     freeInstallation: false,
+    showOnWeb: true,
+    showInCatalog: true,
+    costCents: null,
+    internalNotes: "",
+    specs: "",
     images: [{ src: "", alt: "" }],
   };
 }
@@ -475,6 +480,7 @@ export default function ProductForm({
   const [installCardInput, setInstallCardInput] = useState(
     centsToInput(initial?.installationCents)
   );
+  const [costInput, setCostInput] = useState(centsToInput(initial?.costCents));
   const [idTouched, setIdTouched] = useState(false);
   const [idFlash, setIdFlash] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -966,6 +972,92 @@ export default function ProductForm({
             </div>
           </div>
 
+          {/* ── Visibilidad ── */}
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm space-y-3">
+            <SectionHeader
+              icon={Eye}
+              title="Visibilidad"
+              subtitle="Decide dónde aparece este producto"
+            />
+            <Toggle
+              checked={product.showOnWeb !== false}
+              onChange={() => setField("showOnWeb", product.showOnWeb === false)}
+              color="emerald"
+              label="Mostrar en la web"
+              sublabel="Aparece en la tienda pública (/#productos)"
+            />
+            <Toggle
+              checked={product.showInCatalog !== false}
+              onChange={() =>
+                setField("showInCatalog", product.showInCatalog === false)
+              }
+              color="emerald"
+              label="Mostrar en el catálogo"
+              sublabel="Aparece en /catalogo y en el PDF compartible"
+            />
+          </div>
+
+          {/* ── Inventario interno ── */}
+          <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm space-y-4">
+            <SectionHeader
+              icon={NotebookPen}
+              title="Inventario interno"
+              subtitle="Solo visible en el panel — no sale al catálogo ni a la web"
+            />
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                Costo de compra (USD)
+              </label>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={costInput}
+                onChange={(e) => {
+                  setCostInput(e.target.value);
+                  setField("costCents", parsePriceInput(e.target.value));
+                }}
+                placeholder="Ej: 8.50"
+                className="w-full max-w-[200px] min-h-[44px] rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              />
+              {product.costCents != null &&
+                product.transferPriceCents != null &&
+                product.transferPriceCents > product.costCents && (
+                  <p className="mt-1.5 text-xs text-emerald-700">
+                    Margen vs transferencia:{" "}
+                    {formatUSD(product.transferPriceCents - product.costCents)}
+                  </p>
+                )}
+            </div>
+            <div>
+              <label className="mb-1.5 flex items-center gap-1.5 text-sm font-medium text-gray-700">
+                <Ruler className="h-3.5 w-3.5 text-gray-400" aria-hidden />
+                Medidas / especificaciones
+              </label>
+              <textarea
+                value={product.specs ?? ""}
+                onChange={(e) => setField("specs", e.target.value)}
+                rows={3}
+                placeholder="Ej: 60×60 cm, porcelanato esmaltado, caja de 1.44 m²…"
+                className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              />
+              <p className="mt-1 text-xs text-gray-400">
+                Sí se muestra en el catálogo público y en el PDF.
+              </p>
+            </div>
+            <div>
+              <label className="mb-1.5 block text-sm font-medium text-gray-700">
+                Notas internas
+              </label>
+              <textarea
+                value={product.internalNotes ?? ""}
+                onChange={(e) => setField("internalNotes", e.target.value)}
+                rows={3}
+                placeholder="Proveedor, ubicación en bodega, recordatorios…"
+                className="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-amber-500"
+              />
+            </div>
+          </div>
+
           {/* ── Logística & Beneficios ── */}
           <div className="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm space-y-3">
             <SectionHeader
@@ -978,7 +1070,7 @@ export default function ProductForm({
               checked={!!product.featured}
               onChange={() => setField("featured", !product.featured)}
               label="Destacado"
-              sublabel="Aparece en la sección de inicio"
+              sublabel="Aparece en la sección de inicio (si también está en la web)"
             />
 
             {product.transferPriceCents != null && (

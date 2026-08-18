@@ -1,4 +1,4 @@
-import { getAllProducts, getCategories } from "@/lib/products";
+import { getWebProducts, getCategories } from "@/lib/products";
 import { getGalleryItems } from "@/lib/gallery";
 import { getApprovedReviews } from "@/lib/reviews";
 import CartSync from "@/components/cart/CartSync";
@@ -18,7 +18,7 @@ export const revalidate = 3600;
 
 export default async function Home() {
   const [products, categories, galleryItems, approvedReviews] = await Promise.all([
-    getAllProducts(),
+    getWebProducts(),
     getCategories(),
     getGalleryItems(),
     getApprovedReviews(),

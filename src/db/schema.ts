@@ -71,12 +71,19 @@ export const products = pgTable(
     freeInstallation: boolean("free_installation").notNull().default(false),
     installationCents: integer("installation_cents"),
     installationTransferCents: integer("installation_transfer_cents"),
+    showOnWeb: boolean("show_on_web").notNull().default(true),
+    showInCatalog: boolean("show_in_catalog").notNull().default(true),
+    costCents: integer("cost_cents"),
+    internalNotes: text("internal_notes"),
+    specs: text("specs"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
     updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (t) => [
     index("products_category_idx").on(t.categorySlug),
     index("products_featured_idx").on(t.featured),
+    index("products_show_on_web_idx").on(t.showOnWeb),
+    index("products_show_in_catalog_idx").on(t.showInCatalog),
   ]
 );
 

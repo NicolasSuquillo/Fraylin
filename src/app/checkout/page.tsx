@@ -1,4 +1,4 @@
-import { getAllProducts } from "@/lib/products";
+import { getWebProducts } from "@/lib/products";
 import { getPricingSettings, getTransferSettings } from "@/lib/pricing";
 import CartSync from "@/components/cart/CartSync";
 import CheckoutClient from "./CheckoutClient";
@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic";
 
 export default async function CheckoutPage() {
   const [products, pricing, transfer] = await Promise.all([
-    getAllProducts(),
+    getWebProducts(),
     getPricingSettings(),
     getTransferSettings(),
   ]);

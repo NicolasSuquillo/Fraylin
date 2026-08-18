@@ -17,6 +17,16 @@ export interface Product {
   freeInstallation?: boolean;
   installationCents?: number | null;
   installationTransferCents?: number | null;
+  /** Visible en la home pública. Default true. */
+  showOnWeb?: boolean;
+  /** Visible en /catalogo y PDF. Default true. */
+  showInCatalog?: boolean;
+  /** Costo de compra — solo admin, nunca público. */
+  costCents?: number | null;
+  /** Notas internas — solo admin. */
+  internalNotes?: string | null;
+  /** Medidas/especificaciones — visible en catálogo si tiene valor. */
+  specs?: string | null;
 }
 
 export interface Category {

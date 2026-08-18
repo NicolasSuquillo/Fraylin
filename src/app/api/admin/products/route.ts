@@ -59,6 +59,11 @@ export async function POST(req: NextRequest) {
         freeInstallation: product.freeInstallation ?? false,
         installationCents: product.installationCents ?? null,
         installationTransferCents: product.installationTransferCents ?? null,
+        showOnWeb: product.showOnWeb ?? true,
+        showInCatalog: product.showInCatalog ?? true,
+        costCents: product.costCents ?? null,
+        internalNotes: product.internalNotes?.trim() || null,
+        specs: product.specs?.trim() || null,
       });
 
       if (product.images.length > 0) {
@@ -82,5 +87,6 @@ export async function POST(req: NextRequest) {
 
   await touchCatalogVersion();
   revalidatePath("/");
+  revalidatePath("/catalogo");
   return NextResponse.json({ ok: true }, { status: 201 });
 }

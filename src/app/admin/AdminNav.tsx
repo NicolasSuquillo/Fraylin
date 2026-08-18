@@ -5,7 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { Package, Tags, Images, ShoppingCart, Truck, Landmark, MessageSquare, LogOut, ExternalLink, Settings } from "lucide-react";
 
 const links = [
-  { href: "/admin/products",  label: "Productos",   Icon: Package },
+  { href: "/admin/products",  label: "Inventario",  Icon: Package },
   { href: "/admin/categories",label: "Categorías",  Icon: Tags },
   { href: "/admin/orders",    label: "Pedidos",     Icon: ShoppingCart },
   { href: "/admin/gallery",   label: "Galería",     Icon: Images },
