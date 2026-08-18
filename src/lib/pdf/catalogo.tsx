@@ -61,46 +61,91 @@ const s = StyleSheet.create({
   },
   coverSubtitle: { fontSize: 14, color: TEXT_SEC, marginBottom: 24 },
   coverMeta: { fontSize: 10, color: TEXT_SEC, marginBottom: 4 },
+  section: { marginBottom: 6 },
   sectionTitle: {
     fontFamily: "Playfair",
     fontWeight: 700,
     fontSize: 16,
     color: GOLD_DARK,
-    marginBottom: 12,
-    marginTop: 4,
+    borderBottomWidth: 0.5,
+    borderBottomColor: BORDER,
+    paddingBottom: 4,
+    marginBottom: 10,
+    marginTop: 8,
   },
+  row: { flexDirection: "row", gap: 14, marginBottom: 14 },
   card: {
-    flexDirection: "row",
+    flex: 1,
     borderWidth: 1,
     borderColor: BORDER,
-    borderRadius: 6,
-    marginBottom: 10,
-    padding: 8,
-    gap: 10,
+    borderRadius: 8,
+    overflow: "hidden",
+    backgroundColor: "#fff",
   },
-  thumb: { width: 72, height: 72, borderRadius: 4, objectFit: "cover" },
-  thumbPlaceholder: {
-    width: 72,
-    height: 72,
-    borderRadius: 4,
+  cardSpacer: { flex: 1 },
+  cardImage: { width: "100%", height: 168, objectFit: "cover" },
+  imagePlaceholder: {
+    width: "100%",
+    height: 168,
     backgroundColor: CREAM,
     alignItems: "center",
     justifyContent: "center",
   },
-  cardBody: { flex: 1, minWidth: 0 },
-  productName: { fontSize: 11, fontWeight: 700, color: TEXT, marginBottom: 2 },
-  productDesc: { fontSize: 8, color: TEXT_SEC, marginBottom: 3 },
-  specs: { fontSize: 8, color: TEXT_SEC, marginBottom: 4 },
-  priceRow: { flexDirection: "row", gap: 12, marginTop: 2 },
-  priceLabel: { fontSize: 7, color: TEXT_SEC },
-  priceValue: { fontSize: 10, fontWeight: 700, color: TEXT },
-  badgeRow: { flexDirection: "row", gap: 4, marginTop: 4 },
+  soldOutTag: {
+    position: "absolute",
+    top: 8,
+    left: 8,
+    fontSize: 6.5,
+    color: "#fff",
+    backgroundColor: "#B42318",
+    paddingHorizontal: 5,
+    paddingVertical: 3,
+    borderRadius: 3,
+  },
+  cardBody: { padding: 10 },
+  productName: {
+    fontSize: 11.5,
+    fontWeight: 700,
+    color: TEXT,
+    marginBottom: 6,
+    lineHeight: 1.25,
+  },
+  priceRow: { flexDirection: "row", alignItems: "flex-end", gap: 12 },
+  priceLabel: {
+    fontSize: 6.5,
+    color: TEXT_SEC,
+    textTransform: "uppercase",
+    letterSpacing: 0.4,
+    marginBottom: 1,
+  },
+  priceValue: { fontSize: 14, fontWeight: 700, color: GOLD_DARK },
+  priceValueAlt: { fontSize: 9.5, color: TEXT_SEC },
+  divider: {
+    borderTopWidth: 0.5,
+    borderTopColor: BORDER,
+    marginTop: 8,
+    marginBottom: 7,
+  },
+  productDesc: { fontSize: 8, color: TEXT_SEC, lineHeight: 1.45 },
+  specs: {
+    fontSize: 7.5,
+    color: TEXT_SEC,
+    lineHeight: 1.4,
+    backgroundColor: CREAM,
+    paddingHorizontal: 5,
+    paddingVertical: 4,
+    borderRadius: 4,
+    marginTop: 5,
+  },
+  badgeRow: { flexDirection: "row", flexWrap: "wrap", gap: 4, marginTop: 6 },
   badge: {
-    fontSize: 7,
+    fontSize: 6.5,
     color: GOLD_DARK,
     backgroundColor: CREAM,
-    paddingHorizontal: 4,
-    paddingVertical: 2,
+    borderWidth: 0.5,
+    borderColor: BORDER,
+    paddingHorizontal: 5,
+    paddingVertical: 3,
     borderRadius: 3,
   },
   footer: {
@@ -122,6 +167,76 @@ function absoluteImageSrc(src: string | undefined): string | null {
   if (src.startsWith("http://") || src.startsWith("https://")) return src;
   if (src.startsWith("/")) return `${BASE}${src}`;
   return `${BASE}/${src}`;
+}
+
+function pairs(items: Product[]): Product[][] {
+  const out: Product[][] = [];
+  for (let i = 0; i < items.length; i += 2) out.push(items.slice(i, i + 2));
+  return out;
+}
+
+function ProductCard({ product }: { product: Product }) {
+  const img = absoluteImageSrc(product.images[0]?.src);
+  const transfer = product.transferPriceCents;
+  const card = product.priceCents;
+
+  return (
+    <View style={s.card}>
+      {img ? (
+        // eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image
+        <Image src={img} style={s.cardImage} />
+      ) : (
+        <View style={s.imagePlaceholder}>
+          <Text style={{ fontSize: 8, color: TEXT_SEC }}>Sin foto</Text>
+        </View>
+      )}
+      {product.stock === 0 ? (
+        <Text style={s.soldOutTag}>AGOTADO</Text>
+      ) : null}
+
+      <View style={s.cardBody}>
+        <Text style={s.productName}>{product.name}</Text>
+
+        <View style={s.priceRow}>
+          {transfer != null ? (
+            <View>
+              <Text style={s.priceLabel}>Transferencia / Deuna</Text>
+              <Text style={s.priceValue}>{formatUSD(transfer)}</Text>
+            </View>
+          ) : null}
+          {card != null ? (
+            <View>
+              <Text style={s.priceLabel}>Tarjeta</Text>
+              <Text style={s.priceValueAlt}>{formatUSD(card)}</Text>
+            </View>
+          ) : null}
+          {transfer == null && card == null ? (
+            <Text style={s.priceLabel}>Precio a consultar</Text>
+          ) : null}
+        </View>
+
+        {product.description || product.specs ? (
+          <View style={s.divider} />
+        ) : null}
+
+        {product.description ? (
+          <Text style={s.productDesc}>{product.description}</Text>
+        ) : null}
+        {product.specs ? <Text style={s.specs}>{product.specs}</Text> : null}
+
+        {product.freeShipping || product.freeInstallation ? (
+          <View style={s.badgeRow}>
+            {product.freeShipping ? (
+              <Text style={s.badge}>Envío gratis</Text>
+            ) : null}
+            {product.freeInstallation ? (
+              <Text style={s.badge}>Instalación gratis</Text>
+            ) : null}
+          </View>
+        ) : null}
+      </View>
+    </View>
+  );
 }
 
 function CatalogDoc({
@@ -176,82 +291,36 @@ function CatalogDoc({
         <Text style={s.coverMeta}>{BUSINESS.phones.join(" · ")}</Text>
       </Page>
 
-      {orderedSlugs.map((slug) => {
-        const items = byCategory.get(slug) ?? [];
-        return (
-          <Page key={slug} size="A4" style={s.page} wrap>
-            <Text style={s.sectionTitle}>{labelFor(slug)}</Text>
-            {items.map((product) => {
-              const img = absoluteImageSrc(product.images[0]?.src);
-              return (
-                <View key={product.id} style={s.card} wrap={false}>
-                  {img ? (
-                    // eslint-disable-next-line jsx-a11y/alt-text -- react-pdf Image
-                    <Image src={img} style={s.thumb} />
-                  ) : (
-                    <View style={s.thumbPlaceholder}>
-                      <Text style={{ fontSize: 8, color: TEXT_SEC }}>Sin foto</Text>
-                    </View>
-                  )}
-                  <View style={s.cardBody}>
-                    <Text style={s.productName}>{product.name}</Text>
-                    {product.description ? (
-                      <Text style={s.productDesc}>{product.description}</Text>
-                    ) : null}
-                    {product.specs ? (
-                      <Text style={s.specs}>{product.specs}</Text>
-                    ) : null}
-                    <View style={s.priceRow}>
-                      {product.transferPriceCents != null ? (
-                        <View>
-                          <Text style={s.priceLabel}>Transferencia / Deuna</Text>
-                          <Text style={s.priceValue}>
-                            {formatUSD(product.transferPriceCents)}
-                          </Text>
-                        </View>
-                      ) : null}
-                      {product.priceCents != null ? (
-                        <View>
-                          <Text style={s.priceLabel}>Tarjeta</Text>
-                          <Text style={s.priceValue}>
-                            {formatUSD(product.priceCents)}
-                          </Text>
-                        </View>
-                      ) : null}
-                      {product.transferPriceCents == null &&
-                      product.priceCents == null ? (
-                        <Text style={s.priceLabel}>Precio a consultar</Text>
-                      ) : null}
-                    </View>
-                    <View style={s.badgeRow}>
-                      {product.freeShipping ? (
-                        <Text style={s.badge}>Envío gratis</Text>
-                      ) : null}
-                      {product.freeInstallation ? (
-                        <Text style={s.badge}>Instalación gratis</Text>
-                      ) : null}
-                      {product.stock === 0 ? (
-                        <Text style={s.badge}>Agotado</Text>
-                      ) : null}
-                    </View>
-                  </View>
-                </View>
-              );
-            })}
-            <View style={s.footer} fixed>
-              <Text style={s.footerText}>
-                {BUSINESS.name} · Catálogo
+      <Page size="A4" style={s.page} wrap>
+        {orderedSlugs.map((slug) => {
+          const items = byCategory.get(slug) ?? [];
+          return (
+            <View key={slug} style={s.section}>
+              <Text style={s.sectionTitle} minPresenceAhead={220}>
+                {labelFor(slug)}
               </Text>
-              <Text
-                style={s.footerText}
-                render={({ pageNumber, totalPages }) =>
-                  `${pageNumber} / ${totalPages}`
-                }
-              />
+              {pairs(items).map((pair, i) => (
+                <View key={`${slug}-${i}`} style={s.row} wrap={false}>
+                  {pair.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                  {pair.length === 1 ? <View style={s.cardSpacer} /> : null}
+                </View>
+              ))}
             </View>
-          </Page>
-        );
-      })}
+          );
+        })}
+
+        <View style={s.footer} fixed>
+          <Text style={s.footerText}>{BUSINESS.name} · Catálogo</Text>
+          <Text
+            style={s.footerText}
+            render={({ pageNumber, totalPages }) =>
+              `${pageNumber} / ${totalPages}`
+            }
+          />
+        </View>
+      </Page>
     </Document>
   );
 }

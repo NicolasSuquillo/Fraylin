@@ -48,7 +48,7 @@ export default function ProductosSection({
         </Reveal>
 
         <div className="mb-10 flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between lg:gap-8">
-          <Reveal delay={0.05}>
+          <div>
             <div className="w-full lg:max-w-md lg:shrink-0">
               <ProductSearch
                 products={products}
@@ -58,8 +58,8 @@ export default function ProductosSection({
                 onPickProduct={onProductSelect}
               />
             </div>
-          </Reveal>
-          <Reveal delay={0.08}>
+          </div>
+          <div>
             <div className="min-w-0 w-full lg:flex-1 lg:pt-0.5">
               <CategoryTabs
                 categories={categories}
@@ -68,7 +68,7 @@ export default function ProductosSection({
                 totalCount={products.length}
               />
             </div>
-          </Reveal>
+          </div>
         </div>
 
         {sortedProducts.length === 0 ? (
@@ -95,10 +95,14 @@ export default function ProductosSection({
           </div>
         ) : (
           <div className="grid grid-cols-1 min-[420px]:grid-cols-2 md:grid-cols-3 xl:grid-cols-4 gap-5 sm:gap-6 items-stretch">
-            {sortedProducts.map((product, i) => (
-              <Reveal key={product.id} delay={i * 0.05}>
-                <ProductCard product={product} onSelect={onProductSelect} categories={categories} />
-              </Reveal>
+            {sortedProducts.map((product) => (
+              <div key={product.id}>
+                <ProductCard
+                  product={product}
+                  onSelect={onProductSelect}
+                  categories={categories}
+                />
+              </div>
             ))}
           </div>
         )}
