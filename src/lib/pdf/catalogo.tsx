@@ -262,14 +262,12 @@ export async function buildCatalogoBuffer(opts: {
   categoryFilter?: string;
 }): Promise<Buffer> {
   const { renderToBuffer } = await import("@react-pdf/renderer");
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return renderToBuffer(
-    (
-      <CatalogDoc
-        products={opts.products}
-        categories={opts.categories}
-        categoryFilter={opts.categoryFilter}
-      />
-    ) as any
-  ) as Promise<Buffer>;
+  const doc = (
+    <CatalogDoc
+      products={opts.products}
+      categories={opts.categories}
+      categoryFilter={opts.categoryFilter}
+    />
+  ) as Parameters<typeof renderToBuffer>[0];
+  return renderToBuffer(doc) as Promise<Buffer>;
 }

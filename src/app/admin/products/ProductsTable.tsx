@@ -5,12 +5,13 @@ import { useMemo, useState, useRef, useEffect, useTransition } from "react";
 import Link from "next/link";
 import {
   Pencil, Trash2, Search, LayoutGrid, List,
-  Star, ShoppingCart, MessageCircle, Package,
+  Star, MessageCircle, Package,
   ChevronUp, ChevronDown, ChevronsUpDown, X,
   Truck, Wrench, AlertTriangle, Copy, Check,
   FileDown, Globe, BookOpen, Link2,
 } from "lucide-react";
 import { formatUSD } from "@/lib/money";
+import ProductInventoryModal from "./ProductInventoryModal";
 import type { Product, Category } from "@/types";
 
 interface Props {
@@ -46,50 +47,89 @@ function StockBadge({ stock }: { stock: number | null | undefined }) {
   );
 }
 
-function PriceBadge({ product }: { product: Product }) {
-  if (product.priceCents != null) {
+function PriceBadge({
+  product,
+  size = "sm",
+}: {
+  product: Product;
+  size?: "sm" | "lg";
+}) {
+  const transfer = product.transferPriceCents ?? null;
+  const card = product.priceCents ?? null;
+
+  if (transfer == null && card == null) {
     return (
-      <div className="flex flex-col gap-0.5">
-        <span className="inline-flex items-center gap-1 text-sm font-semibold text-gray-800">
-          <ShoppingCart className="h-3 w-3 text-green-600" aria-hidden />
-          {formatUSD(product.priceCents)}
-        </span>
-        {product.transferPriceCents != null && (
-          <span className="text-[11px] text-gray-400">
-            Transf: {formatUSD(product.transferPriceCents)}
-          </span>
-        )}
-      </div>
+      <span className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-400">
+        <MessageCircle className="h-3 w-3" aria-hidden />
+        Cotizar
+      </span>
     );
   }
+
+  const main = transfer ?? card!;
+  const mainLabel = transfer != null ? "transf." : "tarjeta";
+  const secondary = transfer != null ? card : null;
+
   return (
-    <span className="inline-flex items-center gap-1 text-[11px] font-medium text-gray-400">
-      <MessageCircle className="h-3 w-3" aria-hidden />
-      Cotizar
-    </span>
+    <div className="flex flex-col leading-tight">
+      <span
+        className={`font-bold text-emerald-600 ${
+          size === "lg" ? "text-lg" : "text-sm"
+        }`}
+      >
+        {formatUSD(main)}
+        <span className="ml-1 text-[10px] font-semibold uppercase tracking-wide text-emerald-700/70">
+          {mainLabel}
+        </span>
+      </span>
+      {secondary != null && (
+        <span
+          className={`text-gray-500 ${size === "lg" ? "text-xs" : "text-[11px]"}`}
+        >
+          {formatUSD(secondary)} tarjeta
+        </span>
+      )}
+    </div>
   );
 }
 
-function Thumb({ product, large }: { product: Product; large?: boolean }) {
+function Thumb({
+  product,
+  variant = "row",
+}: {
+  product: Product;
+  variant?: "row" | "md" | "cover";
+}) {
   const src = product.images[0]?.src;
-  const cls = large
-    ? "h-full w-full object-cover"
-    : "h-10 w-10 shrink-0 rounded-lg border border-gray-100 object-cover shadow-sm";
+  const box =
+    variant === "cover"
+      ? "h-full w-full"
+      : variant === "md"
+        ? "h-24 w-24 shrink-0 rounded-xl border border-gray-100 shadow-sm sm:h-28 sm:w-28"
+        : "h-10 w-10 shrink-0 rounded-lg border border-gray-100 shadow-sm";
+
   if (!src)
     return (
       <div
-        className={
-          large
-            ? "flex h-full w-full items-center justify-center bg-gray-50"
-            : "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-dashed border-gray-200 bg-gray-50"
-        }
+        className={`${box} flex items-center justify-center bg-gray-50 ${
+          variant === "cover" ? "" : "border-dashed border-gray-200"
+        }`}
         aria-hidden
       >
-        <Package className="h-4 w-4 text-gray-300" />
+        <Package
+          className={variant === "row" ? "h-4 w-4 text-gray-300" : "h-7 w-7 text-gray-300"}
+        />
       </div>
     );
-  // eslint-disable-next-line @next/next/no-img-element
-  return <img src={src} alt="" loading="lazy" className={cls} />;
+  return (
+    // eslint-disable-next-line @next/next/no-img-element
+    <img
+      src={src}
+      alt=""
+      loading="lazy"
+      className={`${box} object-cover`}
+    />
+  );
 }
 
 function MiniToggle({
@@ -140,16 +180,18 @@ function InlineStock({
 }) {
   const [editing, setEditing] = useState(false);
   const [value, setValue] = useState(stock == null ? "" : String(stock));
+  const [syncedStock, setSyncedStock] = useState(stock ?? null);
   const [saving, setSaving] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  if (syncedStock !== (stock ?? null)) {
+    setSyncedStock(stock ?? null);
+    setValue(stock == null ? "" : String(stock));
+  }
 
   useEffect(() => {
     if (editing) inputRef.current?.focus();
   }, [editing]);
-
-  useEffect(() => {
-    setValue(stock == null ? "" : String(stock));
-  }, [stock]);
 
   async function save() {
     const next =
@@ -327,10 +369,17 @@ export default function ProductsTable({ products: initialProducts, categories, c
   const [copied, setCopied] = useState(false);
   const [patchingId, setPatchingId] = useState<string | null>(null);
   const [pdfBusy, setPdfBusy] = useState(false);
+  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [syncedProducts, setSyncedProducts] = useState(initialProducts);
 
-  useEffect(() => {
+  if (syncedProducts !== initialProducts) {
+    setSyncedProducts(initialProducts);
     setItems(initialProducts);
-  }, [initialProducts]);
+  }
+
+  const selected = selectedId
+    ? items.find((p) => p.id === selectedId) ?? null
+    : null;
 
   const categoryLabel = (slug: string) =>
     categories.find((c) => c.slug === slug)?.label ?? slug;
@@ -490,6 +539,7 @@ export default function ProductsTable({ products: initialProducts, categories, c
   function handleDeleted(id: string) {
     setError("");
     setItems((prev) => prev.filter((p) => p.id !== id));
+    setSelectedId((current) => (current === id ? null : current));
     startTransition(() => router.refresh());
   }
 
@@ -677,16 +727,40 @@ export default function ProductsTable({ products: initialProducts, categories, c
           {filtered.map((p) => (
             <div
               key={p.id}
-              className="group relative overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md"
+              className="group flex flex-col overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md"
             >
-              <div className="relative h-40 overflow-hidden bg-gray-50">
-                <Thumb product={p} large />
-              </div>
-              <div className="p-3 space-y-2">
-                <p className="truncate text-sm font-semibold leading-snug text-gray-900">{p.name}</p>
-                <p className="text-[11px] text-gray-400">{categoryLabel(p.category)}</p>
-                <div className="flex items-center justify-between gap-2">
-                  <PriceBadge product={p} />
+              <button
+                type="button"
+                onClick={() => setSelectedId(p.id)}
+                className="w-full text-left focus:outline-none focus-visible:ring-2 focus-visible:ring-amber-500"
+                title="Ver información de inventario"
+              >
+                <div className="relative aspect-[4/3] w-full overflow-hidden bg-gray-50">
+                  <Thumb product={p} variant="cover" />
+                  {p.featured && (
+                    <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-amber-500/95 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                      <Star className="h-3 w-3 fill-current" /> Destacado
+                    </span>
+                  )}
+                  {p.stock === 0 && (
+                    <span className="absolute right-2 top-2 rounded-full bg-red-600 px-2 py-0.5 text-[10px] font-bold uppercase text-white">
+                      Agotado
+                    </span>
+                  )}
+                </div>
+                <div className="px-3.5 pt-3">
+                  <p className="line-clamp-2 text-[15px] font-bold leading-snug text-gray-900 transition-colors group-hover:text-amber-800">
+                    {p.name}
+                  </p>
+                  <p className="mt-1 text-[11px] text-gray-400">
+                    {categoryLabel(p.category)}
+                  </p>
+                </div>
+              </button>
+
+              <div className="flex flex-1 flex-col gap-2.5 p-3.5 pt-2.5">
+                <div className="flex items-end justify-between gap-2">
+                  <PriceBadge product={p} size="lg" />
                   <InlineStock
                     productId={p.id}
                     stock={p.stock}
@@ -698,9 +772,9 @@ export default function ProductsTable({ products: initialProducts, categories, c
                     onError={setError}
                   />
                 </div>
-                <div className="flex items-center justify-between gap-3 pt-1">
-                  <span className="inline-flex items-center gap-1.5 text-[11px] text-gray-500">
-                    <Globe className="h-3 w-3" /> Web
+                <div className="flex items-center justify-between gap-2 rounded-xl bg-gray-50 px-2.5 py-2">
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-gray-600">
+                    <Globe className="h-3.5 w-3.5 text-gray-400" /> Web
                     <MiniToggle
                       checked={p.showOnWeb !== false}
                       busy={patchingId === p.id}
@@ -708,8 +782,8 @@ export default function ProductsTable({ products: initialProducts, categories, c
                       onChange={() => toggleFlag(p, "showOnWeb")}
                     />
                   </span>
-                  <span className="inline-flex items-center gap-1.5 text-[11px] text-gray-500">
-                    <BookOpen className="h-3 w-3" /> Cat.
+                  <span className="inline-flex items-center gap-1.5 text-[11px] font-medium text-gray-600">
+                    <BookOpen className="h-3.5 w-3.5 text-gray-400" /> Catálogo
                     <MiniToggle
                       checked={p.showInCatalog !== false}
                       busy={patchingId === p.id}
@@ -718,14 +792,14 @@ export default function ProductsTable({ products: initialProducts, categories, c
                     />
                   </span>
                 </div>
-                <div className="flex gap-2 pt-1">
+                <div className="mt-auto flex items-center gap-2">
                   <Link
                     href={`/admin/products/${p.id}/edit`}
-                    className="inline-flex flex-1 items-center justify-center gap-1 rounded-lg bg-amber-600 py-1.5 text-xs font-semibold text-white hover:bg-amber-700"
+                    className="inline-flex min-h-[40px] flex-1 items-center justify-center gap-1.5 rounded-xl bg-amber-600 text-sm font-semibold text-white hover:bg-amber-700"
                   >
-                    <Pencil className="h-3 w-3" aria-hidden /> Editar
+                    <Pencil className="h-3.5 w-3.5" aria-hidden /> Editar
                   </Link>
-                  <div className="inline-flex items-center justify-center rounded-lg border border-red-100 bg-red-50 px-2">
+                  <div className="inline-flex min-h-[40px] items-center justify-center rounded-xl border border-red-100 bg-red-50 px-3">
                     <DeleteButton
                       id={p.id}
                       name={p.name}
@@ -746,32 +820,45 @@ export default function ProductsTable({ products: initialProducts, categories, c
         {filtered.map((p) => (
           <article
             key={p.id}
-            className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm"
+            className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
           >
-            <div className="flex items-start gap-3">
-              <Thumb product={p} />
-              <div className="min-w-0 flex-1">
-                <h2 className="font-semibold leading-snug text-gray-900">{p.name}</h2>
-                <p className="mt-0.5 font-mono text-[11px] text-gray-400">{p.id}</p>
-                <p className="mt-0.5 text-xs text-gray-500">{categoryLabel(p.category)}</p>
+            <button
+              type="button"
+              onClick={() => setSelectedId(p.id)}
+              className="flex w-full items-start gap-3.5 p-3.5 text-left active:bg-amber-50/50"
+            >
+              <div className="relative">
+                <Thumb product={p} variant="md" />
+                {p.stock === 0 && (
+                  <span className="absolute -right-1 -top-1 rounded-full bg-red-600 px-1.5 py-0.5 text-[9px] font-bold uppercase text-white">
+                    Agotado
+                  </span>
+                )}
               </div>
-            </div>
-            <div className="mt-3 flex items-center justify-between">
-              <PriceBadge product={p} />
-              <InlineStock
-                productId={p.id}
-                stock={p.stock}
-                onSaved={(stock) =>
-                  setItems((prev) =>
-                    prev.map((x) => (x.id === p.id ? { ...x, stock } : x))
-                  )
-                }
-                onError={setError}
-              />
-            </div>
-            <div className="mt-3 flex items-center justify-between gap-4">
-              <span className="inline-flex items-center gap-2 text-xs text-gray-600">
-                Web
+              <div className="min-w-0 flex-1">
+                <div className="flex items-start gap-1.5">
+                  <h2 className="min-w-0 flex-1 text-[15px] font-bold leading-snug text-gray-900">
+                    {p.name}
+                  </h2>
+                  {p.featured && (
+                    <Star
+                      className="mt-0.5 h-4 w-4 shrink-0 fill-amber-400 text-amber-400"
+                      aria-label="Destacado"
+                    />
+                  )}
+                </div>
+                <p className="mt-0.5 text-xs text-gray-500">
+                  {categoryLabel(p.category)}
+                </p>
+                <div className="mt-2">
+                  <PriceBadge product={p} size="lg" />
+                </div>
+              </div>
+            </button>
+
+            <div className="flex items-center justify-between gap-2 border-t border-gray-100 px-3.5 py-2.5">
+              <span className="inline-flex items-center gap-2 text-xs font-medium text-gray-600">
+                <Globe className="h-3.5 w-3.5 text-gray-400" /> Web
                 <MiniToggle
                   checked={p.showOnWeb !== false}
                   busy={patchingId === p.id}
@@ -779,8 +866,8 @@ export default function ProductsTable({ products: initialProducts, categories, c
                   onChange={() => toggleFlag(p, "showOnWeb")}
                 />
               </span>
-              <span className="inline-flex items-center gap-2 text-xs text-gray-600">
-                Catálogo
+              <span className="inline-flex items-center gap-2 text-xs font-medium text-gray-600">
+                <BookOpen className="h-3.5 w-3.5 text-gray-400" /> Catálogo
                 <MiniToggle
                   checked={p.showInCatalog !== false}
                   busy={patchingId === p.id}
@@ -789,14 +876,28 @@ export default function ProductsTable({ products: initialProducts, categories, c
                 />
               </span>
             </div>
-            <div className="mt-3 flex gap-2">
+
+            <div className="flex items-center gap-2 border-t border-gray-100 px-3.5 py-3">
+              <span className="inline-flex items-center gap-1.5 text-xs text-gray-500">
+                Stock
+                <InlineStock
+                  productId={p.id}
+                  stock={p.stock}
+                  onSaved={(stock) =>
+                    setItems((prev) =>
+                      prev.map((x) => (x.id === p.id ? { ...x, stock } : x))
+                    )
+                  }
+                  onError={setError}
+                />
+              </span>
               <Link
                 href={`/admin/products/${p.id}/edit`}
-                className="inline-flex min-h-[40px] flex-1 items-center justify-center gap-1.5 rounded-xl bg-amber-600 px-3 text-sm font-semibold text-white hover:bg-amber-700"
+                className="ml-auto inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-amber-600 px-4 text-sm font-semibold text-white active:bg-amber-700"
               >
                 <Pencil className="h-4 w-4" aria-hidden /> Editar
               </Link>
-              <div className="inline-flex min-h-[40px] flex-1 items-center justify-center rounded-xl border border-red-100 bg-red-50">
+              <div className="inline-flex min-h-[44px] items-center justify-center rounded-xl border border-red-100 bg-red-50 px-3">
                 <DeleteButton
                   id={p.id}
                   name={p.name}
@@ -838,8 +939,9 @@ export default function ProductsTable({ products: initialProducts, categories, c
               {filtered.map((p) => (
                 <tr
                   key={p.id}
-                  onClick={() => router.push(`/admin/products/${p.id}/edit`)}
+                  onClick={() => setSelectedId(p.id)}
                   className="group cursor-pointer transition-colors hover:bg-amber-50/40"
+                  title="Ver información de inventario"
                 >
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
@@ -946,6 +1048,14 @@ export default function ProductsTable({ products: initialProducts, categories, c
             </tbody>
           </table>
         </div>
+      )}
+
+      {selected && (
+        <ProductInventoryModal
+          product={selected}
+          categoryLabel={categoryLabel(selected.category)}
+          onClose={() => setSelectedId(null)}
+        />
       )}
     </div>
   );
