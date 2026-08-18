@@ -84,5 +84,19 @@ export function validateProductPayload(
   ) {
     return "Stock inválido";
   }
+  if (
+    product.costCents != null &&
+    (!Number.isInteger(product.costCents) ||
+      product.costCents < 0 ||
+      product.costCents > MAX_PRICE_CENTS)
+  ) {
+    return "Costo inválido";
+  }
+  if (product.internalNotes != null && typeof product.internalNotes !== "string") {
+    return "Notas internas inválidas";
+  }
+  if (product.specs != null && typeof product.specs !== "string") {
+    return "Especificaciones inválidas";
+  }
   return null;
 }

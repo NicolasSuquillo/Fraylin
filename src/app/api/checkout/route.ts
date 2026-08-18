@@ -137,6 +137,12 @@ export async function POST(req: NextRequest) {
       if (!product) {
         return NextResponse.json({ error: `Producto no encontrado: ${item.productId}` }, { status: 400 });
       }
+      if (!product.showOnWeb) {
+        return NextResponse.json(
+          { error: `${product.name} no está disponible en la tienda` },
+          { status: 400 }
+        );
+      }
       if (product.priceCents == null) {
         return NextResponse.json(
           { error: `${product.name} no está disponible para compra en línea` },
