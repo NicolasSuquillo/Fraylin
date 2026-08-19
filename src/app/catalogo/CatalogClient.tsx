@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import {
-  Search, X, FileDown, Truck, Wrench, Package,
+  Search, X, FileDown, Truck, Wrench, Package, Loader2, AlertTriangle,
 } from "lucide-react";
 import SafeImage from "@/components/ui/SafeImage";
 import { formatUSD } from "@/lib/money";
@@ -23,6 +23,8 @@ export default function CatalogClient({
 }: Props) {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState(initialCategory);
+  const [pdfBusy, setPdfBusy] = useState(false);
+  const [pdfError, setPdfError] = useState("");
 
   const categoryLabel = (slug: string) =>
     categories.find((c) => c.slug === slug)?.label ?? slug;
@@ -46,6 +48,30 @@ export default function CatalogClient({
     ? `/api/catalogo/pdf?category=${encodeURIComponent(category)}`
     : "/api/catalogo/pdf";
 
+  async function downloadPdf() {
+    setPdfBusy(true);
+    setPdfError("");
+    try {
+      const res = await fetch(pdfHref, { cache: "no-store" });
+      if (!res.ok) throw new Error(String(res.status));
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = category
+        ? `catalogo-fraylin-${category}.pdf`
+        : "catalogo-fraylin.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 5000);
+    } catch {
+      setPdfError("No se pudo generar el PDF. Intenta de nuevo en un momento.");
+    } finally {
+      setPdfBusy(false);
+    }
+  }
+
   return (
     <div className="min-h-dvh bg-[var(--accent-cream)]">
       <header className="sticky top-0 z-20 border-b border-stone-200/80 bg-[var(--accent-cream)]/95 backdrop-blur-md">
@@ -59,13 +85,23 @@ export default function CatalogClient({
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <a
-              href={pdfHref}
-              className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-[var(--brand-primary)] px-4 text-sm font-semibold text-white hover:bg-[var(--brand-dark)]"
+            <button
+              type="button"
+              onClick={() => void downloadPdf()}
+              disabled={pdfBusy}
+              className="inline-flex min-h-[44px] items-center gap-2 rounded-xl bg-[var(--brand-primary)] px-4 text-sm font-semibold text-white hover:bg-[var(--brand-dark)] disabled:opacity-70"
             >
-              <FileDown className="h-4 w-4" aria-hidden />
-              {category ? "PDF de esta categoría" : "Descargar PDF"}
-            </a>
+              {pdfBusy ? (
+                <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+              ) : (
+                <FileDown className="h-4 w-4" aria-hidden />
+              )}
+              {pdfBusy
+                ? "Generando PDF…"
+                : category
+                  ? "PDF de esta categoría"
+                  : "Descargar PDF"}
+            </button>
             <Link
               href="/"
               className="inline-flex min-h-[44px] items-center rounded-xl border border-stone-300 bg-white px-4 text-sm font-medium text-[var(--text-primary)] hover:bg-stone-50"
@@ -76,7 +112,25 @@ export default function CatalogClient({
         </div>
       </header>
 
-      <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 sm:py-8">
+      <main className="mx-auto max-w-6xl px-4 py-6 pb-24 sm:px-6 sm:py-8 sm:pb-8">
+        {pdfError && (
+          <div
+            role="alert"
+            className="mb-4 flex items-center gap-2 rounded-xl border border-red-100 bg-red-50 px-4 py-3 text-sm text-red-800"
+          >
+            <AlertTriangle className="h-4 w-4 shrink-0" aria-hidden />
+            {pdfError}
+            <button
+              type="button"
+              onClick={() => setPdfError("")}
+              className="ml-auto text-red-400 hover:text-red-600"
+              aria-label="Cerrar aviso"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+
         <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-center">
           <div className="relative flex-1">
             <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
@@ -212,6 +266,26 @@ export default function CatalogClient({
         <p>{BUSINESS.name} · {BUSINESS.address}</p>
         <p className="mt-1">{BUSINESS.phones.join(" · ")}</p>
       </footer>
+
+      <div className="fixed inset-x-0 bottom-0 z-30 border-t border-stone-200 bg-[var(--accent-cream)]/95 p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] backdrop-blur-md sm:hidden">
+        <button
+          type="button"
+          onClick={() => void downloadPdf()}
+          disabled={pdfBusy}
+          className="inline-flex min-h-[48px] w-full items-center justify-center gap-2 rounded-xl bg-[var(--brand-primary)] text-sm font-semibold text-white active:bg-[var(--brand-dark)] disabled:opacity-70"
+        >
+          {pdfBusy ? (
+            <Loader2 className="h-4 w-4 animate-spin" aria-hidden />
+          ) : (
+            <FileDown className="h-4 w-4" aria-hidden />
+          )}
+          {pdfBusy
+            ? "Generando PDF…"
+            : category
+              ? `Descargar PDF de ${categoryLabel(category)}`
+              : "Descargar catálogo en PDF"}
+        </button>
+      </div>
     </div>
   );
 }

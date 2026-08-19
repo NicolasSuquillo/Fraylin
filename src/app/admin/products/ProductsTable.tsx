@@ -8,7 +8,7 @@ import {
   Star, MessageCircle, Package,
   ChevronUp, ChevronDown, ChevronsUpDown, X,
   Truck, Wrench, AlertTriangle, Copy, Check,
-  FileDown, Globe, BookOpen, Link2,
+  FileDown, Globe, BookOpen, Link2, Loader2,
 } from "lucide-react";
 import { formatUSD } from "@/lib/money";
 import ProductInventoryModal from "./ProductInventoryModal";
@@ -441,25 +441,40 @@ export default function ProductsTable({ products: initialProducts, categories, c
     }
   }
 
-  function downloadPdf() {
+  async function downloadPdf() {
     setPdfBusy(true);
+    setError("");
     const qs = categoryFilter
       ? `?category=${encodeURIComponent(categoryFilter)}`
       : "";
-    const a = document.createElement("a");
-    a.href = `/api/catalogo/pdf${qs}`;
-    a.download = categoryFilter
-      ? `catalogo-fraylin-${categoryFilter}.pdf`
-      : "catalogo-fraylin.pdf";
-    document.body.appendChild(a);
-    a.click();
-    a.remove();
-    showToast(
-      categoryFilter
-        ? `PDF de ${categoryLabel(categoryFilter)}`
-        : "Descargando PDF completo"
-    );
-    window.setTimeout(() => setPdfBusy(false), 800);
+    try {
+      const res = await fetch(`/api/catalogo/pdf${qs}`, { cache: "no-store" });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        setError((data as { error?: string }).error ?? "No se pudo generar el PDF");
+        return;
+      }
+      const blob = await res.blob();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = categoryFilter
+        ? `catalogo-fraylin-${categoryFilter}.pdf`
+        : "catalogo-fraylin.pdf";
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      window.setTimeout(() => URL.revokeObjectURL(url), 5000);
+      showToast(
+        categoryFilter
+          ? `PDF de ${categoryLabel(categoryFilter)} listo`
+          : "PDF completo listo"
+      );
+    } catch {
+      setError("Sin conexión: no se pudo generar el PDF");
+    } finally {
+      setPdfBusy(false);
+    }
   }
 
   const stats = useMemo(
@@ -588,12 +603,20 @@ export default function ProductsTable({ products: initialProducts, categories, c
           </a>
           <button
             type="button"
-            onClick={downloadPdf}
+            onClick={() => void downloadPdf()}
             disabled={pdfBusy}
             className="inline-flex min-h-[40px] items-center gap-1.5 rounded-xl bg-amber-600 px-3 text-sm font-semibold text-white hover:bg-amber-700 disabled:opacity-60"
           >
-            <FileDown className="h-4 w-4" />
-            {categoryFilter ? "PDF categoría" : "PDF completo"}
+            {pdfBusy ? (
+              <Loader2 className="h-4 w-4 animate-spin" />
+            ) : (
+              <FileDown className="h-4 w-4" />
+            )}
+            {pdfBusy
+              ? "Generando…"
+              : categoryFilter
+                ? "PDF categoría"
+                : "PDF completo"}
           </button>
         </div>
       </div>
