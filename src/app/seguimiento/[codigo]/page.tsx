@@ -4,6 +4,7 @@ import { AlertCircle, ArrowLeft } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { BUSINESS, buildWhatsAppUrl } from "@/lib/constants";
+import { buildPortalUrl } from "@/lib/site";
 import { getPublicOrderTracking } from "@/lib/orders";
 import { getPricingSettings } from "@/lib/pricing";
 import TrackingSearchForm from "../TrackingSearchForm";
@@ -35,10 +36,9 @@ export default async function SeguimientoDetallePage({
     getPricingSettings(),
   ]);
 
-  const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL?.trim();
-  const portalTrackingUrl = portalUrl
-    ? `${portalUrl.replace(/\/$/, "")}/seguimiento/${encodeURIComponent(normalized)}`
-    : undefined;
+  const portalTrackingUrl =
+    buildPortalUrl(`/seguimiento/${encodeURIComponent(normalized)}`) ??
+    undefined;
 
   return (
     <>

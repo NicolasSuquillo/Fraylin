@@ -4,6 +4,7 @@ import { CheckCircle2, ExternalLink, PackageCheck, ShieldCheck, Star, Truck } fr
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
 import { BUSINESS, buildWhatsAppUrl } from "@/lib/constants";
+import { buildPortalUrl } from "@/lib/site";
 import TrackingSearchForm from "./TrackingSearchForm";
 
 export const metadata: Metadata = {
@@ -13,7 +14,7 @@ export const metadata: Metadata = {
 };
 
 export default function SeguimientoPage() {
-  const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL?.trim();
+  const portalTrackingUrl = buildPortalUrl("/seguimiento");
   const whatsappHelp = buildWhatsAppUrl(
     BUSINESS.whatsapp[0].number,
     "Hola Fraylin, necesito ayuda para consultar el estado de mi pedido."
@@ -55,11 +56,11 @@ export default function SeguimientoPage() {
               >
                 ¿Olvidaste tu código? Escríbenos por WhatsApp
               </a>
-              {portalUrl && (
+              {portalTrackingUrl && (
                 <>
                   <span className="text-stone-300">•</span>
                   <a
-                    href={`${portalUrl.replace(/\/$/, "")}/seguimiento`}
+                    href={portalTrackingUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-1 font-semibold text-brand-dark hover:underline"
