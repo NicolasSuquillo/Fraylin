@@ -999,6 +999,13 @@ export default function CheckoutClient({
                     <MessageCircle size={18} />
                     Abrir WhatsApp
                   </a>
+                  <Link
+                    href={`/seguimiento/${order.clientTransactionId}`}
+                    className="w-full py-3 bg-brand-primary text-neutral-dark hover:bg-brand-dark hover:text-accent-cream font-bold rounded-2xl transition-colors inline-flex items-center justify-center gap-2"
+                  >
+                    <Package size={17} />
+                    Seguir mi pedido
+                  </Link>
                 </div>
 
                 <Link href="/" className="text-sm text-text-secondary text-center underline hover:text-text-primary">

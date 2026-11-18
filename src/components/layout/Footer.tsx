@@ -1,5 +1,6 @@
 import Image from "next/image";
-import { MapPin, Phone, Clock } from "lucide-react";
+import Link from "next/link";
+import { MapPin, Phone, Clock, PackageCheck } from "lucide-react";
 import { BUSINESS } from "@/lib/constants";
 
 export default function Footer() {
@@ -23,6 +24,13 @@ export default function Footer() {
             <p className="text-white/70 text-sm leading-relaxed">
               {BUSINESS.description}
             </p>
+            <Link
+              href="/seguimiento"
+              className="mt-4 inline-flex items-center gap-2 rounded-xl border border-brand-primary/40 bg-brand-primary/10 px-3.5 py-2 text-xs font-semibold text-brand-light hover:bg-brand-primary/20 transition-colors"
+            >
+              <PackageCheck size={15} />
+              Seguir mi pedido
+            </Link>
           </div>
 
           <div>

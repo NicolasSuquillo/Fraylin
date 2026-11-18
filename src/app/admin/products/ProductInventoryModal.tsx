@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import {
   BookOpen, ChevronLeft, ChevronRight, Globe, NotebookPen,
-  Package, Pencil, Ruler, Star, Truck, Wrench, X,
+  Package, Pencil, Ruler, ShoppingCart, Star, Truck, Wrench, X,
 } from "lucide-react";
 import { formatUSD } from "@/lib/money";
 import type { Product } from "@/types";
@@ -302,20 +302,27 @@ export default function ProductInventoryModal({
         </div>
 
         {/* Acciones */}
-        <div className="flex gap-2 border-t border-gray-100 bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-4">
+        <div className="flex flex-wrap gap-2 border-t border-gray-100 bg-white p-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:p-4">
           <button
             type="button"
             onClick={onClose}
-            className="inline-flex min-h-[48px] flex-1 items-center justify-center rounded-xl border border-gray-200 px-4 text-sm font-semibold text-gray-700 hover:bg-gray-50"
+            className="inline-flex min-h-[48px] items-center justify-center rounded-xl border border-gray-200 px-4 text-sm font-semibold text-gray-700 hover:bg-gray-50"
           >
             Cerrar
           </button>
+          <Link
+            href={`/admin/orders/new?productId=${encodeURIComponent(product.id)}`}
+            className="inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl border border-amber-300 bg-amber-50 px-4 text-sm font-semibold text-amber-900 hover:bg-amber-100"
+          >
+            <ShoppingCart className="h-4 w-4" aria-hidden />
+            Crear pedido
+          </Link>
           <Link
             href={`/admin/products/${product.id}/edit`}
             className="inline-flex min-h-[48px] flex-1 items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 text-sm font-semibold text-white hover:bg-amber-700"
           >
             <Pencil className="h-4 w-4" aria-hidden />
-            Editar producto
+            Editar
           </Link>
         </div>
       </div>

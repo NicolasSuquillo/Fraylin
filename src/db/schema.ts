@@ -1,4 +1,4 @@
-import { relations } from "drizzle-orm";
+import { relations, sql } from "drizzle-orm";
 import {
   pgTable,
   text,
@@ -127,6 +127,7 @@ export const orders = pgTable(
     status: orderStatusEnum("status").notNull().default("pending"),
     paymentMethod: paymentMethodEnum("payment_method").notNull().default("payphone"),
     fulfillmentStatus: text("fulfillment_status").notNull().default("nuevo"),
+    trackingNote: text("tracking_note"),
     customerName: text("customer_name").notNull(),
     customerPhone: text("customer_phone").notNull(),
     customerEmail: text("customer_email").notNull(),
@@ -142,6 +143,7 @@ export const orders = pgTable(
     payphoneRaw: jsonb("payphone_raw"),
     confirmedAt: timestamp("confirmed_at"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
   },
   (t) => [
     uniqueIndex("orders_client_tx_idx").on(t.clientTransactionId),
@@ -162,8 +164,34 @@ export const orderItems = pgTable(
     unitPriceCents: integer("unit_price_cents").notNull(),
     quantity: integer("quantity").notNull(),
     lineTotalCents: integer("line_total_cents").notNull(),
+    productImageSrc: text("product_image_src"),
+    productCategory: text("product_category"),
+    productDescription: text("product_description"),
+    productSpecs: text("product_specs"),
   },
   (t) => [index("order_items_order_idx").on(t.orderId)]
+);
+
+export const orderEvents = pgTable(
+  "order_events",
+  {
+    id: serial("id").primaryKey(),
+    orderId: uuid("order_id")
+      .notNull()
+      .references(() => orders.id, { onDelete: "cascade" }),
+    statusFrom: text("status_from"),
+    statusTo: text("status_to"),
+    fulfillmentFrom: text("fulfillment_from"),
+    fulfillmentTo: text("fulfillment_to"),
+    title: text("title").notNull(),
+    description: text("description"),
+    actor: text("actor").notNull().default("sistema"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    index("order_events_order_idx").on(t.orderId),
+    index("order_events_created_idx").on(t.createdAt),
+  ]
 );
 
 export const categoriesRelations = relations(categories, ({ many }) => ({
@@ -187,11 +215,20 @@ export const productImagesRelations = relations(productImages, ({ one }) => ({
 
 export const ordersRelations = relations(orders, ({ many }) => ({
   items: many(orderItems),
+  events: many(orderEvents),
+  reviews: many(reviews),
 }));
 
 export const orderItemsRelations = relations(orderItems, ({ one }) => ({
   order: one(orders, {
     fields: [orderItems.orderId],
+    references: [orders.id],
+  }),
+}));
+
+export const orderEventsRelations = relations(orderEvents, ({ one }) => ({
+  order: one(orders, {
+    fields: [orderEvents.orderId],
     references: [orders.id],
   }),
 }));
@@ -205,7 +242,20 @@ export const reviews = pgTable(
     body: text("body").notNull(),
     avatarUrl: text("avatar_url"),
     approved: boolean("approved").notNull().default(false),
+    orderId: uuid("order_id").references(() => orders.id, { onDelete: "set null" }),
+    clientTransactionId: text("client_transaction_id"),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
-  (t) => [index("reviews_approved_idx").on(t.approved)]
+  (t) => [
+    index("reviews_approved_idx").on(t.approved),
+    index("reviews_order_idx").on(t.orderId),
+    uniqueIndex("reviews_order_id_uq").on(t.orderId).where(sql`${t.orderId} IS NOT NULL`),
+  ]
 );
+
+export const reviewsRelations = relations(reviews, ({ one }) => ({
+  order: one(orders, {
+    fields: [reviews.orderId],
+    references: [orders.id],
+  }),
+}));

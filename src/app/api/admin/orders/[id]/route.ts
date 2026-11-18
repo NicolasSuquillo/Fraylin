@@ -38,7 +38,7 @@ export async function PATCH(
 
   const { id } = await params;
   const body = await req.json().catch(() => ({}));
-  const { fulfillmentStatus, action } = body;
+  const { fulfillmentStatus, trackingNote, eventDescription, action } = body;
 
   if (action === "markPaid") {
     try {
@@ -46,6 +46,7 @@ export async function PATCH(
       await touchCatalogVersion();
       revalidatePath("/admin/orders");
       revalidatePath(`/admin/orders/${id}`);
+      revalidatePath(`/seguimiento/${order.clientTransactionId}`);
       revalidatePath("/");
       return NextResponse.json({ order });
     } catch (err) {
@@ -64,6 +65,7 @@ export async function PATCH(
       await touchCatalogVersion();
       revalidatePath("/admin/orders");
       revalidatePath(`/admin/orders/${id}`);
+      revalidatePath(`/seguimiento/${order.clientTransactionId}`);
       revalidatePath("/");
       return NextResponse.json({ order });
     } catch (err) {
@@ -80,12 +82,39 @@ export async function PATCH(
     return NextResponse.json({ error: "Estado de entrega inválido" }, { status: 400 });
   }
 
-  const order = await updateFulfillmentStatus(id, fulfillmentStatus).catch(() => null);
-  if (!order) {
-    return NextResponse.json({ error: "Pedido no encontrado" }, { status: 404 });
+  if (trackingNote !== undefined && trackingNote !== null && typeof trackingNote !== "string") {
+    return NextResponse.json({ error: "Nota de seguimiento inválida" }, { status: 400 });
+  }
+  if (
+    eventDescription !== undefined &&
+    eventDescription !== null &&
+    typeof eventDescription !== "string"
+  ) {
+    return NextResponse.json({ error: "Detalle del evento inválido" }, { status: 400 });
   }
 
-  revalidatePath("/admin/orders");
-  revalidatePath(`/admin/orders/${id}`);
-  return NextResponse.json({ order });
+  try {
+    const order = await updateFulfillmentStatus(id, fulfillmentStatus, {
+      trackingNote:
+        typeof trackingNote === "string"
+          ? trackingNote.slice(0, 1000)
+          : trackingNote === null
+            ? null
+            : undefined,
+      eventDescription:
+        typeof eventDescription === "string" ? eventDescription.slice(0, 500) : undefined,
+      actor: "admin",
+    });
+    revalidatePath("/admin/orders");
+    revalidatePath(`/admin/orders/${id}`);
+    revalidatePath(`/seguimiento/${order.clientTransactionId}`);
+    return NextResponse.json({ order });
+  } catch (err) {
+    if (err instanceof OrderActionError) {
+      const status = err.code === "not_found" ? 404 : 400;
+      return NextResponse.json({ error: err.message }, { status });
+    }
+    console.error("[admin/orders] PATCH fulfillment:", err);
+    return NextResponse.json({ error: "No se pudo actualizar el pedido" }, { status: 500 });
+  }
 }

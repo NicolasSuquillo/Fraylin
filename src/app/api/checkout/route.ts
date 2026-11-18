@@ -1,11 +1,12 @@
-import { randomBytes } from "crypto";
 import { NextRequest, NextResponse } from "next/server";
-import { inArray } from "drizzle-orm";
+import { asc, inArray } from "drizzle-orm";
 import { db } from "@/db";
-import { orders, orderItems, products } from "@/db/schema";
+import { categories, orderEvents, orders, orderItems, productImages, products } from "@/db/schema";
 import { firstCheckoutError, validateCheckoutCustomer } from "@/lib/checkout-validation";
 import { computeTaxBreakdown } from "@/lib/money";
+import { generateClientTransactionId } from "@/lib/order-ids";
 import { reserveOrderStock, StockUnavailableError } from "@/lib/orders";
+import { syncOrderToPortal } from "@/lib/portal-sync";
 import { checkRateLimit, getClientIp } from "@/lib/rate-limit";
 import { getPricingSettings } from "@/lib/pricing";
 import { PAYMENT_METHODS, type CheckoutCustomer, type PaymentMethod } from "@/types";
@@ -21,10 +22,6 @@ interface CheckoutRequestBody {
   paymentMethod?: PaymentMethod;
   shippingZoneId?: string;
   installationRequested?: boolean;
-}
-
-function generateClientTransactionId(): string {
-  return `FR${randomBytes(8).toString("hex").toUpperCase()}`;
 }
 
 const MAX_ITEMS = 50;
@@ -65,9 +62,16 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "El carrito está vacío" }, { status: 400 });
     }
 
-    const dbProductsEarly = await db.query.products.findMany({
-      where: inArray(products.id, body.items.map((i: CheckoutRequestItem) => i.productId)),
-    });
+    const [dbProductsEarly, categoryRows] = await Promise.all([
+      db.query.products.findMany({
+        where: inArray(products.id, body.items.map((i: CheckoutRequestItem) => i.productId)),
+        with: {
+          images: { orderBy: [asc(productImages.position), asc(productImages.id)] },
+        },
+      }),
+      db.select().from(categories),
+    ]);
+    const categoryLabelBySlug = new Map(categoryRows.map((c) => [c.slug, c.label]));
 
     const allFreeShipping = dbProductsEarly.length > 0 && dbProductsEarly.every((p) => p.freeShipping);
     const allFreeInstallation = dbProductsEarly.length > 0 && dbProductsEarly.every((p) => p.freeInstallation);
@@ -209,9 +213,26 @@ export async function POST(req: NextRequest) {
             unitPriceCents: unit,
             quantity: item.quantity,
             lineTotalCents: unit * item.quantity,
+            productImageSrc: product.images[0]?.src ?? null,
+            productCategory: categoryLabelBySlug.get(product.categorySlug) ?? product.categorySlug,
+            productDescription: product.description ?? null,
+            productSpecs: product.specs ?? null,
           };
         })
       );
+
+      await tx.insert(orderEvents).values({
+        orderId: created.id,
+        statusFrom: null,
+        statusTo: "pending",
+        fulfillmentFrom: null,
+        fulfillmentTo: "nuevo",
+        title: "Pedido registrado",
+        description: isTransfer
+          ? "Pedido creado con pago por transferencia / Deuna. En espera de verificación de comprobante."
+          : "Pedido creado. Esperando confirmación de pago con tarjeta.",
+        actor: "cliente",
+      });
 
       // Transferencia: reservar stock al crear (igual que Payphone en finalizeOrder).
       if (isTransfer) {
@@ -220,6 +241,8 @@ export async function POST(req: NextRequest) {
 
       return created;
     });
+
+    await syncOrderToPortal(order.id);
 
     return NextResponse.json({
       orderId: order.id,

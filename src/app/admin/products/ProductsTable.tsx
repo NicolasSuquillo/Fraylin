@@ -8,7 +8,7 @@ import {
   Star, MessageCircle, Package,
   ChevronUp, ChevronDown, ChevronsUpDown, X,
   Truck, Wrench, AlertTriangle, Copy, Check,
-  FileDown, Globe, BookOpen, Link2, Loader2,
+  FileDown, Globe, BookOpen, Link2, Loader2, ShoppingCart,
 } from "lucide-react";
 import { formatUSD } from "@/lib/money";
 import ProductInventoryModal from "./ProductInventoryModal";
@@ -817,6 +817,13 @@ export default function ProductsTable({ products: initialProducts, categories, c
                 </div>
                 <div className="mt-auto flex items-center gap-2">
                   <Link
+                    href={`/admin/orders/new?productId=${encodeURIComponent(p.id)}`}
+                    className="inline-flex min-h-[40px] items-center justify-center gap-1 rounded-xl border border-amber-300 bg-amber-50 px-2.5 text-xs font-semibold text-amber-900 hover:bg-amber-100"
+                    title="Crear pedido con este producto"
+                  >
+                    <ShoppingCart className="h-3.5 w-3.5" aria-hidden /> Pedido
+                  </Link>
+                  <Link
                     href={`/admin/products/${p.id}/edit`}
                     className="inline-flex min-h-[40px] flex-1 items-center justify-center gap-1.5 rounded-xl bg-amber-600 text-sm font-semibold text-white hover:bg-amber-700"
                   >
@@ -915,8 +922,14 @@ export default function ProductsTable({ products: initialProducts, categories, c
                 />
               </span>
               <Link
+                href={`/admin/orders/new?productId=${encodeURIComponent(p.id)}`}
+                className="ml-auto inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl border border-amber-300 bg-amber-50 px-3 text-xs font-semibold text-amber-900 active:bg-amber-100"
+              >
+                <ShoppingCart className="h-4 w-4" aria-hidden /> Pedido
+              </Link>
+              <Link
                 href={`/admin/products/${p.id}/edit`}
-                className="ml-auto inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-amber-600 px-4 text-sm font-semibold text-white active:bg-amber-700"
+                className="inline-flex min-h-[44px] items-center justify-center gap-1.5 rounded-xl bg-amber-600 px-3.5 text-sm font-semibold text-white active:bg-amber-700"
               >
                 <Pencil className="h-4 w-4" aria-hidden /> Editar
               </Link>
@@ -1038,6 +1051,12 @@ export default function ProductsTable({ products: initialProducts, categories, c
                   </td>
                   <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
                     <div className="flex items-center justify-end gap-3">
+                      <Link
+                        href={`/admin/orders/new?productId=${encodeURIComponent(p.id)}`}
+                        className="inline-flex items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-semibold text-amber-900 hover:bg-amber-100"
+                      >
+                        <ShoppingCart className="h-3.5 w-3.5" aria-hidden /> Pedido
+                      </Link>
                       <Link
                         href={`/admin/products/${p.id}/edit`}
                         className="inline-flex items-center gap-1 font-medium text-amber-700 hover:text-amber-900"

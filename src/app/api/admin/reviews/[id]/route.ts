@@ -10,8 +10,10 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   }
 
   const { id } = await params;
-  const numId = parseInt(id, 10);
-  if (isNaN(numId)) return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+  const numId = Number(id);
+  if (!Number.isInteger(numId) || numId <= 0) {
+    return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+  }
 
   let body: { approved?: unknown };
   try {
@@ -22,8 +24,19 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
   if (typeof body.approved !== "boolean") {
     return NextResponse.json({ error: "Campo 'approved' inválido" }, { status: 400 });
   }
-  await setReviewApproval(numId, body.approved);
+  const res = await setReviewApproval(numId, body.approved);
+  if (!res.found) {
+    return NextResponse.json({ error: "Reseña no encontrada" }, { status: 404 });
+  }
   revalidatePath("/");
+  revalidatePath("/admin/reviews");
+  revalidatePath("/admin/orders");
+  if (res.orderId) {
+    revalidatePath(`/admin/orders/${res.orderId}`);
+  }
+  if (res.clientTransactionId) {
+    revalidatePath(`/seguimiento/${res.clientTransactionId}`);
+  }
   return NextResponse.json({ ok: true });
 }
 
@@ -33,11 +46,24 @@ export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ 
   }
 
   const { id } = await params;
-  const numId = parseInt(id, 10);
-  if (isNaN(numId)) return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+  const numId = Number(id);
+  if (!Number.isInteger(numId) || numId <= 0) {
+    return NextResponse.json({ error: "ID inválido" }, { status: 400 });
+  }
 
-  const avatarUrl = await deleteReview(numId);
-  if (avatarUrl) await tryDeletePublicUpload(avatarUrl);
+  const res = await deleteReview(numId);
+  if (!res.found) {
+    return NextResponse.json({ error: "Reseña no encontrada" }, { status: 404 });
+  }
+  if (res.avatarUrl) await tryDeletePublicUpload(res.avatarUrl);
   revalidatePath("/");
+  revalidatePath("/admin/reviews");
+  revalidatePath("/admin/orders");
+  if (res.orderId) {
+    revalidatePath(`/admin/orders/${res.orderId}`);
+  }
+  if (res.clientTransactionId) {
+    revalidatePath(`/seguimiento/${res.clientTransactionId}`);
+  }
   return NextResponse.json({ ok: true });
 }

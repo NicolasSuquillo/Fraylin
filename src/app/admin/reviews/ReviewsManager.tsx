@@ -30,23 +30,35 @@ export default function ReviewsManager({ reviews: initial }: { reviews: Review[]
 
   async function toggleApproval(id: number, approved: boolean) {
     setBusy(id);
-    await fetch(`/api/admin/reviews/${id}`, {
-      method: "PATCH",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ approved }),
-    });
-    setReviews((prev) => prev.map((r) => (r.id === id ? { ...r, approved } : r)));
-    setBusy(null);
-    router.refresh();
+    try {
+      const res = await fetch(`/api/admin/reviews/${id}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ approved }),
+      });
+      if (res.ok) {
+        setReviews((prev) => prev.map((r) => (r.id === id ? { ...r, approved } : r)));
+      } else if (res.status === 404) {
+        setReviews((prev) => prev.filter((r) => r.id !== id));
+      }
+      router.refresh();
+    } finally {
+      setBusy(null);
+    }
   }
 
   async function remove(id: number) {
     if (!confirm("¿Eliminar esta reseña?")) return;
     setBusy(id);
-    await fetch(`/api/admin/reviews/${id}`, { method: "DELETE" });
-    setReviews((prev) => prev.filter((r) => r.id !== id));
-    setBusy(null);
-    router.refresh();
+    try {
+      const res = await fetch(`/api/admin/reviews/${id}`, { method: "DELETE" });
+      if (res.ok || res.status === 404) {
+        setReviews((prev) => prev.filter((r) => r.id !== id));
+      }
+      router.refresh();
+    } finally {
+      setBusy(null);
+    }
   }
 
   return (
@@ -109,6 +121,11 @@ export default function ReviewsManager({ reviews: initial }: { reviews: Review[]
                 <div className="flex items-center gap-2 flex-wrap">
                   <span className="font-semibold text-sm text-gray-800">{r.authorName}</span>
                   <Stars rating={r.rating} />
+                  {r.clientTransactionId && (
+                    <span className="text-xs px-2 py-0.5 rounded-full font-medium bg-emerald-50 text-emerald-700 border border-emerald-200">
+                      Compra verificada · {r.clientTransactionId}
+                    </span>
+                  )}
                   <span
                     className={`text-xs px-2 py-0.5 rounded-full font-medium ${
                       r.approved

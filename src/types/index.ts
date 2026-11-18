@@ -53,7 +53,7 @@ export type OrderStatus = "pending" | "processing" | "paid" | "failed" | "cancel
 export const PAYMENT_METHODS = ["payphone", "transferencia"] as const;
 export type PaymentMethod = (typeof PAYMENT_METHODS)[number];
 
-export const FULFILLMENT_STATUSES = ["nuevo", "coordinado", "entregado"] as const;
+export const FULFILLMENT_STATUSES = ["nuevo", "preparando", "coordinado", "entregado"] as const;
 export type FulfillmentStatus = (typeof FULFILLMENT_STATUSES)[number];
 
 export interface OrderItem {
@@ -63,6 +63,23 @@ export interface OrderItem {
   unitPriceCents: number;
   quantity: number;
   lineTotalCents: number;
+  productImageSrc?: string | null;
+  productCategory?: string | null;
+  productDescription?: string | null;
+  productSpecs?: string | null;
+}
+
+export interface OrderEvent {
+  id: number;
+  orderId: string;
+  statusFrom: OrderStatus | null;
+  statusTo: OrderStatus | null;
+  fulfillmentFrom: FulfillmentStatus | null;
+  fulfillmentTo: FulfillmentStatus | null;
+  title: string;
+  description: string | null;
+  actor: string;
+  createdAt: string;
 }
 
 export interface Order {
@@ -70,7 +87,8 @@ export interface Order {
   clientTransactionId: string;
   status: OrderStatus;
   paymentMethod: PaymentMethod;
-  fulfillmentStatus: string;
+  fulfillmentStatus: FulfillmentStatus;
+  trackingNote?: string | null;
   customerName: string;
   customerPhone: string;
   customerEmail: string;
@@ -85,7 +103,10 @@ export interface Order {
   payphoneStatusCode?: number | null;
   confirmedAt?: Date | null;
   createdAt: Date;
+  updatedAt?: Date;
   items?: OrderItem[];
+  events?: OrderEvent[];
+  review?: Review | null;
 }
 
 export interface CartItem {
@@ -109,6 +130,8 @@ export interface Review {
   body: string;
   avatarUrl?: string | null;
   approved: boolean;
+  orderId?: string | null;
+  clientTransactionId?: string | null;
   createdAt: string;
 }
 
