@@ -44,7 +44,14 @@ function ReviewCard({ review, delay }: { review: Review; delay: number }) {
           ) : (
             <Initials name={review.authorName} />
           )}
-          <span className="text-sm font-semibold text-text-primary">{review.authorName}</span>
+          <div className="min-w-0">
+            <span className="block text-sm font-semibold text-text-primary">{review.authorName}</span>
+            {review.clientTransactionId && (
+              <span className="inline-block text-[11px] font-medium text-emerald-700">
+                ✓ Compra verificada
+              </span>
+            )}
+          </div>
         </div>
       </article>
     </Reveal>

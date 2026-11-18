@@ -32,6 +32,7 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
+.env.example
 
 # vercel
 .vercel
@@ -40,8 +41,17 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 
-# graphify
+# AI / Agent configs & local plans
+.claude/
+.cursor/
+.gemini/
+CLAUDE.md
+GEMINI.md
+AGENTS.md
+PLAN.md
+plan.md
 graphify-out/
+**/graphify-out/
 
 # PWA (generados por next-pwa en `next build`)
 /public/sw.js
@@ -52,3 +62,5 @@ graphify-out/
 /public/swe-worker-*.js.map
 /public/worker-*.js
 /public/worker-*.js.map
+/public/fallback-*.js
+/public/fallback-*.js.map

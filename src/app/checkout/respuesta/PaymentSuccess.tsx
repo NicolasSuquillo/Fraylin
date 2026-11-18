@@ -349,6 +349,13 @@ export default function PaymentSuccess({ clientTransactionId, totalFormatted, wh
         className="w-full max-w-sm flex flex-col gap-3"
         style={{ animation: "psRise 0.5s ease 0.78s both" }}
       >
+        <Link
+          href={`/seguimiento/${clientTransactionId}`}
+          className="w-full py-3.5 bg-brand-primary text-neutral-dark hover:bg-brand-dark hover:text-accent-cream font-bold rounded-2xl transition-colors inline-flex items-center justify-center gap-2"
+        >
+          <Package size={18} />
+          Seguir mi pedido
+        </Link>
         <a
           href={whatsappUrl}
           target="_blank"

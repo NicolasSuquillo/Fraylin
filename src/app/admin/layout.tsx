@@ -27,7 +27,7 @@ export default async function AdminLayout({ children }: { children: React.ReactN
   return (
     <div className="min-h-dvh bg-gray-50">
       <AdminNav />
-      <main className="relative z-0 md:ml-52 h-dvh max-h-dvh overflow-y-auto overscroll-y-contain">
+      <main className="relative z-0 md:ml-56 h-dvh max-h-dvh overflow-y-auto overscroll-y-contain">
         {/* Reserva espacio real en el flujo: barras fixed no ocupan sitio */}
         <div
           className="md:hidden shrink-0 w-full pointer-events-none"

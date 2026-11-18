@@ -1,36 +1,62 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Fraylin — Tienda Web, Catálogo y Panel Administrativo
 
-## Getting Started
+Sitio web comercial, catálogo compartible en PDF, checkout con Payphone / Transferencia, seguimiento público de pedidos y panel administrativo para **Fraylin Acabados para la Construcción**.
 
-First, run the development server:
+## Stack
+
+- **Framework:** Next.js 16 (App Router) + React 19 + TypeScript
+- **Base de datos:** PostgreSQL / Neon con Drizzle ORM
+- **Estilos:** Tailwind CSS v4 + Lucide Icons
+- **Almacenamiento:** Vercel Blob (imágenes de productos, galería y avatares)
+- **Pagos:** Payphone Cajita de Pagos + Transferencia / Deuna + Registro manual en tienda
+- **PDFs:** `@react-pdf/renderer` (catálogo descargable y comprobantes de pedido)
+- **PWA:** `@ducanh2912/next-pwa` para panel administrativo instalable en móvil
+
+---
+
+## Configuración local
+
+1. Instala las dependencias:
+
+```bash
+npm install
+```
+
+2. Crea `.env.local` tomando como base `.env.example` y completa las credenciales de Neon, sesión, Vercel Blob, Payphone (si aplica) e integración con `FraylinPortal`.
+
+3. Aplica las migraciones de Drizzle:
+
+```bash
+npm run db:migrate
+```
+
+4. Inicia el servidor de desarrollo:
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Abre `http://localhost:3000` para la tienda pública o `http://localhost:3000/admin` para el panel administrativo.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+---
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Funcionalidades principales
 
-## Learn More
+- **Tienda y Catálogo:** Vitrina pública, búsqueda, filtros por categoría, ficha técnica y exportación de catálogo PDF.
+- **Checkout y Seguimiento (`/seguimiento/[codigo]`):** Pago en línea con Payphone o por transferencia/Deuna, más consulta pública de trazabilidad y reseñas verificadas.
+- **Panel Admin (`/admin`):**
+  - Gestión de inventario, precios (tarjeta/transferencia/costo/margen), categorías, galería y reseñas.
+  - Creación de **pedidos manuales / externos** (`/admin/orders/new`) seleccionando productos del inventario, con descuento automático de stock y sincronización inmediata hacia **FraylinPortal**.
+  - Gestión de estados de entrega, cobro, comprobantes PDF y contacto directo por WhatsApp.
 
-To learn more about Next.js, take a look at the following resources:
+## Scripts
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+| Comando | Descripción |
+|---|---|
+| `npm run dev` | Servidor de desarrollo |
+| `npm run build` | Compilación de producción (`next build --webpack`) |
+| `npm run start` | Servidor de producción |
+| `npm run lint` | Verificación con ESLint |
+| `npm test` | Pruebas unitarias con Vitest |
+| `npm run db:generate` | Genera migraciones Drizzle |
+| `npm run db:migrate` | Ejecuta migraciones Drizzle |

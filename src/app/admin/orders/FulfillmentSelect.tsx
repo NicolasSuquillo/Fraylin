@@ -1,49 +1,72 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
-import { FULFILLMENT_STATUSES } from "@/types";
+import { useRef, useState } from "react";
+import { FULFILLMENT_STATUSES, type FulfillmentStatus } from "@/types";
 
-const LABELS: Record<string, string> = {
+const LABELS: Record<FulfillmentStatus, string> = {
   nuevo: "Nuevo",
+  preparando: "En preparación",
   coordinado: "Coordinado",
   entregado: "Entregado",
 };
 
 interface Props {
   orderId: string;
-  value: string;
+  value: FulfillmentStatus;
 }
 
 export default function FulfillmentSelect({ orderId, value }: Props) {
   const router = useRouter();
+  const requestIdRef = useRef(0);
+  const safeValue: FulfillmentStatus = FULFILLMENT_STATUSES.includes(value) ? value : "nuevo";
   const [saving, setSaving] = useState(false);
   // Estado local optimista: el prop solo se actualiza tras router.refresh()
-  const [current, setCurrent] = useState(value);
+  const [current, setCurrent] = useState<FulfillmentStatus>(safeValue);
+  const [prevSafeValue, setPrevSafeValue] = useState<FulfillmentStatus>(safeValue);
   const [error, setError] = useState(false);
 
+  if (!saving && safeValue !== prevSafeValue) {
+    setPrevSafeValue(safeValue);
+    setCurrent(safeValue);
+    setError(false);
+  }
+
   async function handleChange(newValue: string) {
+    if (!FULFILLMENT_STATUSES.includes(newValue as FulfillmentStatus)) return;
+    const nextValue = newValue as FulfillmentStatus;
+    const requestId = ++requestIdRef.current;
     const previous = current;
-    setCurrent(newValue);
+    setCurrent(nextValue);
     setError(false);
     setSaving(true);
     try {
       const res = await fetch(`/api/admin/orders/${orderId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ fulfillmentStatus: newValue }),
+        body: JSON.stringify({ fulfillmentStatus: nextValue }),
       });
       if (!res.ok) {
-        setCurrent(previous);
-        setError(true);
+        if (requestIdRef.current === requestId) {
+          setCurrent(previous);
+          setError(true);
+          router.refresh();
+        }
         return;
       }
-      router.refresh();
+      if (requestIdRef.current === requestId) {
+        router.refresh();
+      }
     } catch {
-      setCurrent(previous);
-      setError(true);
+      if (requestIdRef.current === requestId) {
+        setCurrent(previous);
+        setError(true);
+        router.refresh();
+      }
     } finally {
-      setSaving(false);
+      if (requestIdRef.current === requestId) {
+        setSaving(false);
+      }
     }
   }
 
