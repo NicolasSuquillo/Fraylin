@@ -9,6 +9,7 @@ import {
   reviews,
 } from "@/db/schema";
 import type { FulfillmentStatus, OrderStatus } from "@/types";
+import { buildPortalUrl } from "@/lib/site";
 
 const globalForPortalDb = globalThis as unknown as {
   portalPgClient?: ReturnType<typeof postgres>;
@@ -424,11 +425,15 @@ async function syncPayloadDirectToPortalDb(payload: SyncOrderPayload): Promise<b
 }
 
 async function notifyPortalWebhook(payload: SyncOrderPayload): Promise<void> {
-  const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL?.trim();
+  const endpoint = buildPortalUrl("/api/integration/orders-webhook");
   const secret = process.env.FRAYLIN_INTEGRATION_SECRET?.trim();
-  if (!portalUrl || !secret) return;
-
-  const endpoint = `${portalUrl.replace(/\/$/, "")}/api/integration/orders-webhook`;
+  if (!endpoint) {
+    if (process.env.NEXT_PUBLIC_PORTAL_URL?.trim()) {
+      console.warn("[PortalSync] NEXT_PUBLIC_PORTAL_URL inválida; webhook omitido");
+    }
+    return;
+  }
+  if (!secret) return;
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), 1500);
   try {

@@ -2,6 +2,7 @@ import { getSession } from "@/lib/admin-auth";
 import { redirect, notFound } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2, ExternalLink, MessageCircle, ShieldCheck } from "lucide-react";
+import { buildPortalUrl } from "@/lib/site";
 import { getOrderById } from "@/lib/orders";
 import { formatUSD } from "@/lib/money";
 import { buildWhatsAppUrl } from "@/lib/constants";
@@ -35,10 +36,9 @@ export default async function OrderDetailPage({
 
   const justCreated = sp.created === "1";
   const trackingPath = `/seguimiento/${order.clientTransactionId}`;
-  const portalUrl = process.env.NEXT_PUBLIC_PORTAL_URL?.trim();
-  const portalTrackingUrl = portalUrl
-    ? `${portalUrl.replace(/\/$/, "")}/seguimiento/${encodeURIComponent(order.clientTransactionId)}`
-    : null;
+  const portalTrackingUrl = buildPortalUrl(
+    `/seguimiento/${encodeURIComponent(order.clientTransactionId)}`
+  );
 
   const whatsappUrl = buildWhatsAppUrl(
     whatsAppNumber(order.customerPhone),
