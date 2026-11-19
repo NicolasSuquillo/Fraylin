@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, or } from "drizzle-orm";
 import { db } from "@/db";
 import { products, categories, productImages } from "@/db/schema";
 import type { Product, Category } from "@/types";
@@ -104,4 +104,18 @@ export async function getFeaturedProducts(): Promise<Product[]> {
     orderBy: (product, { asc }) => [asc(product.createdAt), asc(product.id)],
   });
   return rows.map((row) => mapProduct(row));
+}
+
+/** Producto público para la ficha /producto/[slug] (visible en web o catálogo). */
+export async function getPublicProductById(id: string): Promise<Product | null> {
+  const cleaned = id?.trim();
+  if (!cleaned) return null;
+  const row = await db.query.products.findFirst({
+    where: and(
+      eq(products.id, cleaned),
+      or(eq(products.showOnWeb, true), eq(products.showInCatalog, true))
+    ),
+    with: { images: { orderBy: (image, { asc }) => [asc(image.position)] } },
+  });
+  return row ? mapProduct(row) : null;
 }

@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Suspense } from "react";
 import { getCatalogProducts, getCategories } from "@/lib/products";
 import { SITE_NAME, SITE_URL } from "@/lib/site";
 import CatalogClient from "./CatalogClient";
@@ -33,10 +34,12 @@ export default async function CatalogoPage({
     category && categories.some((c) => c.slug === category) ? category : "";
 
   return (
-    <CatalogClient
-      products={products}
-      categories={categories}
-      initialCategory={initialCategory}
-    />
+    <Suspense fallback={<div className="min-h-dvh bg-[#F4F1EA]" />}>
+      <CatalogClient
+        products={products}
+        categories={categories}
+        initialCategory={initialCategory}
+      />
+    </Suspense>
   );
 }

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { CheckCircle2, ExternalLink, PackageCheck, ShieldCheck, Star, Truck } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import ArchitecturalBackground from "@/components/ui/ArchitecturalBackground";
 import { BUSINESS, buildWhatsAppUrl } from "@/lib/constants";
 import { buildPortalUrl } from "@/lib/site";
 import TrackingSearchForm from "./TrackingSearchForm";
@@ -21,13 +22,18 @@ export default function SeguimientoPage() {
   );
 
   return (
-    <>
+    <div className="relative min-h-dvh bg-[#F4F1EA]">
+      <ArchitecturalBackground />
       <Header />
-      <main className="min-h-[75vh] pt-28 pb-16 px-4 bg-accent-cream">
-        <div className="max-w-3xl mx-auto space-y-8">
-          <div className="bg-white rounded-3xl border border-stone-200 shadow-sm p-6 sm:p-10 text-center space-y-6">
-            <div className="inline-flex items-center gap-2 rounded-full bg-brand-primary/15 px-3.5 py-1.5 text-xs font-bold uppercase tracking-widest text-brand-dark">
-              <PackageCheck size={14} />
+      <main
+        id="contenido-principal"
+        tabIndex={-1}
+        className="relative z-10 min-h-[75vh] px-4 pt-28 pb-16 outline-none"
+      >
+        <div className="mx-auto max-w-3xl space-y-8">
+          <div className="space-y-6 rounded-2xl border border-[#E6E1D6] bg-white p-6 text-center shadow-xl shadow-black/5 sm:p-10">
+            <div className="inline-flex items-center gap-2 rounded-full bg-[#F2EFE9] px-3.5 py-1.5 text-xs font-bold tracking-widest text-[#7A6336] uppercase">
+              <PackageCheck size={14} aria-hidden="true" />
               Trazabilidad Fraylin
             </div>
 
@@ -115,7 +121,7 @@ export default function SeguimientoPage() {
         </div>
       </main>
       <Footer />
-    </>
+    </div>
   );
 }
 

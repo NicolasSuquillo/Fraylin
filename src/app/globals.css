@@ -1,33 +1,41 @@
 @import "tailwindcss";
 
 :root {
-  --brand-primary: #C9A84C;
-  --brand-dark: #A07830;
-  --brand-light: #E8C87A;
-  --accent-cream: #FAF7F2;
-  --neutral-dark: #0a0a0a;
-  --neutral-mid: #6B6560;
-  --neutral-light: #F0EBE3;
+  --brand-primary: #C9B079;
+  --brand-dark: #7A6336;
+  --brand-light: #D2BD8A;
+  --brand-logo: #B89B5E;
+  --accent-cream: #F4F1EA;
+  --neutral-dark: #1F1D1A;
+  --neutral-mid: #6E6A63;
+  --neutral-light: #F2EFE9;
   --surface-primary: #FFFFFF;
-  --surface-secondary: #FAF7F2;
-  --text-primary: #1C1C1C;
-  --text-secondary: #4A4540;
+  --surface-secondary: #F2EFE9;
+  --border-subtle: #E6E1D6;
+  --border-input: #E2DDD3;
+  --text-primary: #1F1D1A;
+  --text-secondary: #6E6A63;
+  --text-muted: #8C877E;
 }
 
 @theme inline {
   --color-brand-primary: var(--brand-primary);
   --color-brand-dark: var(--brand-dark);
   --color-brand-light: var(--brand-light);
+  --color-brand-logo: var(--brand-logo);
   --color-accent-cream: var(--accent-cream);
   --color-neutral-dark: var(--neutral-dark);
   --color-neutral-mid: var(--neutral-mid);
   --color-neutral-light: var(--neutral-light);
   --color-surface-primary: var(--surface-primary);
   --color-surface-secondary: var(--surface-secondary);
+  --color-border-subtle: var(--border-subtle);
+  --color-border-input: var(--border-input);
   --color-text-primary: var(--text-primary);
   --color-text-secondary: var(--text-secondary);
-  --font-heading: var(--font-playfair), serif;
-  --font-body: "Inter", sans-serif;
+  --color-text-muted: var(--text-muted);
+  --font-heading: var(--font-playfair), Georgia, serif;
+  --font-body: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
   --animate-slide-in-right: slide-in-right 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
   --animate-fade-in: fade-in 0.25s ease-out both;
 
@@ -55,6 +63,11 @@
   .animate-fade-in {
     animation: none;
   }
+  *,
+  *::before,
+  *::after {
+    scroll-behavior: auto !important;
+  }
 }
 
 * {
@@ -78,6 +91,7 @@ body {
   color: var(--text-primary);
   font-family: var(--font-body);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
 h1,

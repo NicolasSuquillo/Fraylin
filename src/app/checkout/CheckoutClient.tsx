@@ -286,9 +286,8 @@ function ProcessingOverlay({
           </svg>
           {/* Icon center */}
           <div
-            className={`relative z-10 w-11 h-11 rounded-full flex items-center justify-center transition-colors duration-300 ${
-              isDone ? "bg-emerald-50" : "bg-amber-50"
-            }`}
+            className={`relative z-10 w-11 h-11 rounded-full flex items-center justify-center transition-colors duration-300 ${isDone ? "bg-emerald-50" : "bg-amber-50"
+              }`}
           >
             {isDone ? (
               <svg
@@ -320,9 +319,8 @@ function ProcessingOverlay({
             {formatUSD(totalCents)}
           </p>
           <p
-            className={`text-xs mt-1.5 font-medium transition-colors duration-300 ${
-              isDone ? "text-emerald-600" : "text-text-secondary"
-            }`}
+            className={`text-xs mt-1.5 font-medium transition-colors duration-300 ${isDone ? "text-emerald-600" : "text-text-secondary"
+              }`}
           >
             {isDone ? "¡Pedido creado exitosamente!" : "Procesando tu pedido…"}
           </p>
@@ -345,13 +343,12 @@ function ProcessingOverlay({
                 }
               >
                 <div
-                  className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 ${
-                    done
+                  className={`w-5 h-5 rounded-full flex items-center justify-center shrink-0 transition-all duration-300 ${done
                       ? "bg-emerald-500"
                       : active
-                      ? "bg-amber-400"
-                      : "bg-stone-200"
-                  }`}
+                        ? "bg-amber-400"
+                        : "bg-stone-200"
+                    }`}
                 >
                   {done ? (
                     <svg width="10" height="10" viewBox="0 0 10 10" fill="none">
@@ -368,13 +365,12 @@ function ProcessingOverlay({
                   ) : null}
                 </div>
                 <span
-                  className={`text-sm transition-all duration-200 ${
-                    done
+                  className={`text-sm transition-all duration-200 ${done
                       ? "text-stone-400"
                       : active
-                      ? "text-text-primary font-semibold"
-                      : "text-stone-400"
-                  }`}
+                        ? "text-text-primary font-semibold"
+                        : "text-stone-400"
+                    }`}
                 >
                   {s.label}
                 </span>
@@ -554,10 +550,10 @@ export default function CheckoutClient({
   const effectiveShippingCents = allFreeShipping
     ? 0
     : shippingEnabled
-    ? isTransfer
-      ? selectedZone.transferCents
-      : selectedZone.cents
-    : 0;
+      ? isTransfer
+        ? selectedZone.transferCents
+        : selectedZone.cents
+      : 0;
 
   const uniqueCartItems = [...new Map(items.map((i) => [i.productId, i])).values()];
   const cartInstallationSum = uniqueCartItems.reduce((sum, item) => {
@@ -755,11 +751,10 @@ export default function CheckoutClient({
                       {shippingZones.map((zone) => (
                         <label
                           key={zone.id}
-                          className={`flex items-center justify-between gap-3 border-2 rounded-xl p-3.5 cursor-pointer transition-all ${
-                            shippingZoneId === zone.id
+                          className={`flex items-center justify-between gap-3 border-2 rounded-xl p-3.5 cursor-pointer transition-all ${shippingZoneId === zone.id
                               ? "border-amber-500 bg-amber-50"
                               : "border-stone-200 hover:border-stone-300 bg-white"
-                          }`}
+                            }`}
                         >
                           <span className="flex items-center gap-2.5">
                             <input
@@ -797,11 +792,10 @@ export default function CheckoutClient({
                 ) : installationEnabled ? (
                   <SectionCard number={3} title="Instalación profesional">
                     <label
-                      className={`flex items-start gap-4 border-2 rounded-xl p-4 cursor-pointer transition-all ${
-                        installationRequested
+                      className={`flex items-start gap-4 border-2 rounded-xl p-4 cursor-pointer transition-all ${installationRequested
                           ? "border-amber-500 bg-amber-50"
                           : "border-stone-200 hover:border-stone-300 bg-white"
-                      }`}
+                        }`}
                     >
                       <input
                         type="checkbox"
@@ -812,7 +806,7 @@ export default function CheckoutClient({
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2">
                           <span className="text-sm font-semibold text-text-primary">
-                            Agregar instalación profesional
+                            Agregar instalación
                           </span>
                           <span className="text-sm font-bold text-brand-primary shrink-0">
                             +{formatUSD(cartInstallationSum)}
@@ -837,11 +831,10 @@ export default function CheckoutClient({
                   <div className="grid sm:grid-cols-2 gap-2.5">
                     {payphoneToken && (
                       <label
-                        className={`flex flex-col gap-3 border-2 rounded-xl p-4 cursor-pointer transition-all ${
-                          method === "payphone"
+                        className={`flex flex-col gap-3 border-2 rounded-xl p-4 cursor-pointer transition-all ${method === "payphone"
                             ? "border-amber-500 bg-amber-50"
                             : "border-stone-200 hover:border-stone-300 bg-white"
-                        }`}
+                          }`}
                       >
                         <span className="flex items-center gap-2.5">
                           <input
@@ -861,11 +854,10 @@ export default function CheckoutClient({
                       </label>
                     )}
                     <label
-                      className={`flex flex-col gap-3 border-2 rounded-xl p-4 cursor-pointer transition-all ${
-                        method === "transferencia"
+                      className={`flex flex-col gap-3 border-2 rounded-xl p-4 cursor-pointer transition-all ${method === "transferencia"
                           ? "border-amber-500 bg-amber-50"
                           : "border-stone-200 hover:border-stone-300 bg-white"
-                      }`}
+                        }`}
                     >
                       <span className="flex items-center gap-2.5">
                         <input
