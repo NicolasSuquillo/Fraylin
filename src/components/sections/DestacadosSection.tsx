@@ -1,16 +1,12 @@
-"use client";
-
-import { useRef } from "react";
-import { ChevronLeft, ChevronRight } from "lucide-react";
-import SectionHeading from "@/components/ui/SectionHeading";
-import Reveal from "@/components/ui/Reveal";
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
 import ProductCard from "@/components/products/ProductCard";
 import type { Product, Category } from "@/types";
 
 interface DestacadosSectionProps {
   products: Product[];
   categories: Category[];
-  onSelect: (product: Product) => void;
+  onSelect?: (product: Product) => void;
 }
 
 export default function DestacadosSection({
@@ -18,61 +14,44 @@ export default function DestacadosSection({
   categories,
   onSelect,
 }: DestacadosSectionProps) {
-  const scrollRef = useRef<HTMLDivElement>(null);
-
   if (products.length === 0) return null;
 
-  const scrollByViewport = (dir: -1 | 1) => {
-    const el = scrollRef.current;
-    if (!el) return;
-    const step = Math.max(240, el.clientWidth * 0.55);
-    el.scrollBy({ left: dir * step, behavior: "smooth" });
-  };
-
   return (
-    <section
-      aria-label="Productos destacados"
-      className="py-12 md:py-16 bg-accent-cream border-y border-brand-primary/10"
-    >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Reveal>
-          <SectionHeading
-            title="Selección destacada"
-            subtitle="Productos que recomendamos por su demanda y calidad"
-          />
-        </Reveal>
-
-        <div className="relative mt-2">
-          <button
-            type="button"
-            onClick={() => scrollByViewport(-1)}
-            aria-label="Desplazar destacados hacia la izquierda"
-            className="hidden md:flex absolute left-0 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full border border-brand-primary/30 bg-surface-primary text-brand-dark shadow-md hover:bg-brand-primary/10 transition-colors -translate-x-1/2"
-          >
-            <ChevronLeft className="w-5 h-5" aria-hidden />
-          </button>
-          <button
-            type="button"
-            onClick={() => scrollByViewport(1)}
-            aria-label="Desplazar destacados hacia la derecha"
-            className="hidden md:flex absolute right-0 top-1/2 -translate-y-1/2 z-20 h-11 w-11 items-center justify-center rounded-full border border-brand-primary/30 bg-surface-primary text-brand-dark shadow-md hover:bg-brand-primary/10 transition-colors translate-x-1/2"
-          >
-            <ChevronRight className="w-5 h-5" aria-hidden />
-          </button>
-
-          <div
-            ref={scrollRef}
-            className="flex gap-4 md:gap-5 overflow-x-auto overflow-y-hidden pb-2 scroll-smooth snap-x snap-mandatory [-ms-overflow-style:none] [scrollbar-width:thin] md:[scrollbar-gutter:stable_both-edges]"
-          >
-            {products.map((p) => (
-              <div
-                key={p.id}
-                className="snap-start shrink-0 w-[86%] min-w-0 sm:w-[38%] md:w-[31%] lg:w-[24%]"
-              >
-                <ProductCard product={p} onSelect={onSelect} categories={categories} />
-              </div>
-            ))}
+    <section id="destacados" className="relative z-10 py-14 sm:py-16 lg:py-20">
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="mb-10 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+          <div className="max-w-2xl space-y-2">
+            <p className="text-xs font-bold tracking-[0.16em] text-[#7A6336] uppercase">
+              Selección Editorial
+            </p>
+            <h2
+              className="text-3xl font-bold tracking-tight text-[#1F1D1A] sm:text-4xl"
+              style={{ fontFamily: "var(--font-heading)" }}
+            >
+              Destacados de Fraylin Acabados
+            </h2>
+            <p className="text-sm text-[#6E6A63] sm:text-base">
+              Piezas seleccionadas por su formato, resistencia y acabado arquitectónico.
+            </p>
           </div>
+          <Link
+            href="/catalogo"
+            className="inline-flex items-center gap-1.5 rounded-lg border border-[#E6E1D6] bg-white px-4 py-2.5 text-sm font-semibold text-[#1F1D1A] transition-colors duration-200 hover:border-[#C9B079] hover:bg-[#F2EFE9]"
+          >
+            <span>Ir al catálogo</span>
+            <ArrowRight className="size-4" aria-hidden="true" />
+          </Link>
+        </div>
+
+        <div className="grid grid-cols-1 gap-5 sm:grid-cols-2 lg:grid-cols-4">
+          {products.slice(0, 8).map((product) => (
+            <ProductCard
+              key={product.id}
+              product={product}
+              categories={categories}
+              onSelect={onSelect}
+            />
+          ))}
         </div>
       </div>
     </section>

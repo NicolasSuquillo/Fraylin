@@ -3,6 +3,7 @@ import Link from "next/link";
 import { AlertCircle, ArrowLeft } from "lucide-react";
 import Header from "@/components/layout/Header";
 import Footer from "@/components/layout/Footer";
+import ArchitecturalBackground from "@/components/ui/ArchitecturalBackground";
 import { BUSINESS, buildWhatsAppUrl } from "@/lib/constants";
 import { buildPortalUrl } from "@/lib/site";
 import { getPublicOrderTracking } from "@/lib/orders";
@@ -41,9 +42,14 @@ export default async function SeguimientoDetallePage({
     undefined;
 
   return (
-    <>
+    <div className="relative min-h-dvh bg-[#F4F1EA]">
+      <ArchitecturalBackground />
       <Header />
-      <main className="min-h-[75vh] pt-28 pb-16 px-4 bg-accent-cream">
+      <main
+        id="contenido-principal"
+        tabIndex={-1}
+        className="relative z-10 min-h-[75vh] px-4 pt-28 pb-16 outline-none"
+      >
         <div className="max-w-4xl mx-auto space-y-6">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <Link
@@ -87,7 +93,7 @@ export default async function SeguimientoDetallePage({
         </div>
       </main>
       <Footer />
-    </>
+    </div>
   );
 }
 

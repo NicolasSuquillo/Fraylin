@@ -1,110 +1,74 @@
-import { Shield, Star, MapPin } from "lucide-react";
-import SectionHeading from "@/components/ui/SectionHeading";
-import Reveal from "@/components/ui/Reveal";
+import { ShieldCheck, Ruler, Compass } from "lucide-react";
 import { BUSINESS } from "@/lib/constants";
 
-const stats = [
-  { icon: Star, value: "100%", label: "Clientes satisfechos" },
-  { icon: Shield, value: "Calidad", label: "Marcas garantizadas" },
-  { icon: MapPin, value: "Quito", label: "Servicio a domicilio" },
+const pillars = [
+  {
+    icon: Ruler,
+    metric: "Precisión",
+    title: "Selección técnica por uso",
+    description:
+      "Cada formato y superficie se especifica según tránsito, absorción y exposición interior o exterior.",
+  },
+  {
+    icon: ShieldCheck,
+    metric: "Durabilidad",
+    title: "Marcas garantizadas",
+    description:
+      "Trabajamos con fabricantes nacionales e importados que cumplen estándares de resistencia y acabado.",
+  },
+  {
+    icon: Compass,
+    metric: "Asesoría",
+    title: "Acompañamiento en obra",
+    description:
+      "Cálculo de metraje, merma por cortes e instalación profesional en Quito y valles.",
+  },
 ];
 
 export default function NosotrosSection() {
   return (
-    <section id="nosotros" className="py-16 md:py-20 bg-accent-cream">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <Reveal delay={0}>
-          <SectionHeading
-            title="Sobre Nosotros"
-            subtitle="Conoce quiénes somos y por qué somos tu mejor opción"
-          />
-        </Reveal>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-          <Reveal delay={0.05}>
-          <div>
-            <h3
-              className="text-2xl font-bold text-text-primary mb-4"
+    <section id="manifiesto" className="relative z-10 py-14 sm:py-16 lg:py-20">
+      <div id="nosotros" className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:items-center">
+          <div className="space-y-4 lg:col-span-5">
+            <p className="text-xs font-bold tracking-[0.16em] text-[#7A6336] uppercase">
+              Manifiesto de Materialidad
+            </p>
+            <h2
+              className="text-3xl font-bold tracking-tight text-[#1F1D1A] sm:text-4xl"
               style={{ fontFamily: "var(--font-heading)" }}
             >
-              Fraylin: tu aliado en acabados de construcción
-            </h3>
-            <p className="text-text-secondary leading-relaxed mb-4">
-              {BUSINESS.description} Ofrecemos una amplia variedad de productos —
-              desde cerámica y porcelanato hasta grifería, muebles de baño, piedra
-              decorativa y ferretería — todo en un solo lugar.
+              Calidad arquitectónica en cada detalle de obra
+            </h2>
+            <p className="text-sm leading-relaxed text-[#6E6A63] sm:text-base">
+              {BUSINESS.description} Centralizamos asesoría técnica, cálculo de
+              metraje, despacho programado e instalación profesional para que cada
+              ambiente conserve su estética y desempeño a largo plazo.
             </p>
-            <p className="text-text-secondary leading-relaxed mb-6">
-              Brindamos asesoría personalizada y servicio de instalación para que
-              tu proyecto quede perfecto. Nos encontramos en{" "}
-              <strong className="text-text-primary">{BUSINESS.address}</strong>, con
-              horario amplio y disponibilidad flexible para atenderte cuando lo
-              necesites.
-            </p>
-
-            <div className="bg-surface-primary rounded-2xl p-4 border border-brand-primary/20">
-              <p className="text-sm font-semibold text-text-primary mb-2">
-                🕐 Horarios de atención
-              </p>
-              <p className="text-sm text-text-secondary">{BUSINESS.hours.weekdays}</p>
-              <p className="text-sm text-text-secondary">{BUSINESS.hours.saturday}</p>
-              <p className="text-xs text-brand-primary mt-2 italic">
-                {BUSINESS.hours.note}
-              </p>
-            </div>
           </div>
-          </Reveal>
 
-          <div>
-            <div className="grid grid-cols-3 gap-4 mb-8">
-              {stats.map((stat, i) => (
-                <Reveal key={stat.label} delay={0.12 + i * 0.06}>
-                <div
-                  className="bg-surface-primary rounded-2xl p-5 text-center border border-stone-200"
-                >
-                  <div className="w-10 h-10 bg-brand-primary/10 rounded-xl flex items-center justify-center mx-auto mb-3">
-                    <stat.icon size={22} className="text-brand-primary" />
-                  </div>
-                  <p
-                    className="text-xl font-black text-brand-primary"
-                    style={{ fontFamily: "var(--font-heading)" }}
-                  >
-                    {stat.value}
-                  </p>
-                  <p className="text-xs text-text-secondary mt-1">{stat.label}</p>
-                </div>
-                </Reveal>
-              ))}
-            </div>
-
-            <Reveal delay={0.32}>
-            <div className="bg-brand-primary rounded-2xl p-6">
-              <h4
-                className="font-bold text-lg mb-2 text-neutral-dark"
-                style={{ fontFamily: "var(--font-heading)" }}
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3 lg:col-span-7">
+            {pillars.map((pillar) => (
+              <div
+                key={pillar.metric}
+                className="flex flex-col justify-between rounded-2xl border border-[#E6E1D6] bg-white p-5 transition-all duration-200 hover:border-[#C9B079]"
               >
-                ¿Por qué elegirnos?
-              </h4>
-              <ul className="space-y-2 text-sm text-neutral-dark/80">
-                <li className="flex items-center gap-2">
-                  <span className="text-neutral-dark/70">✓</span> Productos de marcas
-                  nacionales e importadas
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-neutral-dark/70">✓</span> Asesoría técnica sin
-                  costo adicional
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-neutral-dark/70">✓</span> Atención personalizada
-                  y trato directo
-                </li>
-                <li className="flex items-center gap-2">
-                  <span className="text-neutral-dark/70">✓</span> Precios competitivos
-                  en todo el catálogo
-                </li>
-              </ul>
-            </div>
-            </Reveal>
+                <div className="space-y-3">
+                  <div className="inline-flex size-10 items-center justify-center rounded-xl bg-[#F2EFE9] text-[#7A6336]">
+                    <pillar.icon className="size-5" aria-hidden="true" />
+                  </div>
+                  <p className="text-xs font-bold tracking-[0.14em] text-[#7A6336] uppercase">
+                    {pillar.metric}
+                  </p>
+                  <h3 className="font-sans text-base font-semibold text-[#1F1D1A]">
+                    {pillar.title}
+                  </h3>
+                  <p className="text-xs leading-relaxed text-[#6E6A63]">
+                    {pillar.description}
+                  </p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>

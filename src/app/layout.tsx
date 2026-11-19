@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from "next";
-import { Playfair_Display } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { SpeedInsights } from "@vercel/speed-insights/next";
 import "./globals.css";
@@ -14,9 +14,15 @@ import {
   SITE_URL,
 } from "@/lib/site";
 
+const inter = Inter({
+  subsets: ["latin"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
 const playfairDisplay = Playfair_Display({
   subsets: ["latin"],
-  weight: ["400", "700"],
+  weight: ["400", "600", "700"],
   variable: "--font-playfair",
   display: "swap",
 });
@@ -25,7 +31,7 @@ export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   viewportFit: "cover",
-  themeColor: "#C9A84C",
+  themeColor: "#C9B079",
 };
 
 export const metadata: Metadata = {
@@ -94,8 +100,18 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="es" className={playfairDisplay.variable} data-scroll-behavior="smooth">
-      <body>
+    <html
+      lang="es"
+      className={`${playfairDisplay.variable} ${inter.variable}`}
+      data-scroll-behavior="smooth"
+    >
+      <body className="min-h-dvh bg-[#F4F1EA] text-[#1F1D1A] antialiased">
+        <a
+          href="#contenido-principal"
+          className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 focus:z-50 focus:rounded-lg focus:bg-[#1F1D1A] focus:px-4 focus:py-2.5 focus:text-sm focus:font-semibold focus:text-white focus:shadow-lg focus:outline-none focus:ring-2 focus:ring-[#C9B079]"
+        >
+          Saltar al contenido principal
+        </a>
         <LocalBusinessJsonLd />
         <CartProvider>
           {children}

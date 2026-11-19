@@ -37,12 +37,12 @@ export default function TrackingSearchForm({ initialCode = "" }: { initialCode?:
             }}
             placeholder="Código de pedido (ej. FR...)"
             aria-label="Código de pedido"
-            className="w-full pl-11 pr-4 py-3.5 rounded-2xl border border-stone-300 bg-white font-mono text-sm text-text-primary placeholder:font-sans placeholder:text-stone-400 focus:outline-none focus:ring-2 focus:ring-brand-primary/50 focus:border-brand-primary"
+            className="w-full rounded-lg border border-[#E2DDD3] bg-white py-3 pr-4 pl-11 font-mono text-sm text-[#1F1D1A] placeholder:font-sans placeholder:text-[#8C877E] focus:border-[#C9B079] focus:outline-none focus:ring-2 focus:ring-[#C9B079]/25"
           />
         </div>
         <button
           type="submit"
-          className="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl bg-brand-primary hover:bg-brand-dark text-neutral-dark hover:text-accent-cream font-bold text-sm transition-colors cursor-pointer shrink-0 shadow-sm"
+          className="inline-flex shrink-0 cursor-pointer items-center justify-center gap-2 rounded-lg bg-[#C9B079] px-6 py-3 text-sm font-semibold text-[#1F1D1A] shadow-xs transition-colors duration-200 hover:bg-[#D2BD8A] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#C9B079]"
         >
           Consultar pedido
           <ArrowRight size={16} />
